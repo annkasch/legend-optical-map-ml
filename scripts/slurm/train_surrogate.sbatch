@@ -2,8 +2,9 @@
 # Train one event surrogate (or fit a standalone MFGP) on a Perlmutter CPU node, from the
 # repository root:
 #   sbatch scripts/slurm/train_surrogate.sbatch configs/CONFIG.yaml [train|mfgp]
-# The Python environment must have resum-flex and this package installed (RESUM_PYTHON,
-# default .venv/bin/python).
+# Install resum-flex and this package into the same environment as described in README.md.
+# The default interpreter is this checkout's .venv/bin/python; set RESUM_PYTHON to an
+# executable path to override.
 # BLAS threads default to 1 (training); GP fits on thousands of voxels profit from more:
 #   BLAS_THREADS=32 sbatch scripts/slurm/train_surrogate.sbatch GP.yaml mfgp
 # Defaults: account m2676, debug QOS, 15 min. Override on the command line, e.g.
@@ -24,5 +25,10 @@ cd "$SLURM_SUBMIT_DIR"
 # Training is single-threaded (set in core.surrogates); evaluation_threads sets the eval pool.
 threads=${BLAS_THREADS:-1}
 export OMP_NUM_THREADS=$threads OPENBLAS_NUM_THREADS=$threads MKL_NUM_THREADS=$threads
+python_exe=${RESUM_PYTHON:-.venv/bin/python}
+if [[ ! -x "$python_exe" ]]; then
+    echo "Python interpreter '$python_exe' not found or not executable; see the README setup instructions." >&2
+    exit 2
+fi
 echo "job $SLURM_JOB_ID on $(hostname), commit $(git rev-parse --short HEAD), $command $config, $threads BLAS threads"
-srun --cpu-bind=none "${RESUM_PYTHON:-.venv/bin/python}" -u -m core.surrogates "$command" "$config"
+srun --cpu-bind=none "$python_exe" -u -m core.surrogates "$command" "$config"

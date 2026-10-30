@@ -8,6 +8,8 @@ This guide explains the two YAML files that control an optical-map training run:
 The example configs target the `centered_425_375_375` data layout. Copy them for a new
 dataset or experiment and change the paths and settings described below. The YAML schemas
 reject unknown keys, so a spelling mistake is reported instead of silently ignored.
+Commands in this guide assume the environment setup in the [README](../README.md#setup),
+which installs RESUM_FLEX and this package into this checkout's `.venv`.
 
 ## Which command should I run?
 
