@@ -6,22 +6,27 @@ import shutil
 from pathlib import Path
 
 import numpy as np
-
 from data.batch_source import FixedBatchSource
-from data.event_cache import EventCache, cached_runs
-from data.optical_features import AffineTransform, RunningMoments, feature_info, theta_features
-from data.optical_reader import source_stamp
-from data.optical_reports import generate_reports
-from data.optical_split import (
+from schemas.data_models import InputMode, StandardBatch
+
+from legend_optical_map_ml.config import UNLABELED_ROLES, OpticalDataConfig
+from legend_optical_map_ml.event_cache import EventCache, cached_runs
+from legend_optical_map_ml.features import (
+    AffineTransform,
+    RunningMoments,
+    feature_info,
+    theta_features,
+)
+from legend_optical_map_ml.reader import source_stamp
+from legend_optical_map_ml.reports import generate_reports
+from legend_optical_map_ml.split import (
     FIDELITIES,
     assign_splits,
     partition_names,
     save_manifest,
     training_partition,
 )
-from data.optical_view import OpticalView, phi_chunks, voxel_centers, write_view
-from schemas.data_models import InputMode, StandardBatch
-from schemas.optical import UNLABELED_ROLES, OpticalDataConfig
+from legend_optical_map_ml.view import OpticalView, phi_chunks, voxel_centers, write_view
 
 
 class PreparedOpticalData:
@@ -119,7 +124,7 @@ def prepare_optical_data(
 ) -> PreparedOpticalData:
     """Cache new or changed inputs, assign partitions, fit normalization and write the view.
 
-    Writes view.npy/view.json (see data.optical_view), metadata.json, normalization.json,
+    Writes view.npy/view.json (see legend_optical_map_ml.view), metadata.json, normalization.json,
     config.json, source_stamp.json, manifest_snapshot.json and reports/ to
     config.output_directory. Batches are built from the view when loaded.
     """

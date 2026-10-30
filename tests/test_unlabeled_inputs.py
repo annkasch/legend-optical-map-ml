@@ -1,14 +1,15 @@
 """Files without optical hit data: cache, gp_unlabeled role, inputs-only loading, inference."""
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
 
-from data.event_cache import INDEX_DTYPE, EventCache
-from data.optical_pipeline import load_partition, prepare_optical_data
-from data.optical_reader import read_run
-from data.optical_view import OpticalView
+from legend_optical_map_ml.event_cache import INDEX_DTYPE, EventCache
+from legend_optical_map_ml.pipeline import load_partition, prepare_optical_data
+from legend_optical_map_ml.reader import read_run
+from legend_optical_map_ml.view import OpticalView
 from tests.test_optical_pipeline import fixture_file, role_config, role_folder
 
 h5py = pytest.importorskip("h5py")
@@ -107,7 +108,7 @@ def _checkpoint(tmp_path, kind, normalization):
     model.metadata = {
         "normalization.json": normalization,
         "step": 7,
-        "data_provider": "data.optical_provider:OpticalDataset",
+        "data_provider": "legend_optical_map_ml.provider:OpticalDataset",
     }
     path = tmp_path / f"run_{kind}" / "checkpoints" / "best"
     save_surrogate(path, model)
@@ -203,7 +204,7 @@ def test_two_level_gp_from_inference_and_hf(tmp_path):
         ],
         n_restarts=1,
         data_directory=c.output_directory,
-        data_provider="data.optical_provider:OpticalDataset",
+        data_provider="legend_optical_map_ml.provider:OpticalDataset",
         output_directory=tmp_path / "gp",
     )
     with pytest.raises(ValueError, match="blinded"):
@@ -217,3 +218,62 @@ def test_two_level_gp_from_inference_and_hf(tmp_path):
     ]
     with np.load(out / "training_arrays.npz") as arrays:
         assert arrays["X_0"].shape[0] == 4 and arrays["X_1"].shape[0] == 3
+
+
+def test_inference_file_level_matches_prepared_voxels(tmp_path):
+    pytest.importorskip("GPy")
+    pytest.importorskip("h5py")
+    from core.surrogates.inference import predict_partition
+    from core.surrogates.mfgp_stage import run_mfgp_config
+    from schemas.surrogates import MFGPRunConfig
+
+    c, result = prepared(tmp_path)
+    checkpoint, model = _checkpoint(tmp_path, "mlp", result.normalization)
+    inference = predict_partition(checkpoint, c.output_directory, "gp_unlabeled")
+    levels = [
+        {"source": "model_mean", "partition": "gp_unlabeled", "inference": str(inference)},
+        {"source": "observed_fraction", "partition": "cnp_train", "fidelity": "lf"},
+    ]
+    config = MFGPRunConfig(
+        levels=levels,
+        evaluation=[{"partition": "cnp_validation", "fidelity": "lf"}],
+        n_restarts=1,
+        data_directory=c.output_directory,
+        data_provider="legend_optical_map_ml.provider:OpticalDataset",
+        output_directory=tmp_path / "gp",
+    )
+    out = run_mfgp_config(config)
+    with np.load(out / "training_arrays.npz") as arrays, np.load(inference) as saved:
+        np.testing.assert_array_equal(arrays["Y_0"].ravel(), saved["mean_probability"])
+        np.testing.assert_array_equal(arrays["X_0"], saved["theta"])
+    records = json.loads((out / "levels.json").read_text())
+    assert records[0]["data"]["inference"] == str(inference) and records[0]["voxels"] == 4
+    wrong = config.model_copy(
+        update={
+            "output_directory": tmp_path / "gp2",
+            "levels": [
+                config.levels[0].model_copy(update={"partition": "cnp_train"}),
+                config.levels[1],
+            ],
+        }
+    )
+    with pytest.raises(ValueError, match="holds gp_unlabeled/lf"):
+        run_mfgp_config(wrong)
+
+
+def test_repository_configs_load():
+    from schemas.surrogates import load_mfgp_config, load_surrogate_config
+
+    from legend_optical_map_ml.config import load_optical_config
+
+    configs = Path(__file__).resolve().parents[1] / "configs"
+    load_optical_config(configs / "config.optical.centered.cnp.data.yaml")
+    kinds = {
+        name: load_surrogate_config(configs / f"config.optical.centered.{name}.yaml").model.kind
+        for name in ("cnp", "cnp.mixup", "mlp")
+    }
+    assert kinds == {"cnp": "cnp", "cnp.mixup": "cnp", "mlp": "mlp"}
+    for name in ("mfgp", "mfgp.log"):
+        config = load_mfgp_config(configs / f"config.optical.centered.{name}.yaml")
+        assert len(config.levels) == 2
+        assert config.data_provider == "legend_optical_map_ml.provider:OpticalDataset"

@@ -6,8 +6,8 @@ from pathlib import Path
 
 import numpy as np
 
-from data.optical_features import center
-from schemas.optical import GP_TRAINING_ROLES, ROLES, OpticalDataConfig, RoleSource
+from legend_optical_map_ml.config import GP_TRAINING_ROLES, ROLES, OpticalDataConfig, RoleSource
+from legend_optical_map_ml.features import center
 
 SPLITS = ("train", "validation", "test")
 FIDELITIES = ("lf", "hf")

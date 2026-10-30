@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from schemas.optical import ANOMALOUS_FILE, SourceConfig
+from legend_optical_map_ml.config import ANOMALOUS_FILE, SourceConfig
 
 # An optional `_v{voxel index}` segment (`run00001_v00003913_x+...`) is accepted and ignored.
 NAME = re.compile(

@@ -1,6 +1,9 @@
 #!/bin/bash
-# Train one event surrogate (or fit a standalone MFGP) on a Perlmutter CPU node:
-#   sbatch scripts/slurm/train_surrogate.sbatch CONFIG.yaml [train|mfgp]
+# Train one event surrogate (or fit a standalone MFGP) on a Perlmutter CPU node, from the
+# repository root:
+#   sbatch scripts/slurm/train_surrogate.sbatch configs/CONFIG.yaml [train|mfgp]
+# The Python environment must have resum-flex and this package installed (RESUM_PYTHON,
+# default .venv/bin/python).
 # BLAS threads default to 1 (training); GP fits on thousands of voxels profit from more:
 #   BLAS_THREADS=32 sbatch scripts/slurm/train_surrogate.sbatch GP.yaml mfgp
 # Defaults: account m2676, debug QOS, 15 min. Override on the command line, e.g.
@@ -22,4 +25,4 @@ cd "$SLURM_SUBMIT_DIR"
 threads=${BLAS_THREADS:-1}
 export OMP_NUM_THREADS=$threads OPENBLAS_NUM_THREADS=$threads MKL_NUM_THREADS=$threads
 echo "job $SLURM_JOB_ID on $(hostname), commit $(git rev-parse --short HEAD), $command $config, $threads BLAS threads"
-srun --cpu-bind=none .venv/bin/python -u -m core.surrogates "$command" "$config"
+srun --cpu-bind=none "${RESUM_PYTHON:-.venv/bin/python}" -u -m core.surrogates "$command" "$config"

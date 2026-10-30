@@ -5,9 +5,9 @@ import json
 
 import numpy as np
 
-from data.optical_features import center, make_labels
-from data.optical_split import FIDELITIES, partition_names
-from schemas.optical import UNLABELED_ROLES
+from legend_optical_map_ml.config import UNLABELED_ROLES
+from legend_optical_map_ml.features import center, make_labels
+from legend_optical_map_ml.split import FIDELITIES, partition_names
 
 
 def write_csv(path, rows, fields=None):

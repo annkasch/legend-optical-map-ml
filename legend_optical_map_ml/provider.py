@@ -6,7 +6,7 @@ Configs select it with ``data_provider: <package>.provider:OpticalDataset`` and 
 
 from pathlib import Path
 
-from data.optical_view import OpticalView, voxel_centers
+from legend_optical_map_ml.view import OpticalView, voxel_centers
 
 
 class OpticalDataset:
@@ -48,8 +48,8 @@ class OpticalDataset:
     @classmethod
     def prepare(cls, data_config, data_directory):
         """Rebuild ``data_directory`` from the optical data config if outdated; returns a record."""
-        from data.optical_pipeline import ensure_prepared_optical_data
-        from schemas.optical import load_optical_config
+        from legend_optical_map_ml.config import load_optical_config
+        from legend_optical_map_ml.pipeline import ensure_prepared_optical_data
 
         preparation = load_optical_config(data_config)
         data_directory = Path(data_directory).resolve()

@@ -5,10 +5,15 @@ import os
 import numpy as np
 import pytest
 
-from data.event_cache import EventCache, cached_runs, main
-from data.optical_features import AffineTransform, RunningMoments, make_features, make_labels
-from data.optical_reader import read_run
-from data.optical_view import OpticalView, build_batch
+from legend_optical_map_ml.event_cache import EventCache, cached_runs, main
+from legend_optical_map_ml.features import (
+    AffineTransform,
+    RunningMoments,
+    make_features,
+    make_labels,
+)
+from legend_optical_map_ml.reader import read_run
+from legend_optical_map_ml.view import OpticalView, build_batch
 from tests.test_optical_pipeline import config, dataset, fixture_file
 
 h5py = pytest.importorskip("h5py")
@@ -132,8 +137,8 @@ def test_running_moments_match_a_direct_fit():
 
 
 def test_view_batches_are_chunk_independent(tmp_path, monkeypatch):
-    import data.optical_view as optical_view
-    from data.optical_pipeline import prepare_optical_data
+    import legend_optical_map_ml.view as optical_view
+    from legend_optical_map_ml.pipeline import prepare_optical_data
 
     c = dataset(tmp_path, 4)
     prepare_optical_data(c)
@@ -150,7 +155,7 @@ def test_view_batches_are_chunk_independent(tmp_path, monkeypatch):
 
 
 def test_real_paths_match_resolve(tmp_path):
-    from data.optical_reader import real_paths
+    from legend_optical_map_ml.reader import real_paths
 
     (tmp_path / "data").mkdir()
     (tmp_path / "data/a.stp.lh5").touch()

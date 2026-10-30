@@ -4,8 +4,8 @@ from dataclasses import asdict, dataclass
 
 import numpy as np
 
-from data.optical_reader import OpticalRun
-from schemas.optical import OpticalDataConfig
+from legend_optical_map_ml.config import OpticalDataConfig
+from legend_optical_map_ml.reader import OpticalRun
 
 
 def center(run: OpticalRun, config: OpticalDataConfig) -> np.ndarray:

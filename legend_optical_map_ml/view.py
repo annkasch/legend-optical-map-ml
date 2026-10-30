@@ -16,11 +16,11 @@ import os
 from pathlib import Path
 
 import numpy as np
-
-from data.event_cache import NAME_BYTES, EventCache
-from data.optical_features import AffineTransform, phi_features, theta_features
 from schemas.data_models import InputMode, StandardBatch
-from schemas.optical import OpticalDataConfig
+
+from legend_optical_map_ml.config import OpticalDataConfig
+from legend_optical_map_ml.event_cache import NAME_BYTES, EventCache
+from legend_optical_map_ml.features import AffineTransform, phi_features, theta_features
 
 VERSION = 1
 FIDELITIES = ("lf", "hf")

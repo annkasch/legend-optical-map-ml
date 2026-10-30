@@ -24,8 +24,8 @@ and compacting must not run while another process reads the cache.
 
 Command line::
 
-    python -m data.event_cache update CONFIG.yaml   # cache the inputs of a data config
-    python -m data.event_cache compact CACHE_DIR
+    python -m legend_optical_map_ml.event_cache update CONFIG.yaml   # cache the inputs of a data config
+    python -m legend_optical_map_ml.event_cache compact CACHE_DIR
 """
 
 import hashlib
@@ -41,8 +41,8 @@ from pathlib import Path
 
 import numpy as np
 
-from data.optical_reader import nominal_center, read_arrays, select_inputs
-from schemas.optical import SourceConfig
+from legend_optical_map_ml.config import SourceConfig
+from legend_optical_map_ml.reader import nominal_center, read_arrays, select_inputs
 
 VERSION = 2  # 2: "labeled" column; version-1 indexes are upgraded on load
 NAME_BYTES = 96
@@ -491,9 +491,9 @@ def cached_runs(source: SourceConfig, cache: EventCache, *, workers: int | None 
 def main(argv=None):
     import argparse
 
-    from schemas.optical import load_optical_config
+    from legend_optical_map_ml.config import load_optical_config
 
-    parser = argparse.ArgumentParser(prog="python -m data.event_cache")
+    parser = argparse.ArgumentParser(prog="python -m legend_optical_map_ml.event_cache")
     commands = parser.add_subparsers(dest="command", required=True)
     update = commands.add_parser("update", help="cache the raw inputs of a data config")
     update.add_argument("config", type=Path)

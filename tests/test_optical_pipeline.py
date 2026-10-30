@@ -6,12 +6,11 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from data.optical_features import AffineTransform, cylindrical, make_features, make_labels
-from data.optical_pipeline import load_partition, prepare_optical_data
-from data.optical_reader import read_optical_runs, read_run
-from data.optical_split import assign_splits, integer_targets, save_manifest
-from schemas.config import load_config
-from schemas.optical import ANOMALOUS_FILE, OpticalDataConfig
+from legend_optical_map_ml.config import ANOMALOUS_FILE, OpticalDataConfig
+from legend_optical_map_ml.features import AffineTransform, cylindrical, make_features, make_labels
+from legend_optical_map_ml.pipeline import load_partition, prepare_optical_data
+from legend_optical_map_ml.reader import read_optical_runs, read_run
+from legend_optical_map_ml.split import assign_splits, integer_targets, save_manifest
 
 h5py = pytest.importorskip("h5py")
 
@@ -21,7 +20,7 @@ def load(out, partition, fidelity="lf"):
 
 
 def has(out, partition, fidelity="lf"):
-    from data.optical_view import OpticalView
+    from legend_optical_map_ml.view import OpticalView
 
     return (partition, fidelity) in OpticalView(out).available()
 
@@ -295,8 +294,7 @@ def test_design_only_and_unequal_event_counts(tmp_path):
     np.testing.assert_array_equal(batch.labels[row, : counts[row]], make_labels(run, c))
 
 
-def test_configs_and_integer_targets(tmp_path, legacy_config_path):
-    assert load_config(legacy_config_path).data is None
+def test_configs_and_integer_targets(tmp_path):
     assert integer_targets(85, (0.7, 0.15, 0.15)).tolist() == [59, 13, 13]
     assert integer_targets(22, (0.7, 0.15, 0.15)).tolist() == [16, 3, 3]
     with pytest.raises(ValueError, match="detector_id"):
@@ -307,7 +305,6 @@ def test_configs_and_integer_targets(tmp_path, legacy_config_path):
 
 def test_cnp_context_target_and_training_smoke(tmp_path):
     import torch
-
     from core.surrogate_cnp import build_cnp, split_context_target
     from core.training import train_cnp
     from data.batch_source import FixedBatchSource
@@ -338,7 +335,7 @@ def test_cnp_context_target_and_training_smoke(tmp_path):
 
 
 def test_multiple_input_folders_deduplicate_and_keep_identities(tmp_path):
-    from schemas.optical import SourceConfig
+    from legend_optical_map_ml.config import SourceConfig
 
     first = fixture_file(tmp_path / "a", "lf", run=1)
     second = fixture_file(tmp_path / "b", "lf", run=2, center=(.4, .5, .6))
@@ -356,8 +353,9 @@ def test_multiple_input_folders_deduplicate_and_keep_identities(tmp_path):
 
 
 def test_folder_lists_reject_ambiguous_sources(tmp_path):
-    from schemas.optical import SourceConfig
     import shutil
+
+    from legend_optical_map_ml.config import SourceConfig
 
     with pytest.raises(ValueError, match="either directory"):
         SourceConfig(directory=tmp_path, directories={"lf": [tmp_path]})
@@ -378,7 +376,7 @@ def test_folder_lists_reject_ambiguous_sources(tmp_path):
 
 
 def test_preparation_config_resolves_folder_lists(tmp_path):
-    from schemas.optical import load_optical_config
+    from legend_optical_map_ml.config import load_optical_config
 
     path = tmp_path / "data.yaml"
     path.write_text('source:\n  directories:\n    lf: [lf1, lf2]\n    hf: [hf]\noutput_directory: prepared\nsplit:\n  manifest: split.json\n')
@@ -389,7 +387,7 @@ def test_preparation_config_resolves_folder_lists(tmp_path):
 
 
 def test_automatic_preparation_recovers_batches_and_keeps_split(tmp_path):
-    from data.optical_pipeline import ensure_prepared_optical_data
+    from legend_optical_map_ml.pipeline import ensure_prepared_optical_data
 
     c = config(tmp_path)
     for i in range(4):
@@ -418,7 +416,7 @@ def test_automatic_preparation_recovers_batches_and_keeps_split(tmp_path):
 
 
 def test_automatic_preparation_updates_changed_sources_and_policy(tmp_path):
-    from data.optical_pipeline import ensure_prepared_optical_data
+    from legend_optical_map_ml.pipeline import ensure_prepared_optical_data
 
     c = config(tmp_path)
     lf = [fixture_file(c.source.directory, "lf", i, center=(float(i), 0., 0.))
@@ -506,7 +504,7 @@ def test_role_sources_split_by_fraction_count_and_whole_folder(tmp_path):
 
 
 def test_role_sources_reject_invalid_splits(tmp_path):
-    from schemas.optical import RoleSource, SourceConfig
+    from legend_optical_map_ml.config import RoleSource, SourceConfig
 
     with pytest.raises(ValueError, match="sum to 1"):
         RoleSource(path=tmp_path, fractions={"cnp_train": 0.5})
@@ -537,7 +535,7 @@ def test_role_sources_reject_invalid_splits(tmp_path):
 
 
 def test_role_manifest_keeps_assignments_and_detects_changes(tmp_path):
-    from data.optical_pipeline import ensure_prepared_optical_data
+    from legend_optical_map_ml.pipeline import ensure_prepared_optical_data
 
     folder = role_folder(tmp_path / "a", 8)
     sources = [{"path": str(folder), "fractions": {"cnp_train": 0.5, "gp_train": 0.5}}]
@@ -575,7 +573,7 @@ def yaml_safe_config(data, output):
         "training": {"backend": "neural", "n_steps": 1, "eval_every": 1, "batch_size": 1,
                      "n_events": 4, "n_context_min": 1, "n_context_max": 2},
         "data_directory": str(data),
-        "data_provider": "data.optical_provider:OpticalDataset",
+        "data_provider": "legend_optical_map_ml.provider:OpticalDataset",
         "partitions": {"train": "cnp_train", "validation": "cnp_validation", "test": "cnp_test"},
         "output_directory": str(output),
         "validation_context_events": 2,
@@ -583,7 +581,7 @@ def yaml_safe_config(data, output):
 
 
 def test_fast_check_skips_reading_and_detects_config_and_file_changes(tmp_path, monkeypatch):
-    import data.optical_pipeline as pipeline
+    import legend_optical_map_ml.pipeline as pipeline
 
     a = role_folder(tmp_path / "a", 6)
     b = role_folder(tmp_path / "b", 4, offset=1.0, first_run=20)
@@ -615,9 +613,9 @@ def test_fast_check_skips_reading_and_detects_config_and_file_changes(tmp_path, 
 
 def test_cnp_run_regenerates_stale_data_from_data_config(tmp_path):
     import yaml
-
-    from data.optical_provider import OpticalDataset
     from schemas.surrogates import load_surrogate_config
+
+    from legend_optical_map_ml.provider import OpticalDataset
 
     ensure_matching_data = OpticalDataset.prepare
 
@@ -648,7 +646,6 @@ def test_cnp_run_regenerates_stale_data_from_data_config(tmp_path):
 
 def test_cnp_selection_subset_and_evaluation_threads(tmp_path):
     import torch
-
     from core.surrogates.evaluation import evaluation_threads
     from core.surrogates.experiment import run_experiment
     from schemas.surrogates import SurrogateRunConfig
