@@ -10,7 +10,7 @@ specific to the optical-map application:
 - `configs/`: data, event-model (CNP, MLP, mixup ablation) and GP configs for Ian Wang's
   centered box (`centered_425_375_375`), plus [LBNL CSV-manifest data](configs/config.optical.lbnl_secondment.data.yaml)
   and [MLP run](configs/config.optical.lbnl_secondment.mlp.yaml) examples.
-- `scripts/slurm/train_surrogate.sbatch`: Perlmutter job script.
+- `scripts/slurm/`: Perlmutter job scripts for individual stages and dependent pipelines.
 - [Configuration guide](docs/configuration.md): how to set up the data, training and GP YAML configs.
 - [Optical data guide](docs/optical_data.md): data preparation, roles, event cache and inputs without hits.
 
@@ -57,6 +57,17 @@ On Perlmutter, create the Slurm log directory and submit each step from the repo
 mkdir -p outputs/slurm_logs
 sbatch -q regular -t 01:00:00 scripts/slurm/train_surrogate.sbatch configs/CONFIG.yaml [train|mfgp]
 ```
+
+To submit training, mean prediction, and GP fitting as dependent jobs, use:
+
+```bash
+scripts/slurm/submit_surrogate_pipeline.sh \
+  configs/config.optical.centered.mlp.yaml \
+  configs/config.optical.centered.mfgp.yaml \
+  -q regular -t 01:00:00
+```
+
+See [the Slurm pipeline guide](docs/slurm_pipeline.md) for details.
 
 The batch script uses this checkout's `.venv/bin/python` by default; set `RESUM_PYTHON` to
 the executable path of another interpreter if needed.

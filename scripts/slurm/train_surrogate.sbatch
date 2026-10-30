@@ -1,6 +1,5 @@
 #!/bin/bash
-# Train one event surrogate (or fit a standalone MFGP) on a Perlmutter CPU node, from the
-# repository root:
+# Run training or standalone MFGP on a Perlmutter CPU node, from the repository root:
 #   sbatch scripts/slurm/train_surrogate.sbatch configs/CONFIG.yaml [train|mfgp]
 # Install resum-flex and this package into the same environment as described in README.md.
 # The default interpreter is this checkout's .venv/bin/python; set RESUM_PYTHON to an
@@ -21,6 +20,10 @@
 set -euo pipefail
 config=${1:?usage: sbatch scripts/slurm/train_surrogate.sbatch CONFIG.yaml [train|mfgp]}
 command=${2:-train}
+case "$command" in
+    train|mfgp) ;;
+    *) echo "Unknown command '$command'; choose train or mfgp." >&2; exit 2 ;;
+esac
 cd "$SLURM_SUBMIT_DIR"
 # Training is single-threaded (set in core.surrogates); evaluation_threads sets the eval pool.
 threads=${BLAS_THREADS:-1}
