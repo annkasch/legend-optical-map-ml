@@ -1,5 +1,6 @@
 """Optical fixtures verify event alignment, leakage prevention and integration."""
 
+import csv
 import json
 from dataclasses import replace
 
@@ -550,6 +551,77 @@ def test_role_manifest_keeps_assignments_and_detects_changes(tmp_path):
     ensure_prepared_optical_data(c)
     kept = {r["file"]: r["split"] for r in json.loads(c.split.manifest.read_text())["files"]}
     assert kept == {r["file"]: r["split"] for r in first["files"] if r["file"] in kept}
+
+
+def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
+    from core.surrogates.experiment import run_experiment
+    from legend_optical_map_ml.config import OpticalDataConfig
+    from legend_optical_map_ml.view import OpticalView
+    from schemas.surrogates import SurrogateRunConfig
+
+    root = tmp_path / "inputs"
+    centers = {
+        "cnp_train": (0.1, 0.2, 0.3),
+        "cnp_validation": (0.2, 0.2, 0.3),
+        "gp_unlabeled": (0.3, 0.2, 0.3),
+        "gp_train": (0.3, 0.2, 0.3),
+        "gp_validation": (0.2, 0.2, 0.3),
+    }
+    files = {
+        "cnp_train": fixture_file(root, "lf", 1, centers["cnp_train"]),
+        "cnp_validation": fixture_file(root, "lf", 2, centers["cnp_validation"]),
+        "gp_unlabeled": fixture_file(root, "lf", 3, centers["gp_unlabeled"]),
+        "gp_train": fixture_file(root, "hf", 3, centers["gp_train"]),
+        "gp_validation": fixture_file(root, "hf", 2, centers["gp_validation"]),
+    }
+    manifests = []
+    for role, file in files.items():
+        manifest = tmp_path / f"{role}.csv"
+        exact_center = np.asarray(centers[role]) + [0.00025, 0, 0]
+        with manifest.open("w", newline="") as stream:
+            writer = csv.DictWriter(
+                stream, fieldnames=["stp_file", "tier", "x_mm", "y_mm", "z_mm"]
+            )
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "stp_file": file.relative_to(tmp_path).as_posix(),
+                    "tier": file.parent.name,
+                    "x_mm": exact_center[0] * 1000,
+                    "y_mm": exact_center[1] * 1000,
+                    "z_mm": exact_center[2] * 1000,
+                }
+            )
+        manifests.append({"path": manifest, "role": role})
+
+    data = OpticalDataConfig.model_validate(
+        {
+            "source": {"manifests": manifests},
+            "output_directory": tmp_path / "prepared",
+            "split": {"manifest": tmp_path / "split.json"},
+        }
+    )
+    prepare_optical_data(data, workers=1)
+    view = OpticalView(data.output_directory)
+    assert {r["split"] for r in json.loads(data.split.manifest.read_text())["files"]} == set(files)
+    assert view.available() == {
+        ("cnp_train", "lf"),
+        ("cnp_validation", "lf"),
+        ("gp_unlabeled", "lf"),
+        ("gp_train", "hf"),
+        ("gp_validation", "hf"),
+    }
+    np.testing.assert_allclose(
+        view.centers(view.select("cnp_train", "lf"))[0],
+        np.asarray(centers["cnp_train"]) + [0.00025, 0, 0],
+    )
+
+    run_config = yaml_safe_config(data.output_directory, tmp_path / "run")
+    run_config["model"] = {"kind": "mlp", "architecture": {"hidden_dims": [8]}}
+    run_config["hf_validation"] = False
+    run_config["test_fidelities"] = []
+    result = run_experiment(SurrogateRunConfig.model_validate(run_config))
+    assert (result / "checkpoints/best/model.json").is_file()
 
 
 def test_cnp_run_on_role_data_rejects_missing_hf(tmp_path):
