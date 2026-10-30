@@ -18,20 +18,25 @@ Models, training, validation metrics and the multi-fidelity GP are RESUM_FLEX's.
 
 ## Setup
 
-Create one environment in this checkout, then install both editable packages into it.
-Use Python 3.11 or 3.12 to stay within the supported versions of RESUM_FLEX:
+Create one environment in this checkout and use RESUM_FLEX's lockfile to install its
+dependencies, including CPU-only PyTorch. Run these commands from the optical-map repository
+root; use Python 3.11 or 3.12:
 
 ```bash
-python3.11 -m venv .venv  # Python 3.12 also works
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -e "/path/to/RESUM_FLEX[gp]"
-.venv/bin/python -m pip install -e .
+APP_ROOT=$PWD
+RESUM_FLEX_ROOT=/path/to/RESUM_FLEX
+uv venv --python 3.11 .venv  # or use 3.12
+(
+  cd "$RESUM_FLEX_ROOT"
+  UV_PROJECT_ENVIRONMENT="$APP_ROOT/.venv" uv sync --extra gp
+)
+uv pip install --python .venv/bin/python -e .
 ```
 
-Replace `/path/to/RESUM_FLEX` with the path to your RESUM_FLEX checkout. Every install
-command uses `.venv/bin/python`, so both packages go into the same environment that the
-training commands and Slurm script use. A `.venv` symlink or environment from another
-checkout is not required.
+Replace `/path/to/RESUM_FLEX` with the path to your RESUM_FLEX checkout. `uv sync` installs
+RESUM_FLEX into the app checkout's `.venv`; the last command installs this package there too.
+Training commands and Slurm then use that same environment. A `.venv` symlink or environment
+from another checkout is not required.
 
 ## Workflow (from the repository root)
 
