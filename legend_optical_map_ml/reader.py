@@ -80,7 +80,25 @@ def read_arrays(h, *, require_hits: bool = True) -> dict:
     if len(ev) != n or len(np.unique(ev)) != n:
         raise ValueError("vertex IDs must be unique and match simulated event count")
     pos = [array("vtx/" + a + "loc", "m") for a in "xyz"]
-    mom = [array("vtx/p" + a, "MeV") for a in "xyz"]
+    if all(f"vtx/p{axis}" in h for axis in "xyz"):
+        # Older inputs store one momentum vector directly alongside each vertex.
+        mom = [array("vtx/p" + a, "MeV") for a in "xyz"]
+    elif all(f"particles/p{axis}" in h for axis in "xyz"):
+        # The secondment LH5 layout stores momenta in a particle table. Map its
+        # rows back to events explicitly rather than relying on table ordering.
+        particle_ev = array("particles/evtid", integer=True)
+        particle_mom = [array("particles/p" + a, "MeV") for a in "xyz"]
+        if any(len(a) != len(particle_ev) for a in particle_mom):
+            raise ValueError("particle momentum array length mismatch")
+        if len(particle_ev) != n or len(np.unique(particle_ev)) != n:
+            raise ValueError("expected exactly one particle momentum per event")
+        if not np.array_equal(np.sort(particle_ev), np.sort(ev)):
+            raise ValueError("particle IDs must match vertex event IDs")
+        order = np.argsort(particle_ev)
+        event_order = np.searchsorted(particle_ev[order], ev)
+        mom = [a[order][event_order] for a in particle_mom]
+    else:
+        raise ValueError("missing momentum components in vtx/ or particles/")
     time = array("vtx/time", "ns")
     n_part = array("vtx/n_part", integer=True)
     if any(len(a) != n for a in [*pos, *mom, time, n_part]):
