@@ -6,7 +6,13 @@ from pathlib import Path
 
 import numpy as np
 
-from legend_optical_map_ml.config import GP_TRAINING_ROLES, ROLES, OpticalDataConfig, RoleSource
+from legend_optical_map_ml.config import (
+    GP_TRAINING_ROLES,
+    ROLES,
+    SHARED_VALIDATION_ROLES,
+    OpticalDataConfig,
+    RoleSource,
+)
 from legend_optical_map_ml.features import center
 
 SPLITS = ("train", "validation", "test")
@@ -54,12 +60,12 @@ def integer_targets(n, fractions):
 
 def partition_names(config: OpticalDataConfig) -> tuple[str, ...]:
     """Prepared partitions: LF roles for role sources, otherwise train/validation/test."""
-    return ROLES if config.source.sources else SPLITS
+    return ROLES if config.source.sources or config.source.manifests else SPLITS
 
 
 def training_partition(config: OpticalDataConfig) -> str:
     """The partition normalization is fitted on."""
-    return "cnp_train" if config.source.sources else "train"
+    return "cnp_train" if config.source.sources or config.source.manifests else "train"
 
 
 def role_targets(n: int, source: RoleSource) -> np.ndarray:
@@ -165,20 +171,85 @@ def assign_roles(runs, config: OpticalDataConfig, *, update=False):
     return assignments, payload
 
 
+def assign_manifest_roles(runs, config: OpticalDataConfig, *, update=False):
+    """Use each file-list manifest's role directly, without randomly splitting its rows."""
+    settings = {
+        "manifests": [m.model_dump(mode="json") for m in config.source.manifests],
+    }
+    path = config.split.manifest
+    previous = {}
+    if path.exists():
+        old = json.loads(path.read_text())
+        if old.get("version") != 1:
+            raise ValueError("Unsupported split manifest version")
+        previous = {r["file"]: r for r in old["files"]}
+        current = {r.file: r for r in runs}
+        changed = old["settings"] != settings or set(previous) != set(current) or any(
+            previous[name]["fingerprint"] != run.fingerprint
+            or previous[name]["split"] != run.role
+            or previous[name]["nominal_center"] != run.nominal_center.tolist()
+            for name, run in current.items()
+            if name in previous
+        )
+        if changed and not update:
+            raise ValueError("File-list manifests changed; use explicit manifest update")
+
+    assignments = {}
+    for run in runs:
+        if run.role not in ROLES:
+            raise ValueError(f"{run.file}: manifest does not assign a valid role")
+        assignments[run.file] = run.role
+    _check_shared_positions(runs, assignments, config)
+
+    counts = np.zeros((len(ROLES), len(FIDELITIES)), dtype=int)
+    for run in runs:
+        counts[ROLES.index(run.role), FIDELITIES.index(run.fidelity)] += 1
+    records = []
+    for group in voxel_groups(runs, config):
+        identities = sorted(set(tuple(r.nominal_center.tolist()) for r in group))
+        group_id = hashlib.sha256(json.dumps(identities).encode()).hexdigest()[:16]
+        records.extend(
+            {
+                "file": run.file,
+                "fidelity": run.fidelity,
+                "source": str(config.source.manifests[run.source].path),
+                "group_id": group_id,
+                "nominal_center": run.nominal_center.tolist(),
+                "fingerprint": run.fingerprint,
+                "split": assignments[run.file],
+            }
+            for run in group
+        )
+    payload = {
+        "version": 1,
+        "settings": settings,
+        "files": sorted(records, key=lambda r: r["file"]),
+        "targets": counts.tolist(),
+        "actual_counts": counts.tolist(),
+        "split_order": list(ROLES),
+        "fidelity_order": list(FIDELITIES),
+        "overlapping_groups": sum(len(g) > 1 for g in voxel_groups(runs, config)),
+    }
+    return assignments, payload
+
+
 def _check_shared_positions(runs, assignments, config):
-    """Reject voxel positions shared by different roles, except among GP training roles."""
+    """Reject cross-role overlap except nested GP inputs and held-out validation pairs."""
     for group in voxel_groups(runs, config):
         shared = {assignments[r.file] for r in group}
-        if len(shared) > 1 and not shared <= set(GP_TRAINING_ROLES):
+        allowed = (set(GP_TRAINING_ROLES), set(SHARED_VALIDATION_ROLES))
+        if len(shared) > 1 and not any(shared <= roles for roles in allowed):
             names = ", ".join(sorted(r.file for r in group))
             raise ValueError(
-                f"Voxel position shared by roles {sorted(shared)} ({names}); only "
-                f"{', '.join(GP_TRAINING_ROLES)} may share positions"
+                f"Voxel position shared by roles {sorted(shared)} ({names}); allowed pairs are "
+                f"{GP_TRAINING_ROLES} and {SHARED_VALIDATION_ROLES}"
             )
 
 
 def assign_splits(runs, config: OpticalDataConfig, *, update=False):
     """Update preserves assignments of surviving files; conflicting groups fail."""
+    if config.source.manifests:
+        return assign_manifest_roles(runs, config, update=update)
     if config.source.sources:
         return assign_roles(runs, config, update=update)
     path = config.split.manifest

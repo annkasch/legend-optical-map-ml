@@ -9,6 +9,10 @@ training, validation metrics and the multi-fidelity GP are documented in RESUM_F
 For a walkthrough of the YAML settings and how to connect a data config to a training or GP
 run config, see [configuration.md](configuration.md).
 
+Data configs can read either folder-based inputs or CSV file-list manifests. A manifest
+assigns its listed LH5 files directly to a role; see the [manifest configuration section](configuration.md#choosing-raw-sources-and-roles)
+for the format and the LBNL example.
+
 ## Data preparation
 
 Prepare optical data with the library, after setting the input folders in a data config:

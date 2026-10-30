@@ -17,10 +17,11 @@ Role = Literal[
 ]
 # Roles whose files need no optical hits (inputs only, e.g. for event-model inference).
 UNLABELED_ROLES = ("gp_unlabeled",)
-# Roles that may share voxel positions across folders (nested multi-fidelity GP design,
-# e.g. HF training voxels at positions of unlabeled LF voxels). Any other shared position
-# between different roles is rejected as leakage.
+# Roles that may share positions in a nested multi-fidelity GP design, for example HF training
+# voxels at positions of LF inputs. Held-out CNP and GP validation roles may also overlap.
 GP_TRAINING_ROLES = ("gp_train", "gp_unlabeled")
+# Two validation fidelities may evaluate the same held-out position without train leakage.
+SHARED_VALIDATION_ROLES = ("cnp_validation", "gp_validation")
 
 
 class StrictModel(BaseModel):
@@ -57,22 +58,44 @@ class RoleSource(StrictModel):
         return self
 
 
+class ManifestSource(StrictModel):
+    """A CSV file list whose rows all belong to one prepared-data role."""
+
+    path: Path
+    role: Role
+    # Read from the CSV's `tier` column when present; specify this for simpler lists.
+    fidelity: Literal["lf", "hf"] | None = None
+
+
 class SourceConfig(StrictModel):
     directory: Path | None = None
     directories: dict[Literal["lf", "hf"], list[Path]] = Field(default_factory=dict)
     # Role-based LF layout: per-folder splits replace the global split fractions.
     sources: list[RoleSource] = Field(default_factory=list)
+    # Explicit file lists (for example CSV manifests) assign every row directly to a role.
+    manifests: list[ManifestSource] = Field(default_factory=list)
     exclude_files: list[str] = Field(default_factory=lambda: [ANOMALOUS_FILE])
 
     @model_validator(mode="after")
     def check_sources(self):
-        if sum([self.directory is not None, bool(self.directories), bool(self.sources)]) != 1:
-            raise ValueError("Provide either directory, per-fidelity directories or role sources")
+        if sum([
+            self.directory is not None,
+            bool(self.directories),
+            bool(self.sources),
+            bool(self.manifests),
+        ]) != 1:
+            raise ValueError(
+                "Provide either directory, per-fidelity directories, role sources, "
+                "or file-list manifests"
+            )
         if any(not paths for paths in self.directories.values()):
             raise ValueError("Each configured fidelity needs at least one folder")
         paths = [s.path for s in self.sources]
         if len(set(paths)) != len(paths):
             raise ValueError("Each role source folder may appear only once")
+        manifest_paths = [m.path for m in self.manifests]
+        if len(set(manifest_paths)) != len(manifest_paths):
+            raise ValueError("Each file-list manifest may appear only once")
         return self
 
 
@@ -154,9 +177,12 @@ class OpticalDataConfig(StrictModel):
     def check_role_split(self):
         per_source = {"seed", "manifest"}
         default = SplitConfig().model_dump(exclude=per_source)
-        if self.source.sources and self.split.model_dump(exclude=per_source) != default:
+        if (self.source.sources or self.source.manifests) and self.split.model_dump(
+            exclude=per_source
+        ) != default:
             raise ValueError(
-                "With role sources, set splits per source; only split.seed and split.manifest apply"
+                "With role sources or file-list manifests, set role assignment in source; "
+                "only split.seed and split.manifest apply"
             )
         return self
 
@@ -188,7 +214,7 @@ def load_optical_config(path: str | Path) -> OpticalDataConfig:
         fidelity: [resolve(folder) for folder in folders]
         for fidelity, folders in config.source.directories.items()
     }
-    for source in config.source.sources:
+    for source in [*config.source.sources, *config.source.manifests]:
         source.path = resolve(source.path)
     config.output_directory = resolve(config.output_directory)
     resolve_cache_directory(config, resolve)

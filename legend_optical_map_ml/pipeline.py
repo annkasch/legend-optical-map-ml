@@ -14,6 +14,7 @@ from legend_optical_map_ml.event_cache import EventCache, cached_runs
 from legend_optical_map_ml.features import (
     AffineTransform,
     RunningMoments,
+    center,
     feature_info,
     theta_features,
 )
@@ -26,7 +27,7 @@ from legend_optical_map_ml.split import (
     save_manifest,
     training_partition,
 )
-from legend_optical_map_ml.view import OpticalView, phi_chunks, voxel_centers, write_view
+from legend_optical_map_ml.view import OpticalView, phi_chunks, write_view
 
 
 class PreparedOpticalData:
@@ -103,7 +104,7 @@ def fit_normalization(runs, config: OpticalDataConfig) -> dict:
         raise ValueError("No training files; adjust split or provide more data")
     cache = runs[0].cache
     rows = np.array([r.row for r in runs])
-    centers = voxel_centers(cache, rows, config)  # [B, 3]
+    centers = np.array([center(r, config) for r in runs])  # [B, 3]
     theta = AffineTransform.fit(theta_features(centers, config)[0], config.normalization.method)
     phi = None
     if feature_info(config)["phi"]["dimension"]:

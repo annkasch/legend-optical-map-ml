@@ -417,6 +417,8 @@ class CachedRun:
     file: str  # fidelity/filename, as in the split manifest
     fidelity: str
     source: int | None = None  # index into SourceConfig.sources (role-based layout only)
+    role: str | None = None  # explicit role for file-list manifests
+    center_override: np.ndarray | None = None
 
     @property
     def path(self) -> str:
@@ -428,6 +430,8 @@ class CachedRun:
 
     @property
     def nominal_center(self) -> np.ndarray:
+        if self.center_override is not None:
+            return self.center_override
         return self.cache.index["nominal_center"][self.row]
 
     @property
@@ -475,15 +479,23 @@ class CachedRun:
 def cached_runs(source: SourceConfig, cache: EventCache, *, workers: int | None = None):
     """Runs of the configured inputs, sorted by name, after caching new or changed files."""
     included, excluded = select_inputs(source)
-    paths = [resolved for *_, resolved in included]
+    paths = [resolved for _, _, _, resolved in included]
     read = cache.update(paths, workers=workers)
     print(
         f"Event cache {cache.directory}: {read} files read, {len(paths) - read} reused", flush=True
     )
     rows = cache.locate(paths)
     runs = [
-        CachedRun(cache, int(row), name, name.split("/", 1)[0], source_index)
-        for row, (_, _, _, name, source_index, _) in zip(rows, included, strict=True)
+        CachedRun(
+            cache,
+            int(row),
+            name,
+            name.split("/", 1)[0],
+            source_index,
+            item.role,
+            None if item.nominal_center is None else np.asarray(item.nominal_center),
+        )
+        for row, (item, name, source_index, _) in zip(rows, included, strict=True)
     ]
     return sorted(runs, key=lambda r: r.file), excluded
 

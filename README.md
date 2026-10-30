@@ -8,7 +8,8 @@ specific to the optical-map application:
   role-based splits, features and reports, and `provider.OpticalDataset`, the dataset
   provider RESUM_FLEX reads the prepared data through.
 - `configs/`: data, event-model (CNP, MLP, mixup ablation) and GP configs for Ian Wang's
-  centered box (`centered_425_375_375`).
+  centered box (`centered_425_375_375`), plus [LBNL CSV-manifest data](configs/config.optical.lbnl_secondment.data.yaml)
+  and [MLP run](configs/config.optical.lbnl_secondment.mlp.yaml) examples.
 - `scripts/slurm/train_surrogate.sbatch`: Perlmutter job script.
 - [Configuration guide](docs/configuration.md): how to set up the data, training and GP YAML configs.
 - [Optical data guide](docs/optical_data.md): data preparation, roles, event cache and inputs without hits.

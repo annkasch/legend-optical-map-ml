@@ -22,7 +22,7 @@ from legend_optical_map_ml.config import OpticalDataConfig
 from legend_optical_map_ml.event_cache import NAME_BYTES, EventCache
 from legend_optical_map_ml.features import AffineTransform, phi_features, theta_features
 
-VERSION = 1
+VERSION = 2
 FIDELITIES = ("lf", "hf")
 VIEW_DTYPE = np.dtype(
     [
@@ -31,6 +31,7 @@ VIEW_DTYPE = np.dtype(
         ("folder", "i4"),  # position in view.json "folders"
         ("name", f"S{NAME_BYTES}"),
         ("sha256", "u1", (32,)),
+        ("nominal_center", "f8", (3,)),  # exact manifest center or filename-derived center
     ]
 )
 CHUNK_EVENTS = 4_000_000  # events whose features are computed at once (~200 MB float64)
@@ -53,6 +54,7 @@ def write_view(directory: Path, entries, partitions, config, normalization):
             folders.setdefault(folder, len(folders)),
             name.encode(),
             cache.index["sha256"][run.row],
+            run.nominal_center,
         )
     meta = {
         "version": VERSION,
@@ -78,7 +80,7 @@ class OpticalView:
     def __init__(self, directory: str | Path):
         self.directory = Path(directory)
         self.meta = json.loads((self.directory / "view.json").read_text())
-        if self.meta.get("version") != VERSION:
+        if self.meta.get("version") not in (1, VERSION):
             raise ValueError(f"Unsupported optical view version in {self.directory}")
         self.rows = np.load(self.directory / "view.npy")
         self.config = OpticalDataConfig.model_validate(self.meta["config"])
@@ -128,7 +130,9 @@ class OpticalView:
             raise FileNotFoundError(f"{self.directory}: no {fidelity} files in {partition}")
         cache = self.cache
         rows = cache.locate(self.paths(view), view["sha256"])
-        return build_batch(cache, rows, self.config, self.meta["normalization"])
+        return build_batch(
+            cache, rows, self.config, self.meta["normalization"], centers=self.centers(view)
+        )
 
     def load_theta(self, partition: str, fidelity: str) -> tuple[np.ndarray, list[str]]:
         """Normalized voxel coordinates [B, D_theta] and file paths, without reading events."""
@@ -137,9 +141,19 @@ class OpticalView:
             raise FileNotFoundError(f"{self.directory}: no {fidelity} files in {partition}")
         paths = self.paths(view)
         rows = self.cache.locate(paths, view["sha256"])
-        centers = voxel_centers(self.cache, rows, self.config)
+        centers = self.centers(view)
         transform = AffineTransform(**self.meta["normalization"]["theta"])
         return transform.transform(theta_features(centers, self.config)[0]), paths
+
+    def centers(self, view_rows) -> np.ndarray:
+        """Feature centers for selected rows, preserving exact CSV coordinates."""
+        if self.config.theta.center_source == "observed_midrange":
+            rows = self.cache.locate(self.paths(view_rows), view_rows["sha256"])
+            return self.cache.index["measured_center"][rows]
+        if "nominal_center" in view_rows.dtype.names:
+            return view_rows["nominal_center"]
+        rows = self.cache.locate(self.paths(view_rows), view_rows["sha256"])
+        return self.cache.index["nominal_center"][rows]
 
     def load_inputs(self, partition: str, fidelity: str) -> tuple[StandardBatch, list[str]]:
         """Normalized model inputs of one partition, also for files without hit data.
@@ -153,7 +167,14 @@ class OpticalView:
         cache = self.cache
         paths = self.paths(view)
         rows = cache.locate(paths, view["sha256"])
-        batch = build_batch(cache, rows, self.config, self.meta["normalization"], labeled=False)
+        batch = build_batch(
+            cache,
+            rows,
+            self.config,
+            self.meta["normalization"],
+            labeled=False,
+            centers=self.centers(view),
+        )
         return batch, paths
 
 
@@ -184,7 +205,13 @@ def phi_chunks(cache: EventCache, rows, centers, config: OpticalDataConfig):
 
 
 def build_batch(
-    cache: EventCache, rows, config: OpticalDataConfig, normalization: dict, *, labeled=True
+    cache: EventCache,
+    rows,
+    config: OpticalDataConfig,
+    normalization: dict,
+    *,
+    labeled=True,
+    centers=None,
 ):
     """StandardBatch of cached files ``rows``; phi is float32, as the models compute.
 
@@ -192,7 +219,7 @@ def build_batch(
     """
     counts = cache.index["n_events"][rows].astype(np.int64)  # [B]
     width = int(counts.max())
-    centers = voxel_centers(cache, rows, config)  # [B, 3]
+    centers = voxel_centers(cache, rows, config) if centers is None else np.asarray(centers)
     theta = AffineTransform(**normalization["theta"]).transform(theta_features(centers, config)[0])
     detector = config.target.detector_id if config.target.kind == "single_channel" else None
     labels = np.zeros((len(rows), width), dtype=np.int8)  # [B, N]

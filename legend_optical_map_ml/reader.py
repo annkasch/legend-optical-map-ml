@@ -1,5 +1,6 @@
 """LH5 input validation. Importing this module does not require h5py."""
 
+import csv
 import errno
 import hashlib
 import os
@@ -36,6 +37,7 @@ class OpticalRun:
     hit_time: np.ndarray
     hit_wavelength: np.ndarray
     source: int | None = None  # index into SourceConfig.sources (role-based layout only)
+    role: str | None = None  # explicit assignment from a file-list manifest
 
     @property
     def n_events(self):
@@ -160,22 +162,102 @@ def read_run(path: Path, root: Path, *, fidelity: str | None = None) -> OpticalR
         raise ValueError(f"{path}: {exc}") from exc
 
 
-def list_source_files(config: SourceConfig) -> list[tuple[Path, Path, str | None]]:
-    """(file, root folder, explicit fidelity) for every configured input, without reading it."""
+@dataclass(frozen=True)
+class InputFile:
+    path: Path
+    root: Path
+    fidelity: str | None = None
+    source: int | None = None
+    role: str | None = None
+    relative_name: str | None = None
+    nominal_center: tuple[float, float, float] | None = None
+
+
+def list_source_files(config: SourceConfig) -> list[InputFile]:
+    """Configured raw files, with optional explicit fidelity, role and CSV coordinates."""
     inputs = []
     if config.directory is not None:
         root = config.directory.resolve()
         for fidelity in ("hf", "lf"):
-            inputs.extend((p, root, None) for p in sorted((root / fidelity).glob("*.stp.lh5")))
+            inputs.extend(
+                InputFile(p, root, relative_name=f"{fidelity}/{p.name}")
+                for p in sorted((root / fidelity).glob("*.stp.lh5"))
+            )
     elif config.sources:
-        for source in config.sources:
+        for index, source in enumerate(config.sources):
             folder = source.path.expanduser().resolve()
             if not folder.is_dir():
                 raise FileNotFoundError(f"Optical input folder does not exist: {folder}")
             paths = sorted(folder.glob("*.stp.lh5"))
             if not paths:
                 raise ValueError(f"No simulation files found in {folder}")
-            inputs.extend((p, folder, source.fidelity) for p in paths)
+            inputs.extend(
+                InputFile(p, folder, source.fidelity, source=index,
+                          relative_name=f"{source.fidelity}/{p.name}")
+                for p in paths
+            )
+    elif config.manifests:
+        for index, manifest in enumerate(config.manifests):
+            path = manifest.path.expanduser().resolve()
+            if not path.is_file():
+                raise FileNotFoundError(f"File-list manifest does not exist: {path}")
+            with path.open(newline="", encoding="utf-8-sig") as stream:
+                reader = csv.DictReader(stream)
+                required = {"stp_file"}
+                if not reader.fieldnames or not required.issubset(reader.fieldnames):
+                    raise ValueError(f"{path}: expected a CSV with an stp_file column")
+                fields = set(reader.fieldnames)
+                has_center = {"x_mm", "y_mm", "z_mm"}.issubset(fields)
+                partial_center = bool(fields & {"x_mm", "y_mm", "z_mm"}) and not has_center
+                if partial_center:
+                    raise ValueError(f"{path}: x_mm, y_mm and z_mm must be provided together")
+                for line, row in enumerate(reader, start=2):
+                    listed = (row.get("stp_file") or "").strip()
+                    if not listed:
+                        raise ValueError(f"{path}:{line}: stp_file is empty")
+                    raw_path = Path(listed).expanduser()
+                    file_path = raw_path if raw_path.is_absolute() else path.parent / raw_path
+                    file_path = Path(os.path.abspath(file_path))
+                    if not file_path.is_file():
+                        raise FileNotFoundError(
+                            f"{path}:{line}: listed file does not exist: {file_path}"
+                        )
+                    row_fidelity = (row.get("tier") or "").strip().lower()
+                    fidelity = manifest.fidelity or row_fidelity or None
+                    if fidelity not in ("lf", "hf"):
+                        raise ValueError(f"{path}:{line}: set fidelity or provide tier: lf/hf")
+                    if manifest.fidelity and row_fidelity and row_fidelity != manifest.fidelity:
+                        raise ValueError(
+                            f"{path}:{line}: tier {row_fidelity!r} disagrees with configured "
+                            f"fidelity {manifest.fidelity!r}"
+                        )
+                    center = None
+                    if has_center:
+                        try:
+                            center = tuple(
+                                float(row[key]) / 1000 for key in ("x_mm", "y_mm", "z_mm")
+                            )
+                        except (TypeError, ValueError) as exc:
+                            raise ValueError(f"{path}:{line}: invalid x_mm/y_mm/z_mm") from exc
+                        if not np.isfinite(center).all():
+                            raise ValueError(f"{path}:{line}: non-finite voxel center")
+                    try:
+                        relative = file_path.relative_to(path.parent).as_posix()
+                    except ValueError:
+                        relative = os.path.relpath(file_path, path.parent)
+                    inputs.append(
+                        InputFile(
+                            file_path,
+                            path.parent,
+                            fidelity=fidelity,
+                            source=index,
+                            role=manifest.role,
+                            relative_name=f"{fidelity}/{relative}",
+                            nominal_center=center,
+                        )
+                    )
+            if not any(item.source == index for item in inputs):
+                raise ValueError(f"No simulation files listed in {path}")
     else:
         for fidelity, folders in sorted(config.directories.items()):
             for folder in folders:
@@ -185,7 +267,11 @@ def list_source_files(config: SourceConfig) -> list[tuple[Path, Path, str | None
                 paths = sorted(folder.glob("*.stp.lh5"))
                 if not paths:
                     raise ValueError(f"No simulation files found in {folder}")
-                inputs.extend((p, folder, fidelity) for p in paths)
+                inputs.extend(
+                    InputFile(p, folder, fidelity,
+                              relative_name=f"{fidelity}/{p.name}")
+                    for p in paths
+                )
     if not inputs:
         raise ValueError("No simulation files found in configured folders")
     return inputs
@@ -199,10 +285,30 @@ def _file_identity(path: str) -> str:
 def source_stamp(config: SourceConfig) -> list[list]:
     """Cheap identity of the raw inputs without opening any file.
 
-    Per folder: file count and a hash over every file's name, size and modification time.
-    Adding, removing, renaming or rewriting a file changes it. Metadata is fetched in
-    parallel, because one-by-one stat calls are slow on network file systems.
+    Folder sources hash each folder's file names, sizes and modification times. File-list
+    sources also hash each CSV's contents and the listed inputs. Adding, removing, renaming
+    or rewriting an input changes the stamp. Metadata is fetched in parallel because
+    one-by-one stat calls are slow on network file systems.
     """
+    if config.manifests:
+        inputs = list_source_files(config)
+        def identity(path):
+            stat = path.stat()
+            return stat.st_size, stat.st_mtime_ns
+
+        with ThreadPoolExecutor(max_workers=32) as pool:
+            file_ids = list(pool.map(identity, (item.path for item in inputs), chunksize=256))
+        files = sorted(
+            f"{item.relative_name}:{size}:{mtime}"
+            for item, (size, mtime) in zip(inputs, file_ids, strict=True)
+        )
+        manifests = []
+        for item in config.manifests:
+            path = item.path.expanduser().resolve()
+            stat = path.stat()
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            manifests.append([str(path), stat.st_size, stat.st_mtime_ns, digest])
+        return [["manifests", manifests, hashlib.sha256("\n".join(files).encode()).hexdigest()]]
     if config.directory is not None:
         folders = [config.directory / f for f in ("hf", "lf") if (config.directory / f).is_dir()]
     elif config.sources:
@@ -251,42 +357,49 @@ def real_paths(paths) -> list[Path]:
 
 
 def select_inputs(config: SourceConfig) -> tuple[list[tuple], list[dict]]:
-    """Included inputs as (path, root, explicit fidelity, name, source index, resolved path),
-    plus exclusions.
-
-    ``name`` is ``fidelity/filename``; duplicates through aliases are dropped, conflicting
-    duplicates fail. Nothing is opened.
-    """
+    """Included inputs as (InputFile, name, source index, resolved path), plus exclusions."""
     inputs = list_source_files(config)
-    resolved_paths = real_paths([path for path, *_ in inputs])
+    resolved_paths = real_paths([item.path for item in inputs])
     sources = {s.path.expanduser().resolve(): i for i, s in enumerate(config.sources or [])}
     exclusions = set(config.exclude_files) | {ANOMALOUS_FILE}
     included, excluded = [], []
     seen_paths, seen_names = {}, {}
-    for (path, root, explicit_fidelity), resolved in zip(inputs, resolved_paths, strict=True):
-        name = (
-            path.relative_to(root).as_posix()
-            if explicit_fidelity is None
-            else f"{explicit_fidelity}/{path.name}"
-        )
+    for item, resolved in zip(inputs, resolved_paths, strict=True):
+        path, root = item.path, item.root
+        name = item.relative_name or path.relative_to(root).as_posix()
+        explicit_fidelity = item.fidelity
         fidelity = name.split("/", 1)[0]
         if resolved in seen_paths:
+            if config.manifests:
+                raise ValueError(f"File is listed more than once across manifests: {path}")
             if seen_paths[resolved] != fidelity:
                 raise ValueError(f"Same source file assigned to LF and HF: {path}")
             continue
         if name in seen_names:
             raise ValueError(f"Ambiguous simulation filename {name} in multiple folders")
         seen_paths[resolved], seen_names[name] = fidelity, resolved
-        if name in exclusions:
+        exclusion_names = {name, path.name, f"{fidelity}/{path.name}"}
+        if item.relative_name:
+            exclusion_names.add(item.relative_name.split("/", 1)[-1])
+        matched_exclusion = next((key for key in exclusions if key in exclusion_names), None)
+        if matched_exclusion:
             excluded.append(
                 {
                     "file": name,
-                    "reason": "known anomaly" if name == ANOMALOUS_FILE else "configured exclusion",
+                    "reason": (
+                        "known anomaly"
+                        if matched_exclusion == ANOMALOUS_FILE
+                        else "configured exclusion"
+                    ),
                 }
             )
             continue
-        source = sources[root] if config.sources else None
-        included.append((path, root, explicit_fidelity, name, source, resolved))
+        source = (
+            item.source
+            if item.source is not None
+            else (sources[root] if config.sources else None)
+        )
+        included.append((item, name, source, resolved))
     if not included:
         raise ValueError("No included simulation files")
     return included, excluded
@@ -295,8 +408,12 @@ def select_inputs(config: SourceConfig) -> tuple[list[tuple], list[dict]]:
 def read_optical_runs(config: SourceConfig) -> tuple[list[OpticalRun], list[dict]]:
     included, excluded = select_inputs(config)
     runs = []
-    for path, root, explicit_fidelity, _, source, _ in included:
-        run = read_run(path, root, fidelity=explicit_fidelity)
+    for item, name, source, _ in included:
+        run = read_run(item.path, item.root, fidelity=item.fidelity)
+        run.file = name
         run.source = source
+        run.role = item.role
+        if item.nominal_center is not None:
+            run.nominal_center = np.asarray(item.nominal_center, dtype=float)
         runs.append(run)
     return sorted(runs, key=lambda r: r.file), excluded

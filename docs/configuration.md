@@ -22,6 +22,16 @@ From this repository's root, the example MLP run is:
 .venv/bin/python -m core.surrogates train configs/config.optical.centered.mlp.yaml
 ```
 
+For the LBNL voxel-set example, use:
+
+```bash
+.venv/bin/python -m core.surrogates train configs/config.optical.lbnl_secondment.mlp.yaml
+```
+
+Its run config points to the CSV-manifest data config, so the first run prepares the listed
+files automatically. The supplied lists do not include a separate CNP test set; this
+baseline evaluates train and validation only.
+
 To prepare data on its own, see [optical_data.md](optical_data.md#data-preparation). Both
 commands use the same data config.
 
@@ -57,10 +67,10 @@ Its main settings are:
 
 ### Choosing raw sources and roles
 
-The `source` block supports one of three layouts: `directory` for a single LF folder,
-`directories` for lists of folders by fidelity (`lf` or `hf`), or `sources` for explicit
-per-folder role assignment. Use exactly one layout. The provided centered dataset uses
-`sources`, for example:
+The `source` block supports four layouts: `directory` for a single LF/HF tree,
+`directories` for lists of folders by fidelity (`lf` or `hf`), `sources` for explicit
+per-folder role assignment, or `manifests` for CSV file lists. Use exactly one layout. The
+provided centered dataset uses `sources`, for example:
 
 ```yaml
 source:
@@ -87,10 +97,40 @@ for that folder. Counts assign a fixed number of files to each role; one role ma
   GP. These files do not need optical-hit data.
 - `gp_validation`, `gp_test`: held-out data for GP model selection and final evaluation.
 
+When the files already live together but CSVs define the splits, use `manifests`. Each CSV
+is assigned one role and lists its files in an `stp_file` column; paths in that column are
+relative to the CSV's directory. If a CSV has a `tier` column (`lf` or `hf`), fidelity is
+read from it. Otherwise set `fidelity` in the manifest entry. If `x_mm`, `y_mm`, and `z_mm`
+are present, they are used as the exact voxel center (converted from mm to m); otherwise the
+center is parsed from the filename.
+
+```yaml
+source:
+  manifests:
+  - path: /data/voxel_sets/voxels_LF_train.csv
+    role: cnp_train
+  - path: /data/voxel_sets/voxels_CNP_val.csv
+    role: cnp_validation
+  - path: /data/voxel_sets/voxels_LF2_train.csv
+    role: gp_unlabeled
+  - path: /data/voxel_sets/voxels_HF_train.csv
+    role: gp_train
+  - path: /data/voxel_sets/voxels_GP_val.csv
+    role: gp_validation
+```
+
+Each manifest file may appear only once, and a raw file may not be listed by multiple
+manifests. The `voxels_all.csv` union should not be included alongside its component lists.
+Manifest assignments are used directly; no random repartitioning is performed. CSV content
+and listed file size/modification times are checked for updates before each run. See
+[`config.optical.lbnl_secondment.data.yaml`](../configs/config.optical.lbnl_secondment.data.yaml)
+for the concrete LBNL dataset mapping.
+
 Do not put the same voxel in unrelated roles; the preparer checks for position overlap to
 prevent data leakage. `gp_train` and `gp_unlabeled` may overlap by design for a nested GP
-experiment. `exclude_files` lists raw files to omit, relative to their source folder; use it
-for known bad or incomplete files.
+experiment. `cnp_validation` and `gp_validation` may also share positions because both are
+held out from training. `exclude_files` lists raw files to omit, relative to their source
+folder; use it for known bad or incomplete files.
 
 ### Features, target, and split
 

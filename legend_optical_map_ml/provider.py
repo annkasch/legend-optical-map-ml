@@ -6,7 +6,7 @@ Configs select it with ``data_provider: <package>.provider:OpticalDataset`` and 
 
 from pathlib import Path
 
-from legend_optical_map_ml.view import OpticalView, voxel_centers
+from legend_optical_map_ml.view import OpticalView
 
 
 class OpticalDataset:
@@ -39,8 +39,7 @@ class OpticalDataset:
         """Voxel centers [B, 3] in m (filename or observed midrange, as configured)."""
         view = self.view
         selected = view.select(partition, fidelity)
-        rows = view.cache.locate(view.paths(selected), selected["sha256"])
-        return voxel_centers(view.cache, rows, view.config)
+        return view.centers(selected)
 
     def normalization(self):
         return self.view.meta["normalization"]
