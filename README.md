@@ -10,7 +10,8 @@ specific to the optical-map application:
 - `configs/`: data, event-model (CNP, MLP, mixup ablation) and GP configs for Ian Wang's
   centered box (`centered_425_375_375`).
 - `scripts/slurm/train_surrogate.sbatch`: Perlmutter job script.
-- `docs/optical_data.md`: data preparation, roles, event cache and inputs without hits.
+- [Configuration guide](docs/configuration.md): how to set up the data, training and GP YAML configs.
+- [Optical data guide](docs/optical_data.md): data preparation, roles, event cache and inputs without hits.
 
 Models, training, validation metrics and the multi-fidelity GP are RESUM_FLEX's.
 
@@ -43,6 +44,13 @@ On Perlmutter submit each step with
 `sbatch -q regular -t 01:00:00 scripts/slurm/train_surrogate.sbatch configs/CONFIG.yaml [train|mfgp]`.
 Outputs (prepared data, event cache, runs, Slurm logs) go to `outputs/` (not tracked).
 Test sets stay blinded until a config sets `unblind_test: true`.
+
+## Documentation
+
+- [Configuration guide](docs/configuration.md): configure data preparation, event-model runs, and GP runs.
+- [Optical data guide](docs/optical_data.md): raw inputs, role assignments, preparation, and the event cache.
+- [RESUM_FLEX configuration reference](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/configs.md): all model, training, and GP settings.
+- [RESUM_FLEX surrogate workflow](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/surrogates.md): training, validation, checkpoints, and GP workflow.
 
 ## Tests
 

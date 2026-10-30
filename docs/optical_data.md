@@ -6,6 +6,9 @@ training, validation metrics and the multi-fidelity GP are documented in RESUM_F
 (`docs/surrogates.md`); RESUM_FLEX reads these data through
 `legend_optical_map_ml.provider:OpticalDataset`.
 
+For a walkthrough of the YAML settings and how to connect a data config to a training or GP
+run config, see [configuration.md](configuration.md).
+
 ## Data preparation
 
 Prepare optical data with the library, after setting the input folders in a data config:
