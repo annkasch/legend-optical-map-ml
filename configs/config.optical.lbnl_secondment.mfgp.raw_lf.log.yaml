@@ -1,0 +1,21 @@
+# Baseline/ablation for config.optical.lbnl_secondment.mfgp.log.yaml: the same two-level MFGP,
+# but level 0 is the simulated LF hit fraction of LF2_train instead of the MLP prediction.
+# Only possible here because the LBNL LF2_train voxels are simulated with optical hits (the
+# role gp_unlabeled only means the MLP pipeline uses their inputs). No event model is involved.
+levels:
+- source: observed_fraction
+  partition: gp_unlabeled   # LF2_train, 1500 events per voxel
+  fidelity: lf
+- source: observed_fraction
+  partition: gp_train       # HF_train, 5000 events per voxel (target)
+  fidelity: hf
+evaluation:
+- {partition: gp_validation, fidelity: hf}
+output_transform: log   # log of the rate; observed fractions smoothed to (m + 0.5)/(N + 1)
+kernel: rbf
+n_restarts: 5
+seed: 0
+data_directory: ../outputs/optical_lbnl_secondment_5mm
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_config: config.optical.lbnl_secondment.data.yaml
+output_directory: ../outputs/optical_mfgp/lbnl_secondment_5mm_raw_lf_hf_log/seed0
