@@ -59,12 +59,26 @@ class RoleSource(StrictModel):
 
 
 class ManifestSource(StrictModel):
-    """A CSV file list whose rows all belong to one prepared-data role."""
+    """A CSV file list: all rows in one role, or split across roles like a RoleSource.
+
+    ``fractions``/``counts`` split the rows seeded by ``split.seed`` (one stream per manifest),
+    keeping voxel groups together, e.g. ``fractions: {gp_validation: 0.5, gp_test: 0.5}``.
+    """
 
     path: Path
-    role: Role
+    role: Role | None = None
+    fractions: dict[Role, float] | None = None
+    counts: dict[Role, int | Literal["rest"]] | None = None
     # Read from the CSV's `tier` column when present; specify this for simpler lists.
     fidelity: Literal["lf", "hf"] | None = None
+
+    @model_validator(mode="after")
+    def one_assignment(self):
+        if sum(x is not None for x in (self.role, self.fractions, self.counts)) != 1:
+            raise ValueError(f"{self.path}: give exactly one of role, fractions or counts")
+        if self.role is None:
+            RoleSource(path=self.path, fractions=self.fractions, counts=self.counts)  # same checks
+        return self
 
 
 class SourceConfig(StrictModel):

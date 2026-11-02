@@ -172,10 +172,17 @@ def assign_roles(runs, config: OpticalDataConfig, *, update=False):
 
 
 def assign_manifest_roles(runs, config: OpticalDataConfig, *, update=False):
-    """Use each file-list manifest's role directly, without randomly splitting its rows."""
+    """Use each file-list manifest's role directly, or split its rows by fractions/counts.
+
+    Split manifests divide their voxel groups seeded by ``split.seed`` (one stream per
+    manifest), filling the most underfilled role first, as for role sources.
+    """
     settings = {
         "manifests": [m.model_dump(mode="json") for m in config.source.manifests],
     }
+    if any(m.role is None for m in config.source.manifests):
+        settings["seed"] = config.split.seed
+    assignments = _manifest_assignments(runs, config)
     path = config.split.manifest
     previous = {}
     if path.exists():
@@ -186,7 +193,7 @@ def assign_manifest_roles(runs, config: OpticalDataConfig, *, update=False):
         current = {r.file: r for r in runs}
         changed = old["settings"] != settings or set(previous) != set(current) or any(
             previous[name]["fingerprint"] != run.fingerprint
-            or previous[name]["split"] != run.role
+            or previous[name]["split"] != assignments[name]
             or previous[name]["nominal_center"] != run.nominal_center.tolist()
             for name, run in current.items()
             if name in previous
@@ -194,16 +201,11 @@ def assign_manifest_roles(runs, config: OpticalDataConfig, *, update=False):
         if changed and not update:
             raise ValueError("File-list manifests changed; use explicit manifest update")
 
-    assignments = {}
-    for run in runs:
-        if run.role not in ROLES:
-            raise ValueError(f"{run.file}: manifest does not assign a valid role")
-        assignments[run.file] = run.role
     _check_shared_positions(runs, assignments, config)
 
     counts = np.zeros((len(ROLES), len(FIDELITIES)), dtype=int)
     for run in runs:
-        counts[ROLES.index(run.role), FIDELITIES.index(run.fidelity)] += 1
+        counts[ROLES.index(assignments[run.file]), FIDELITIES.index(run.fidelity)] += 1
     records = []
     for group in voxel_groups(runs, config):
         identities = sorted(set(tuple(r.nominal_center.tolist()) for r in group))
@@ -231,6 +233,29 @@ def assign_manifest_roles(runs, config: OpticalDataConfig, *, update=False):
         "overlapping_groups": sum(len(g) > 1 for g in voxel_groups(runs, config)),
     }
     return assignments, payload
+
+
+def _manifest_assignments(runs, config):
+    """Role per file: the manifest's role, or a seeded split of a fractions/counts manifest."""
+    assignments, pending = {}, {}
+    for run in runs:
+        if run.role is None:
+            pending.setdefault(run.source, []).append(run)
+        elif run.role not in ROLES:
+            raise ValueError(f"{run.file}: manifest does not assign a valid role")
+        else:
+            assignments[run.file] = run.role
+    for index, members in sorted(pending.items()):
+        groups = voxel_groups(members, config)
+        targets = role_targets(len(members), config.source.manifests[index])
+        filled = np.zeros(len(ROLES), dtype=int)
+        stream = np.random.default_rng(np.random.SeedSequence([config.split.seed, index]))
+        for i in stream.permutation(len(groups)):
+            # Most underfilled role first; zero-target roles never receive files.
+            k = int(np.argmax(np.where(targets > 0, targets - filled, -np.inf)))
+            filled[k] += len(groups[i])
+            assignments.update({r.file: ROLES[k] for r in groups[i]})
+    return assignments
 
 
 def _check_shared_positions(runs, assignments, config):
