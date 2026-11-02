@@ -72,3 +72,10 @@ def test_manifest_needs_exactly_one_assignment(tmp_path):
         ManifestSource(path=tmp_path / "a.csv", role="gp_test", fractions={"gp_test": 1.0})
     with pytest.raises(ValueError, match="sum to 1"):
         ManifestSource(path=tmp_path / "a.csv", fractions={"gp_test": 0.4})
+
+
+def test_cnp_validation_may_share_positions_with_gp_test():
+    from legend_optical_map_ml.config import SHARED_VALIDATION_ROLES
+
+    assert {"cnp_validation", "gp_test"} <= set(SHARED_VALIDATION_ROLES)
+    assert "gp_train" not in SHARED_VALIDATION_ROLES and "cnp_train" not in SHARED_VALIDATION_ROLES

@@ -1,7 +1,8 @@
 # The CSV manifests define the roles; their stp_file paths are relative to the dataset root.
 # LF_train/CNP_val are the initial event-model train/validation sets. LF2_train and HF_train
 # form the GP training inputs; GP_val is split 50/50 (seeded) into GP validation and a blinded
-# GP test set.
+# GP test set. 11 GP_val voxels share their position with CNP_val (the lists were sampled
+# independently); kept, although it leaks the CNP checkpoint choice slightly into the GP test.
 source:
   manifests:
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_LF_train.csv

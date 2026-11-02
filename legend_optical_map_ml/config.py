@@ -20,8 +20,10 @@ UNLABELED_ROLES = ("gp_unlabeled",)
 # Roles that may share positions in a nested multi-fidelity GP design, for example HF training
 # voxels at positions of LF inputs. Held-out CNP and GP validation roles may also overlap.
 GP_TRAINING_ROLES = ("gp_train", "gp_unlabeled")
-# Two validation fidelities may evaluate the same held-out position without train leakage.
-SHARED_VALIDATION_ROLES = ("cnp_validation", "gp_validation")
+# Held-out roles that may evaluate the same position. CNP validation shared with the GP test
+# leaks the checkpoint choice into the test slightly; accepted for datasets whose validation
+# lists were sampled independently (e.g. LBNL secondment), avoid it in new samplings.
+SHARED_VALIDATION_ROLES = ("cnp_validation", "gp_validation", "gp_test")
 
 
 class StrictModel(BaseModel):
