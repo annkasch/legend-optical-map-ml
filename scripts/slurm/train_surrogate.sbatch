@@ -18,11 +18,11 @@
 #SBATCH --job-name=resum-train
 #SBATCH --output=outputs/slurm_logs/%x-%j.out
 set -euo pipefail
-config=${1:?usage: sbatch scripts/slurm/train_surrogate.sbatch CONFIG.yaml [train|mfgp]}
+config=${1:?usage: sbatch scripts/slurm/train_surrogate.sbatch CONFIG.yaml [train|mfgp|binomial]}
 command=${2:-train}
 case "$command" in
-    train|mfgp) ;;
-    *) echo "Unknown command '$command'; choose train or mfgp." >&2; exit 2 ;;
+    train|mfgp|binomial) ;;
+    *) echo "Unknown command '$command'; choose train, mfgp or binomial." >&2; exit 2 ;;
 esac
 cd "$SLURM_SUBMIT_DIR"
 # Training is single-threaded (set in core.surrogates); evaluation_threads sets the eval pool.
