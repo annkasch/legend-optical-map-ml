@@ -1,0 +1,21 @@
+# Binomial count GP with the MLP as covariate: logit p = b logit(p_MLP) + c + delta(theta), on
+# the HF_train counts only (640 voxels, fast). The MLP (lbnl_secondment_5mm_mlp_v2) was trained
+# on LF_train and selected on CNP_val, never on these sets. Its mean per voxel is computed on
+# donor photons (a fresh emission sample from LF2_train voxels), so nothing of a voxel's own
+# simulation enters the covariate. Compare with config.optical.lbnl_secondment.binomial.yaml.
+observations:
+- {partition: gp_train, fidelity: hf}       # HF_train
+evaluation:
+- {partition: gp_validation, fidelity: hf}
+covariate:
+  inference:
+    gp_train/hf: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v2/seed0/inference/best/gp_train_hf_photons-gp_unlabeled_lf.npz
+    gp_validation/hf: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v2/seed0/inference/best/gp_validation_hf_photons-gp_unlabeled_lf.npz
+kernel: matern52
+n_restarts: 2
+seed: 0
+coverage_ylim: [0, 0.0065]   # fixed y range of the coverage plots
+data_directory: ../outputs/optical_lbnl_secondment_5mm
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_config: config.optical.lbnl_secondment.data.yaml
+output_directory: ../outputs/optical_binomial/lbnl_secondment_5mm_mlp_hf/seed0
