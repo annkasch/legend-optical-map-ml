@@ -10,6 +10,7 @@ evaluation:
 kernel: matern52
 n_restarts: 2
 seed: 0
+coverage_ylim: [0, 0.0065]   # fixed y range of the coverage plots
 data_directory: ../outputs/optical_lbnl_secondment_5mm
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_config: config.optical.lbnl_secondment.data.yaml

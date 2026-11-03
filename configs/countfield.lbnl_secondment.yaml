@@ -20,4 +20,6 @@ training:
   learning_rate: 1.0e-3
   holdout_fraction: 0.1
   eval_every: 100
+evaluation:
+  coverage_ylim: [0, 0.0065]   # fixed y range of the coverage plots
 output_directory: ../outputs/countfield/lbnl_secondment_5mm/seed0
