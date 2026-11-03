@@ -9,13 +9,14 @@ data:
   evaluation: [gp_validation/hf]
   merge_decimals: 6   # m; positions agreeing to 1 µm are the same voxel
 model:
+  kind: local_latent
   neighbours: 32
   hidden: 64
   heads: 4
+  batch_size: 256
 training:
   seed: 0
   steps: 5000
-  batch_size: 256
   learning_rate: 1.0e-3
   holdout_fraction: 0.1
   eval_every: 100
