@@ -1,0 +1,22 @@
+# countfield local-latent neural process on the LBNL secondment counts: the same observed
+# voxels as config.optical.lbnl_secondment.binomial.yaml (LF2_train, 1500 events per voxel, and
+# HF_train, 5000 events per voxel). 320 HF voxels share their position with an LF2 voxel
+# (independent simulations); they are merged by summing hits and events.
+# Counts file: scripts/export_counts.py (gp_test stays blinded and is not exported).
+data:
+  path: ../outputs/countfield/lbnl_secondment_5mm_counts.npz
+  observations: [gp_unlabeled/lf, gp_train/hf]
+  evaluation: [gp_validation/hf]
+  merge_decimals: 6   # m; positions agreeing to 1 µm are the same voxel
+model:
+  neighbours: 32
+  hidden: 64
+  heads: 4
+training:
+  seed: 0
+  steps: 5000
+  batch_size: 256
+  learning_rate: 1.0e-3
+  holdout_fraction: 0.1
+  eval_every: 100
+output_directory: ../outputs/countfield/lbnl_secondment_5mm/seed0
