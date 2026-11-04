@@ -180,7 +180,7 @@ class NormalizationConfig(StrictModel):
 class OpticalDataConfig(StrictModel):
     source: SourceConfig
     output_directory: Path = Path("outputs/optical_data")
-    # Shared float32 copy of the raw files (data/event_cache.py); by default next to
+    # Shared float32 copy of the raw files (event_cache.py); by default next to
     # output_directory, so data configs writing to the same parent folder share it.
     cache_directory: Path | None = None
     theta: ThetaConfig = Field(default_factory=ThetaConfig)

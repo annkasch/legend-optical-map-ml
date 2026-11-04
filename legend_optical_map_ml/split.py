@@ -85,9 +85,9 @@ def role_targets(n: int, source: RoleSource) -> np.ndarray:
 def assign_roles(runs, config: OpticalDataConfig, *, update=False):
     """Split each role source's LF voxels by its own fractions or counts.
 
-    Voxel groups never cross roles. A group spanning two folders is rejected, because the
-    folders may prescribe different roles for it. Assignments of unchanged files are kept
-    while the split settings stay the same.
+    Voxel groups never cross roles. Groups are formed per folder; a position shared by two
+    folders must end up in the same role (or an allowed pair, see _check_shared_positions).
+    Assignments of unchanged files are kept while the split settings stay the same.
     """
     path = config.split.manifest
     sources = config.source.sources
@@ -369,7 +369,10 @@ def assign_splits(runs, config: OpticalDataConfig, *, update=False):
     payload = {
         "version": 1,
         "settings": settings,
-        "policy": {"lf_train_only": config.split.lf_train_only, "hf_train_count": config.split.hf_train_count},
+        "policy": {
+            "lf_train_only": config.split.lf_train_only,
+            "hf_train_count": config.split.hf_train_count,
+        },
         "files": sorted(records, key=lambda r: r["file"]),
         "targets": targets.tolist(),
         "actual_counts": counts.tolist(),

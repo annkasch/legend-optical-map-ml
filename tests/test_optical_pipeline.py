@@ -344,7 +344,9 @@ def test_multiple_input_folders_deduplicate_and_keep_identities(tmp_path):
     alias = tmp_path / "alias"
     alias.mkdir()
     (alias / first.name).symlink_to(first)
-    source = SourceConfig(directories={"lf": [first.parent, second.parent, alias], "hf": [high.parent]})
+    source = SourceConfig(
+        directories={"lf": [first.parent, second.parent, alias], "hf": [high.parent]}
+    )
     runs, excluded = read_optical_runs(source)
     assert len(runs) == 3 and not excluded
     assert {r.file for r in runs} == {f"lf/{first.name}", f"lf/{second.name}", f"hf/{high.name}"}
@@ -380,7 +382,10 @@ def test_preparation_config_resolves_folder_lists(tmp_path):
     from legend_optical_map_ml.config import load_optical_config
 
     path = tmp_path / "data.yaml"
-    path.write_text('source:\n  directories:\n    lf: [lf1, lf2]\n    hf: [hf]\noutput_directory: prepared\nsplit:\n  manifest: split.json\n')
+    path.write_text(
+        "source:\n  directories:\n    lf: [lf1, lf2]\n    hf: [hf]\n"
+        "output_directory: prepared\nsplit:\n  manifest: split.json\n"
+    )
     c = load_optical_config(path)
     assert c.source.directories['lf'] == [tmp_path / 'lf1', tmp_path / 'lf2']
     assert c.output_directory == tmp_path / 'prepared'
@@ -555,9 +560,10 @@ def test_role_manifest_keeps_assignments_and_detects_changes(tmp_path):
 
 def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
     from core.surrogates.experiment import run_experiment
+    from schemas.surrogates import SurrogateRunConfig
+
     from legend_optical_map_ml.config import OpticalDataConfig
     from legend_optical_map_ml.view import OpticalView
-    from schemas.surrogates import SurrogateRunConfig
 
     root = tmp_path / "inputs"
     centers = {

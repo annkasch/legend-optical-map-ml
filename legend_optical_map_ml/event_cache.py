@@ -24,7 +24,7 @@ and compacting must not run while another process reads the cache.
 
 Command line::
 
-    python -m legend_optical_map_ml.event_cache update CONFIG.yaml   # cache the inputs of a data config
+    python -m legend_optical_map_ml.event_cache update CONFIG.yaml  # cache a data config's inputs
     python -m legend_optical_map_ml.event_cache compact CACHE_DIR
 """
 
@@ -81,7 +81,7 @@ def _read_file(path: Path):
     try:
         import h5py
     except ImportError as exc:
-        raise ImportError("Install resum-flex[optical-data] to read LH5 files") from exc
+        raise ImportError("Install h5py to read LH5 files") from exc
     data = path.read_bytes()
     digest = np.frombuffer(hashlib.sha256(data).digest(), dtype=np.uint8)
     with h5py.File(io.BytesIO(data), "r") as h:

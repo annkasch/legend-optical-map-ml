@@ -64,7 +64,7 @@ Its main settings are:
 | `theta` | How the voxel's nominal position becomes the model's spatial input. |
 | `phi` | Which per-event inputs are used and how vertex and momentum are represented. |
 | `target` | Which optical-hit outcome is predicted. |
-| `split` | Seed and manifest for reproducible voxel assignment. In a role-based `source.sources` config, only `seed` and `manifest` apply. |
+| `split` | Seed and manifest for reproducible voxel assignment. With `source.sources` or `source.manifests`, only `seed` and `manifest` apply. |
 | `normalization` | How input features are scaled. Statistics are fitted on training data and reused for all roles. |
 
 ### Choosing raw sources and roles
@@ -153,8 +153,8 @@ folder; use it for known bad or incomplete files.
 - `normalization.fit_fidelities` optionally restricts which fidelities contribute to the
   normalization statistics. If omitted, all eligible training-role data are used.
 
-With explicit `source.sources`, the role assignment is the split, so leave the other split
-fraction fields at their defaults. The centered example sets `split.seed` and `manifest`.
+With explicit `source.sources` or `source.manifests`, the role assignment is the split, so
+leave the other split fields at their defaults; the preparer rejects any other value. The centered example sets `split.seed` and `manifest`.
 
 ## Training run config
 

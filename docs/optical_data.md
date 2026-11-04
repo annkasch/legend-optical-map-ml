@@ -59,7 +59,7 @@ split:
 Splitting keeps whole voxels together and is seeded per folder; the global split fractions
 are rejected in this layout. A voxel position shared by different roles is an error, except
 between `gp_train` and `gp_unlabeled` (nested multi-fidelity design: HF voxels at positions of
-LF inputs). Normalization is fitted on `cnp_train` and applied to every role and fidelity.
+LF inputs) and between `cnp_validation` and `gp_validation` (both held out from training). Normalization is fitted on `cnp_train` and applied to every role and fidelity.
 `python -m core.surrogates train` reads `cnp_train`, `cnp_validation` (with
 `lf_validation: true`) and `cnp_test` (with `test_fidelities: [lf]` and `unblind_test`). Set
 `hf_validation: false`; the HF roles are GP levels and evaluation sets (`mfgp` levels name the
@@ -85,8 +85,9 @@ regenerated is recorded in the run's `experiment.json`.
 Simulations without optical output (vertex and momentum only, e.g. `LF_primaries`) go into
 the role `gp_unlabeled`. The event cache stores them with `labeled = False`; reading their
 labels or hits raises, and preparation fails if such a file lands in a labeled role. Their
-partition loads only through `OpticalView(dir)` (`legend_optical_map_ml.view`.load_inputs(partition, fidelity)`, whose
-labels are a zero placeholder for the `StandardBatch` contract and must never be scored.
+partition loads only through `OpticalView(dir).load_inputs(partition, fidelity)` (in
+`legend_optical_map_ml.view`), whose labels are a zero placeholder for the `StandardBatch`
+contract and must never be scored.
 
 ```bash
 .venv/bin/python -m core.surrogates predict RUN/checkpoints/best DATA_DIR gp_unlabeled --threads 8
@@ -120,7 +121,7 @@ settings never rewrites the cache.
 
 A prepared dataset is a view on the cache: `view.npy` lists each file's partition, fidelity,
 path and sha256, and `view.json` stores the cache directory, data config and normalization.
-`load_partition(directory, partition, fidelity)` (in `data.optical_pipeline`) builds the
+`load_partition(directory, partition, fidelity)` (in `legend_optical_map_ml.pipeline`) builds the
 normalized `StandardBatch` (phi in float32) and returns its provenance: a sha256 over the
 selected files' contents and `view.json`. Loading checks that the cache still holds the same
 file contents. Normalization is fitted with streaming moments over the training files, so
@@ -146,8 +147,8 @@ the preparation YAML. Repeated references/symlinks to the same physical file
 are loaded once. Different files with the same fidelity and basename, and the
 same physical file assigned to both fidelities, are rejected as ambiguous.
 Splitting and training-only normalization happen after collecting all folders.
-Event counts may differ between voxels (see "Unequal event counts per voxel");
-mixing primary budgets within LF remains a separate, retired modeling choice.
+Event counts may differ between voxels; ragged partitions are zero-padded and carry
+per-voxel `event_counts`. Mixing primary budgets within LF remains a separate, retired modeling choice.
 
 ## Automatic preparation
 

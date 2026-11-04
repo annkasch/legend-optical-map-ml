@@ -24,4 +24,6 @@ remain blocked by `afterok` and will not run.
 
 The wrapper accepts additional `sbatch` options after the two config paths. For example,
 `-q regular -t 01:00:00` applies the requested queue and time limit to all three jobs. Set
-`PREDICT_THREADS` to change the prediction worker count; its default is 8.
+`PREDICT_THREADS` to change the prediction worker count; its default is 8. The MFGP job runs
+with `GP_BLAS_THREADS` BLAS threads (default 32). Set `GP_TIME` (e.g. `GP_TIME=12:00:00`) to
+give the MFGP job its own time limit; GP fitting time grows steeply with the number of voxels.

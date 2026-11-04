@@ -146,7 +146,7 @@ def read_run(path: Path, root: Path, *, fidelity: str | None = None) -> OpticalR
     try:
         import h5py
     except ImportError as exc:
-        raise ImportError("Install resum-flex[optical-data] to read LH5 files") from exc
+        raise ImportError("Install h5py to read LH5 files") from exc
     try:
         relative = (
             path.relative_to(root).as_posix() if fidelity is None else f"{fidelity}/{path.name}"
@@ -385,7 +385,6 @@ def select_inputs(config: SourceConfig) -> tuple[list[tuple], list[dict]]:
     for item, resolved in zip(inputs, resolved_paths, strict=True):
         path, root = item.path, item.root
         name = item.relative_name or path.relative_to(root).as_posix()
-        explicit_fidelity = item.fidelity
         fidelity = name.split("/", 1)[0]
         if resolved in seen_paths:
             if config.manifests:

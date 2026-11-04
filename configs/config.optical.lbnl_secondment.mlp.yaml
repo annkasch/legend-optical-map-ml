@@ -34,6 +34,6 @@ data_directory: ../outputs/optical_lbnl_secondment_5mm
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 partitions: {train: cnp_train, validation: cnp_validation, test: cnp_test}
 data_config: config.optical.lbnl_secondment.data.yaml
-output_directory: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v1/seed0
+output_directory: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v2/seed0
 selection_max_voxels: 500
 evaluation_threads: 16

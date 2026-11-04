@@ -93,7 +93,13 @@ predict_result=$(sbatch --parsable "${scheduler_options[@]}" \
     "$checkpoint" "$data_directory" "$partition" --fidelity "$fidelity" --threads "$predict_threads")
 predict_job=${predict_result%%;*}
 
-gp_result=$(sbatch --parsable "${scheduler_options[@]}" \
+# GP fits profit from many BLAS threads; training stays single-threaded.
+gp_options=()
+if [[ -n "${GP_TIME:-}" ]]; then
+    gp_options+=(--time="$GP_TIME")
+fi
+gp_result=$(BLAS_THREADS=${GP_BLAS_THREADS:-32} sbatch --parsable "${scheduler_options[@]}" \
+    "${gp_options[@]}" \
     --dependency="afterok:$predict_job" \
     --job-name=surrogate-mfgp \
     scripts/slurm/train_surrogate.sbatch "$gp_config" mfgp)

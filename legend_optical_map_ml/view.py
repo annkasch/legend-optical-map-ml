@@ -140,7 +140,7 @@ class OpticalView:
         if not len(view):
             raise FileNotFoundError(f"{self.directory}: no {fidelity} files in {partition}")
         paths = self.paths(view)
-        rows = self.cache.locate(paths, view["sha256"])
+        self.cache.locate(paths, view["sha256"])  # the cache must still hold these contents
         centers = self.centers(view)
         transform = AffineTransform(**self.meta["normalization"]["theta"])
         return transform.transform(theta_features(centers, self.config)[0]), paths
