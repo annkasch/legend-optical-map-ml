@@ -28,3 +28,28 @@ Each rate model predicts a rate and its uncertainty for every benchmark voxel. T
 compared with the observed HF counts using the same metrics: count NLL, MAE, RMSE, CRPS,
 Pearson r, bias and coverage, together with the compute of the whole pipeline (core-hours,
 from each run's `compute.json`).
+
+## Running the benchmark
+
+```bash
+python -m legend_optical_map_ml.benchmark configs/benchmark.lbnl_secondment.yaml
+```
+
+The tool only reads finished runs, so it is cheap (fine on a login node). Each entry of
+`models` names a `label`, a `kind` and the `run` directory holding its benchmark prediction:
+
+| kind | prediction read from the run |
+|---|---|
+| `binomial_gp`, `mfgp` | `evaluation_<e>.npz` of the benchmark set (MFGP: target level) |
+| `countfield` | `evaluation_<partition>_<fidelity>.npz` |
+| `event_model` | `inference/<checkpoint>/…_predictive.npz` and `_scores.json`; score the checkpoint first with `scripts/score_event_model.py` (`checkpoint`, `donors` select the file) |
+
+`compute` lists every run of the model's pipeline: a run directory (`compute.json`), a json
+file with a `compute` entry, or `slurm_job: ID` for runs from before `compute.json` (wall
+time, `TotalCPU` and `AllocCPUS` from `sacct`; `threads_per_core` converts logical CPUs to
+cores). Without it, the run's own records are used. All models must score the same voxels
+in the same order; `reference` names the model for the paired NLL difference. Test
+partitions need `unblind_test: true`.
+
+`output_directory` receives `report.md` (table, definitions, runs), `benchmark.csv`,
+`benchmark.json` and `benchmark.{png,pdf}`; the report is rewritten on every call.

@@ -86,7 +86,7 @@ Test sets stay blinded until a config sets `unblind_test: true`.
 
 - [Configuration guide](docs/configuration.md): configure data preparation, event-model runs, and GP runs.
 - [Optical data guide](docs/optical_data.md): raw inputs, role assignments, preparation, and the event cache.
-- [Benchmark protocol](docs/benchmark.md): how all models are compared on the same held-out HF voxels.
+- [Benchmark protocol](docs/benchmark.md): how all models are compared on the same held-out HF voxels, and the report tool (`python -m legend_optical_map_ml.benchmark`).
 - [RESUM_FLEX configuration reference](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/configs.md): all model, training, and GP settings.
 - [RESUM_FLEX surrogate workflow](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/surrogates.md): training, validation, checkpoints, and GP workflow.
 

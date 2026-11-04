@@ -1,0 +1,63 @@
+# Benchmark of the LBNL 5 mm rate models on GP_val (docs/benchmark.md):
+#   python -m legend_optical_map_ml.benchmark configs/benchmark.lbnl_secondment.yaml
+# Reads finished runs only. Runs from before compute.json (2026-11-04) give their Slurm jobs.
+# The last-layer MLP and field runs listed here trained on LF train (cnp_train), from before
+# the rule that rate models train on LF2 + HF train; rerun them with the current configs.
+title: LBNL 5 mm rate models
+partition: gp_validation
+fidelity: hf
+reference: Binomial GP
+output_directory: /global/cfs/projectdirs/m2676/users/aschuetz/data/benchmarks/lbnl_secondment_5mm_gp_validation
+models:
+- label: Binomial GP
+  kind: binomial_gp
+  run: ../outputs/optical_binomial/lbnl_secondment_5mm/seed0
+  compute: [{slurm_job: 60723878}]
+- label: GP + MLP (LF2 + HF)
+  kind: binomial_gp
+  run: ../outputs/optical_binomial/lbnl_secondment_5mm_mlp_lf2_hf/seed0
+  note: MLP v2 as covariate; compute = MLP training + donor inference + GP fit.
+  compute: [{slurm_job: 60576744}, {slurm_job: 60755892}, {slurm_job: 60756277}]
+- label: GP + MLP (HF)
+  kind: binomial_gp
+  run: ../outputs/optical_binomial/lbnl_secondment_5mm_mlp_hf/seed0
+  note: Ablation, GP on HF train only; compute = MLP training + donor inference + GP fit.
+  compute: [{slurm_job: 60576744}, {slurm_job: 60755892}, {slurm_job: 60756276}]
+- label: Neural process
+  kind: countfield
+  run: ../outputs/countfield/lbnl_secondment_5mm/seed0
+  compute: [{slurm_job: 60721477}]
+- label: RESuM MLP → MFGP
+  kind: mfgp
+  run: ../outputs/optical_mfgp/lbnl_secondment_5mm_mlp_v2_hf_log_split/seed0
+  note: compute = MLP training + LF2 inference + MFGP fit.
+  compute: [{slurm_job: 60576744}, {slurm_job: 60576745}, {slurm_job: 60715038}]
+- label: MFGP raw LF
+  kind: mfgp
+  run: ../outputs/optical_mfgp/lbnl_secondment_5mm_raw_lf_hf_log/seed0
+  compute: [{slurm_job: 60715028}]
+- label: MLP + BLL
+  kind: event_model
+  run: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_bll/seed0
+  note: Trained on LF train; HF scoring compute not recorded.
+  compute: [{slurm_job: 60776076}]
+- label: Field f1
+  kind: event_model
+  run: ../outputs/optical_resum/lbnl_secondment_5mm_field_f1/seed0
+  note: Trained on LF train; HF scoring compute not recorded.
+  compute: [{slurm_job: 60776077}]
+- label: Field f2
+  kind: event_model
+  run: ../outputs/optical_resum/lbnl_secondment_5mm_field_f2/seed0
+  note: Trained on LF train; HF scoring compute not recorded.
+  compute: [{slurm_job: 60776078}]
+- label: Field f4
+  kind: event_model
+  run: ../outputs/optical_resum/lbnl_secondment_5mm_field_f4/seed0
+  note: Trained on LF train; HF scoring compute not recorded.
+  compute: [{slurm_job: 60776080}]
+- label: Field f8
+  kind: event_model
+  run: ../outputs/optical_resum/lbnl_secondment_5mm_field_f8/seed0
+  note: Trained on LF train; HF scoring compute not recorded.
+  compute: [{slurm_job: 60776081}]
