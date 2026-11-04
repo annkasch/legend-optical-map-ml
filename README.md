@@ -9,7 +9,15 @@ specific to the optical-map application:
   provider RESUM_FLEX reads the prepared data through.
 - `configs/`: data, event-model (CNP, MLP, mixup ablation) and GP configs for Ian Wang's
   centered box (`centered_425_375_375`), plus [LBNL CSV-manifest data](configs/config.optical.lbnl_secondment.data.yaml)
-  and [MLP run](configs/config.optical.lbnl_secondment.mlp.yaml) examples.
+  with the models compared on it (see the [benchmark protocol](docs/benchmark.md)):
+  - event models: [MLP](configs/config.optical.lbnl_secondment.mlp.yaml), MLP with a Bayesian
+    last layer (`mlp_bll`), neural fields (`field_f1` … `field_f8`, maximum Fourier frequency);
+  - GPs: binomial count GP (`binomial`, with the MLP covariate: `binomial.mlp`,
+    `binomial.mlp_lf2`), log-space MFGP on the MLP mean (`mfgp.log`) or raw LF (`mfgp.raw_lf.log`);
+  - [countfield](https://github.com/annkasch/countfield) runs (`countfield.lbnl_secondment*`):
+    neural process and Point Transformer variants.
+- `scripts/`: `export_counts.py` / `export_photons.py` (countfield inputs),
+  `score_event_model.py` (a Bayesian-last-layer checkpoint scored on HF validation voxels).
 - `scripts/slurm/`: Perlmutter job scripts for individual stages and dependent pipelines.
 - [Configuration guide](docs/configuration.md): how to set up the data, training and GP YAML configs.
 - [Optical data guide](docs/optical_data.md): data preparation, roles, event cache and inputs without hits.
@@ -78,6 +86,7 @@ Test sets stay blinded until a config sets `unblind_test: true`.
 
 - [Configuration guide](docs/configuration.md): configure data preparation, event-model runs, and GP runs.
 - [Optical data guide](docs/optical_data.md): raw inputs, role assignments, preparation, and the event cache.
+- [Benchmark protocol](docs/benchmark.md): how all models are compared on the same held-out HF voxels.
 - [RESUM_FLEX configuration reference](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/configs.md): all model, training, and GP settings.
 - [RESUM_FLEX surrogate workflow](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/surrogates.md): training, validation, checkpoints, and GP workflow.
 

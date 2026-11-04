@@ -623,11 +623,52 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
     )
 
     run_config = yaml_safe_config(data.output_directory, tmp_path / "run")
-    run_config["model"] = {"kind": "mlp", "architecture": {"hidden_dims": [8]}}
+    run_config["model"] = {
+        "kind": "mlp",
+        "architecture": {"hidden_dims": [8]},
+        "last_layer": {"draws": 100},
+    }
     run_config["hf_validation"] = False
     run_config["test_fidelities"] = []
     result = run_experiment(SurrogateRunConfig.model_validate(run_config))
     assert (result / "checkpoints/best/model.json").is_file()
+
+    # scripts/score_event_model.py: HF validation scored with donor photons, then reused.
+    import runpy
+    import sys
+    from pathlib import Path
+
+    script = Path(__file__).parents[1] / "scripts/score_event_model.py"
+    argv = [
+        str(script),
+        str(result / "checkpoints/best"),
+        str(data.output_directory),
+        "--donors",
+        "cnp_train/lf",
+        "--threads",
+        "1",
+        "--plot-directory",
+        str(tmp_path / "plots"),
+        "--label",
+        "mlp",
+    ]
+    stem = result / "inference/best/gp_validation_hf_photons-cnp_train_lf"
+    for _ in range(2):  # the second call reuses the inference file
+        old, sys.argv = sys.argv, argv
+        try:
+            runpy.run_path(str(script), run_name="__main__")
+        finally:
+            sys.argv = old
+        scores = json.loads(stem.with_name(stem.name + "_scores.json").read_text())
+        assert np.isfinite(scores["plugin_count_nll"]) and scores["donors"] == "cnp_train/lf"
+        assert scores["compute"]["inference"]["stages"][-1]["name"] == "prediction"
+    assert (tmp_path / "plots/mlp_gp_validation_hf_coverage.png").is_file()
+    with pytest.raises(SystemExit, match="donor seed"):
+        old, sys.argv = sys.argv, [*argv, "--seed", "1"]
+        try:
+            runpy.run_path(str(script), run_name="__main__")
+        finally:
+            sys.argv = old
 
 
 def test_cnp_run_on_role_data_rejects_missing_hf(tmp_path):
