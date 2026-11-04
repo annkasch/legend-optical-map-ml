@@ -1,5 +1,8 @@
 # Neural field scan (2026-11-03), max_frequency = 8: same data, split and training as the
-# MLP v2 / mlp_bll runs; continuous emission position, spherical-harmonic direction.
+# mlp_bll run; continuous emission position, spherical-harmonic direction.
+# Benchmark rule (docs/benchmark.md, 2026-11-04): a model that predicts voxel rates itself trains
+# on the GP's training data, LF2 + HF train; checkpoints are still selected on LF validation
+# (cnp_validation). The earlier runs on cnp_train are in the output folder without _lf2hf.
 model:
   kind: field
   architecture:
@@ -40,8 +43,11 @@ hf_validation: false
 test_fidelities: [] # No dedicated CNP test list is provided in this dataset.
 data_directory: ../outputs/optical_lbnl_secondment_5mm
 data_provider: legend_optical_map_ml.provider:OpticalDataset
-partitions: {train: cnp_train, validation: cnp_validation, test: cnp_test}
+train_sets:
+- {partition: gp_unlabeled, fidelity: lf}   # LF2_train
+- {partition: gp_train, fidelity: hf}       # HF_train
+partitions: {validation: cnp_validation, test: cnp_test}
 data_config: config.optical.lbnl_secondment.data.yaml
-output_directory: ../outputs/optical_resum/lbnl_secondment_5mm_field_f8/seed0
+output_directory: ../outputs/optical_resum/lbnl_secondment_5mm_field_f8_lf2hf/seed0
 selection_max_voxels: 500
 evaluation_threads: 16

@@ -1,3 +1,5 @@
+# Ablation outside the benchmark rule (docs/benchmark.md): the GP sees HF train only, not LF2 +
+# HF train; the rule-conforming variant is config.optical.lbnl_secondment.binomial.mlp_lf2.yaml.
 # Binomial count GP with the MLP as covariate: logit p = b logit(p_MLP) + c + delta(theta), on
 # the HF_train counts only (640 voxels, fast). The MLP (lbnl_secondment_5mm_mlp_v2) was trained
 # on LF_train and selected on CNP_val, never on these sets. Its mean per voxel is computed on
