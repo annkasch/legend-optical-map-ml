@@ -19,8 +19,7 @@ specific to the optical-map application:
 - `scripts/`: `export_counts.py` / `export_photons.py` (countfield inputs),
   `score_event_model.py` (a Bayesian-last-layer checkpoint scored on HF validation voxels).
 - `scripts/slurm/`: Perlmutter job scripts for individual stages and dependent pipelines.
-- [Configuration guide](docs/configuration.md): how to set up the data, training and GP YAML configs.
-- [Optical data guide](docs/optical_data.md): data preparation, roles, event cache and inputs without hits.
+- `docs/`: one short file per topic, listed in the [docs index](docs/index.md).
 
 Models, training, validation metrics and the multi-fidelity GP are RESUM_FLEX's.
 
@@ -75,7 +74,7 @@ scripts/slurm/submit_surrogate_pipeline.sh \
   -q regular -t 01:00:00
 ```
 
-See [the Slurm pipeline guide](docs/slurm_pipeline.md) for details.
+See [the Slurm guide](docs/slurm.md) for details.
 
 The batch script uses this checkout's `.venv/bin/python` by default; set `RESUM_PYTHON` to
 the executable path of another interpreter if needed.
@@ -84,11 +83,10 @@ Test sets stay blinded until a config sets `unblind_test: true`.
 
 ## Documentation
 
-- [Configuration guide](docs/configuration.md): configure data preparation, event-model runs, and GP runs.
-- [Optical data guide](docs/optical_data.md): raw inputs, role assignments, preparation, and the event cache.
-- [Benchmark protocol](docs/benchmark.md): how all models are compared on the same held-out HF voxels, and the report tool (`python -m legend_optical_map_ml.benchmark`).
-- [RESUM_FLEX configuration reference](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/configs.md): all model, training, and GP settings.
-- [RESUM_FLEX surrogate workflow](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/surrogates.md): training, validation, checkpoints, and GP workflow.
+[docs/index.md](docs/index.md) lists one file per topic and when to read it: design, datasets,
+data configs, preparation, event cache, run configs, photon store, benchmark, countfield
+exports and Slurm. Toolkit topics (models, training, GPs, metrics): the
+[RESUM_FLEX docs index](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/index.md).
 
 ## Tests
 
