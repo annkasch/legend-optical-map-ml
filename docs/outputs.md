@@ -33,5 +33,5 @@ All runs made before this layout were moved here on 2026-11-07; their JSON recor
 view provenance) were rewritten to the new folders, including the centered runs' older
 `RESUM_FLEX/outputs/...` paths from before the repository split. Runs whose recorded view hash
 was already stale before the move still fail the residual stage's provenance check: lbnl
-`mlp_v1`, `mlp_v2`, `mfgp_mlp_v2_hf_log*`, `mfgp_debug_*` (made before the lbnl view was
+`mlp_v1`, `mlp_v2`, `mfgp_mlp_v2_hf_log*` (made before the lbnl view was
 rebuilt on 2026-11-02) and every centered run (made from views built in RESUM_FLEX).
