@@ -6,7 +6,7 @@
 sources:
 - path: /pscratch/sd/a/aschuetz/genesis-remage/box_x+300+500_y-100+100_z-100+100/results
   name: box_x+300+500_y-100+100_z-100+100
-store: /pscratch/sd/a/aschuetz/photon_stores/genesis_box_x+300+500
+store: ../outputs/photon_x+300+500_y-100+100_z-100+100/data
 shard_photons: 100000000
 split:
   seed: 0

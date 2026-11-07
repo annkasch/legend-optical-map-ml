@@ -24,7 +24,7 @@ training:
   precision: bf16
   compile: false
   validation_events: null     # all 800k validation photons
-event_store: /pscratch/sd/a/aschuetz/photon_stores/genesis_box_x+300+500
+event_store: ../outputs/photon_x+300+500_y-100+100_z-100+100/data
 event_source: legend_optical_map_ml.photon_loader:PhotonStream
 dim_theta: 3                 # voxel centre
 dim_phi: 6                   # emission offset (3) + momentum (3)

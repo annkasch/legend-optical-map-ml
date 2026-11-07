@@ -7,7 +7,7 @@ photon store (config `configs/photons.*.yaml`, schema `config.py:PhotonStoreConf
 
 ```bash
 python -m legend_optical_map_ml.photon_store build configs/photons.genesis_box_x+300+500.yaml --workers 8
-python -m legend_optical_map_ml.photon_store info /pscratch/sd/a/aschuetz/photon_stores/genesis_box_x+300+500
+python -m legend_optical_map_ml.photon_store info outputs/photon_x+300+500_y-100+100_z-100+100/data
 # Large campaigns: plan once, convert tasks in a Slurm array, then finalize
 python -m legend_optical_map_ml.photon_store plan CONFIG.yaml
 python -m legend_optical_map_ml.photon_store run CONFIG.yaml --task-index $SLURM_ARRAY_TASK_ID --task-count N

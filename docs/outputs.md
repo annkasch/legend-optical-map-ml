@@ -10,7 +10,8 @@ outputs/
     data/                      prepared view: the data YAML's output_directory
     event_learning/<run>/seedN networks: MLP, CNP, BLL MLP, neural field
     regression/<run>/seedN     GPs: binomial_*, mfgp_*
-  photon_<volume>/             one homogeneous photon box (its store stays at `store:`)
+  photon_<volume>/             one homogeneous photon box
+    data/                      photon store: the store YAML's `store:` (photon-store.md)
     event_learning/<run>/seedN networks trained on that photon store
 ```
 

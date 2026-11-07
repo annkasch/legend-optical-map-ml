@@ -48,8 +48,8 @@ On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data ca
 - Voxel sets `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, same sampling and roles as LBNL.
   Data config: `config.optical.genesis_x+300+500_5mm.data.yaml`.
 - Homogeneous box `box_x+300+500_y-100+100_z-100+100` (32 chunks of 400k isotropic photons,
-  9.68 ± 0.22 eV) → photon store `/pscratch/sd/a/aschuetz/photon_stores/genesis_box_x+300+500`
-  (`configs/photons.genesis_box_x+300+500.yaml`, `docs/photon-store.md`).
+  9.68 ± 0.22 eV) → photon store `outputs/photon_x+300+500_y-100+100_z-100+100/data` (moved from `$PSCRATCH`
+  2026-11-07; `configs/photons.genesis_box_x+300+500.yaml`, `docs/photon-store.md`).
 
 ## Older by-primaries layout
 
