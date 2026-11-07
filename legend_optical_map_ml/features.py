@@ -142,6 +142,37 @@ class RunningMoments:
         self.n = total
         return self
 
+    def merge(self, other: "RunningMoments") -> "RunningMoments":
+        """Add the rows summarized by ``other`` (Chan's parallel update; exact)."""
+        if other.n == 0:
+            return self
+        if self.n == 0:
+            self.n, self.mean, self.m2 = other.n, np.array(other.mean), np.array(other.m2)
+            self.min, self.max = np.array(other.min), np.array(other.max)
+            return self
+        total = self.n + other.n
+        delta = np.asarray(other.mean) - self.mean
+        self.mean = self.mean + delta * (other.n / total)
+        self.m2 = self.m2 + np.asarray(other.m2) + np.square(delta) * (self.n * other.n / total)
+        self.min = np.minimum(self.min, other.min)
+        self.max = np.maximum(self.max, other.max)
+        self.n = total
+        return self
+
+    def to_dict(self) -> dict:
+        return dict(
+            n=int(self.n),
+            **{k: np.asarray(getattr(self, k)).tolist() for k in ("mean", "m2", "min", "max")},
+        )
+
+    @classmethod
+    def from_dict(cls, values: dict) -> "RunningMoments":
+        moments = cls()
+        moments.n = int(values["n"])
+        for k in ("mean", "m2", "min", "max"):
+            setattr(moments, k, np.asarray(values[k], dtype=float))
+        return moments
+
 
 @dataclass
 class AffineTransform:

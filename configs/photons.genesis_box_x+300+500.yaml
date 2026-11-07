@@ -1,0 +1,14 @@
+# Photon store of the homogeneous genesis-remage box x 300..500 mm, y -100..100, z -100..100
+# (32 chunks of 400k photons, isotropic, 9.68 ± 0.22 eV): every photon, float32 position and
+# momentum (legend_optical_map_ml/photon_store.py). Training data of the neural field; the
+# field is evaluated on the voxel campaign (config.optical.genesis_x+300+500_5mm.data.yaml).
+# shard_photons, split and seed are fixed once the store exists; sources may be added.
+sources:
+- path: /pscratch/sd/a/aschuetz/genesis-remage/box_x+300+500_y-100+100_z-100+100/results
+  name: box_x+300+500_y-100+100_z-100+100
+store: /pscratch/sd/a/aschuetz/photon_stores/genesis_box_x+300+500
+shard_photons: 100000000
+split:
+  seed: 0
+  fractions: {train: 0.9, validation: 0.05, test: 0.05}
+seed: 0

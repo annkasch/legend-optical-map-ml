@@ -236,3 +236,74 @@ def load_optical_config(path: str | Path) -> OpticalDataConfig:
     resolve_cache_directory(config, resolve)
     config.split.manifest = resolve(config.split.manifest)
     return config
+
+
+# --- Photon store: ungrouped photons (e.g. homogeneous campaigns) for event models ----------
+
+PhotonSplitName = Literal["train", "validation", "test"]
+
+
+class PhotonSource(StrictModel):
+    """LH5 files ``path/pattern``; ``name`` prefixes their keys (default: the folder name).
+
+    A file's key ``<name>/<path relative to the folder>`` decides its split, so moving the data
+    keeps the split as long as name and relative path stay the same.
+    """
+
+    path: Path
+    pattern: str = "*.stp.lh5"
+    name: str | None = None
+
+    @property
+    def key_prefix(self) -> str:
+        return self.name or self.path.name
+
+
+class PhotonSplitConfig(StrictModel):
+    seed: int = 0
+    fractions: dict[PhotonSplitName, float] = Field(
+        default_factory=lambda: {"train": 0.9, "validation": 0.05, "test": 0.05}
+    )
+
+    @model_validator(mode="after")
+    def check_fractions(self):
+        values = list(self.fractions.values())
+        if any(not 0 <= v <= 1 for v in values) or abs(sum(values) - 1) > 1e-9:
+            raise ValueError("photon split fractions must lie in [0, 1] and sum to 1")
+        if self.fractions.get("train", 0) == 0:
+            raise ValueError("the train split needs a nonzero fraction")
+        return self
+
+
+class PhotonStoreConfig(StrictModel):
+    """Settings of a photon store (photon_store.py). Fixed once the store exists."""
+
+    sources: list[PhotonSource] = Field(min_length=1)
+    store: Path
+    shard_photons: int = Field(default=100_000_000, gt=0)
+    split: PhotonSplitConfig = Field(default_factory=PhotonSplitConfig)
+    seed: int = 0  # photon permutation inside shards
+
+    @model_validator(mode="after")
+    def distinct_prefixes(self):
+        prefixes = [s.key_prefix for s in self.sources]
+        if len(set(prefixes)) != len(prefixes):
+            raise ValueError("photon sources need distinct names (key prefixes)")
+        return self
+
+
+def load_photon_store_config(path: str | Path) -> PhotonStoreConfig:
+    """Load photon-store settings with paths relative to the configuration file."""
+    import yaml
+
+    path = Path(path).resolve()
+    config = PhotonStoreConfig.model_validate(yaml.safe_load(path.read_text()))
+
+    def resolve(value):
+        value = value.expanduser()
+        return value.resolve() if value.is_absolute() else (path.parent / value).resolve()
+
+    for source in config.sources:
+        source.path = resolve(source.path)
+    config.store = resolve(config.store)
+    return config
