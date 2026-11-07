@@ -8,7 +8,7 @@ random donor voxel (a fresh emission sample), so nothing of its own simulation e
 counts k / n of the voxel are then scored against the binomial predictive mixed over the
 last-layer draws (resum_flex core.gp_metrics.count_predictive_scores), the same measures as
 the binomial GP. ``plugin_count_nll`` uses only the mean p, as in the model comparison table.
-Writes RUN/inference/<checkpoint>/<partition>_<fidelity>_photons-<donors>_scores.json, the
+Writes RUN/inference/<checkpoint>/<partition>_<fidelity>_events-<donors>_scores.json, the
 per-voxel predictive arrays (_predictive.npz) and coverage / z-score plots (to
 --plot-directory, default next to the scores; --label names the model in titles and files).
 ``compute`` holds the scoring run's stages (resum_flex core.compute) and the inference
@@ -26,6 +26,8 @@ from core.surrogates.checkpoints import load_surrogate
 from core.surrogates.datasets import load_provider
 from core.surrogates.inference import predict_partition
 from scipy.stats import binom
+
+from legend_optical_map_ml.benchmark import donor_stem
 
 
 def main():
@@ -49,12 +51,8 @@ def main():
     model = load_surrogate(args.checkpoint)
     if getattr(model, "last_layer", None) is None:
         raise SystemExit("The checkpoint has no Bayesian last layer")
-    path = (
-        args.checkpoint.parent.parent
-        / "inference"
-        / args.checkpoint.name
-        / f"{args.partition}_{args.fidelity}_photons-{donors[0]}_{donors[1]}.npz"
-    )
+    folder = args.checkpoint.parent.parent / "inference" / args.checkpoint.name
+    path = folder / (donor_stem(folder, f"{args.partition}_{args.fidelity}", args.donors) + ".npz")
     if path.exists():  # inference files are never overwritten: reuse the earlier prediction
         saved = json.loads(path.with_suffix(".json").read_text())["event_inputs"]
         if saved["seed"] != args.seed:
@@ -66,7 +64,7 @@ def main():
             args.partition,
             args.fidelity,
             threads=args.threads,
-            photons_from=donors,
+            events_from=donors,
             seed=args.seed,
         )
     compute.lap("checkpoint_and_inference")
@@ -123,20 +121,19 @@ def _plots(arrays, args, path):
     stem = f"{label}_{args.partition}_{args.fidelity}"
     title = f"{label}, {args.partition}/{args.fidelity}"
     intervals = {k: (arrays[f"lower_{k}"], arrays[f"upper_{k}"]) for k in (1, 2, 3)}
-    for suffix in ("png", "pdf"):
-        plot_coverage_test(
-            arrays["observed"],
-            arrays["mean"],
-            arrays["sigma"],
-            out_path=directory / f"{stem}_coverage.{suffix}",
-            title=f"{title}: observation-predictive coverage (Bayesian last layer)",
-            xlabel="Validation voxel index",
-            predicted_label="Predictive mean",
-            raw_label="Observed fraction",
-            ylim=tuple(args.coverage_ylim),
-            intervals=intervals,
-            show_predicted=False,
-        )
+    plot_coverage_test(
+        arrays["observed"],
+        arrays["mean"],
+        arrays["sigma"],
+        out_path=directory / f"{stem}_coverage.png",
+        title=f"{title}: observation-predictive coverage (Bayesian last layer)",
+        xlabel="Validation voxel index",
+        predicted_label="Predictive mean",
+        raw_label="Observed fraction",
+        ylim=tuple(args.coverage_ylim),
+        intervals=intervals,
+        show_predicted=False,
+    )
     z = (arrays["observed"] - arrays["mean"]) / arrays["sigma"]
     plot_zscores(
         z,

@@ -11,7 +11,7 @@ kind            file read from ``run``
 binomial_gp     ``evaluation_<e>.npz`` (RESUM_FLEX binomial GP; ``e`` from metrics.json)
 mfgp            ``evaluation_<e>.npz`` (RESUM_FLEX MFGP, target level)
 countfield      ``evaluation_<partition>_<fidelity>.npz`` (countfield run)
-event_model     ``inference/<checkpoint>/<partition>_<fidelity>[_photons-<donors>]_predictive.npz``
+event_model     ``inference/<checkpoint>/<partition>_<fidelity>[_events-<donors>]_predictive.npz``
                 and ``_scores.json`` (scripts/score_event_model.py)
 ==============  ==========================================================================
 
@@ -20,7 +20,7 @@ the same metrics; see ``docs/benchmark.md``. All models must cover the same voxe
 order. Compute is summed over the runs listed per model (``compute.json`` of RESUM_FLEX runs,
 the ``compute`` entry of score/inference files, or Slurm accounting for older runs).
 
-Writes ``report.md``, ``benchmark.csv``, ``benchmark.json`` and ``benchmark.{png,pdf}`` into
+Writes ``report.md``, ``benchmark.csv``, ``benchmark.json`` and ``benchmark.png`` into
 ``output_directory``; a report is derived data and is rewritten on every call.
 """
 
@@ -162,6 +162,19 @@ def _native(row: dict, *, count_nll: bool) -> dict:
     return dict(crps=row.get("crps"), predictive_nll=nll)
 
 
+def donor_stem(folder: Path, base: str, donors: str | None) -> str:
+    """Inference file stem of ``base`` (partition_fidelity) with donor events ``donors``
+    ("partition/fidelity"): ``<base>_events-<donors>`` as RESUM_FLEX writes it; runs predicted
+    before 2026-11-06 used ``_photons-`` and are found under that name."""
+    if donors is None:
+        return base
+    suffix = donors.replace("/", "_")
+    old = f"{base}_photons-{suffix}"
+    if not any(folder.glob(f"{base}_events-{suffix}*")) and any(folder.glob(f"{old}*")):
+        return old
+    return f"{base}_events-{suffix}"
+
+
 def load_prediction(model: BenchmarkModel, partition: str, fidelity: str) -> VoxelPrediction:
     """The benchmark-set prediction of one model, from the files of its finished run."""
     run, key = model.run, f"{partition}/{fidelity}"
@@ -184,10 +197,8 @@ def load_prediction(model: BenchmarkModel, partition: str, fidelity: str) -> Vox
         path = run / f"evaluation_{partition}_{fidelity}.npz"
         native = _native(rows[0], count_nll=True)
     else:
-        stem = f"{partition}_{fidelity}"
-        if model.donors is not None:
-            stem += "_photons-" + model.donors.replace("/", "_")
         folder = run / "inference" / model.checkpoint
+        stem = donor_stem(folder, f"{partition}_{fidelity}", model.donors)
         scores = folder / f"{stem}_scores.json"
         if not scores.is_file():
             raise FileNotFoundError(
@@ -303,10 +314,9 @@ def model_compute(model: BenchmarkModel, config: BenchmarkConfig, *, run=subproc
         if (model.run / "compute.json").is_file():
             sources.append(ComputeSource(path=model.run))
         if model.kind == "event_model":
-            stem = f"{config.partition}_{config.fidelity}"
-            if model.donors is not None:
-                stem += "_photons-" + model.donors.replace("/", "_")
-            scores = model.run / "inference" / model.checkpoint / f"{stem}_scores.json"
+            folder = model.run / "inference" / model.checkpoint
+            stem = donor_stem(folder, f"{config.partition}_{config.fidelity}", model.donors)
+            scores = folder / f"{stem}_scores.json"
             if scores.is_file() and "compute" in json.loads(scores.read_text()):
                 sources.append(ComputeSource(path=scores))
     if not sources:
@@ -523,8 +533,7 @@ def _plot(directory: Path, results: list[dict], config: BenchmarkConfig):
         f"{config.title}: {config.partition}/{config.fidelity}", color=INK, fontsize=11, x=0.01,
         ha="left",
     )  # fmt: skip
-    for suffix in ("png", "pdf"):
-        fig.savefig(directory / f"benchmark.{suffix}", dpi=150, facecolor=SURFACE)
+    fig.savefig(directory / "benchmark.png", dpi=150, facecolor=SURFACE)
     plt.close(fig)
 
 

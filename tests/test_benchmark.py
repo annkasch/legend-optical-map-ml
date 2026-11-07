@@ -87,7 +87,7 @@ def _runs(root):
     )
     folder = runs["event_model"] / "inference/best"
     folder.mkdir(parents=True)
-    stem = folder / "gp_validation_hf_photons-cnp_train_lf"
+    stem = folder / "gp_validation_hf_events-cnp_train_lf"
     np.savez(f"{stem}_predictive.npz", **_arrays(0.5 * (TRUE_P + TRUE_P.mean())))
     scores = dict(
         crps=3.5e-4,
@@ -139,7 +139,7 @@ def test_report_scores_every_kind_the_same_way(tmp_path):
     assert rows["MFGP"]["compute"] is None
     text = report.read_text()
     assert "| GP | " in text and "| MFGP | " in text and "benchmark.png" in text
-    for name in ("benchmark.csv", "benchmark.png", "benchmark.pdf"):
+    for name in ("benchmark.csv", "benchmark.png"):
         assert (report.parent / name).is_file()
     assert len((report.parent / "benchmark.csv").read_text().splitlines()) == 5
 
@@ -160,7 +160,7 @@ def test_reference_and_mismatched_voxels(tmp_path):
 
 def test_missing_scoring_file_and_blinded_test(tmp_path):
     runs = _runs(tmp_path / "runs")
-    scores = runs["event_model"] / "inference/best/gp_validation_hf_photons-cnp_train_lf"
+    scores = runs["event_model"] / "inference/best/gp_validation_hf_events-cnp_train_lf"
     scores.with_name(scores.name + "_scores.json").unlink()
     with pytest.raises(FileNotFoundError, match="score_event_model"):
         run_benchmark(_config(tmp_path, runs))
@@ -195,3 +195,14 @@ def test_slurm_accounting():
     assert record["core_hours"] == pytest.approx(2051 * 128 / 3600)
     with pytest.raises(ValueError, match="no record"):
         slurm_compute(1, 2, run=fake)
+
+
+def test_donor_stem_prefers_the_new_name_and_finds_old_runs(tmp_path):
+    from legend_optical_map_ml.benchmark import donor_stem
+
+    assert donor_stem(tmp_path, "gp_validation_hf", None) == "gp_validation_hf"
+    assert donor_stem(tmp_path, "a_hf", "b/lf") == "a_hf_events-b_lf"
+    (tmp_path / "a_hf_photons-b_lf.npz").touch()  # predicted before 2026-11-06
+    assert donor_stem(tmp_path, "a_hf", "b/lf") == "a_hf_photons-b_lf"
+    (tmp_path / "a_hf_events-b_lf.npz").touch()
+    assert donor_stem(tmp_path, "a_hf", "b/lf") == "a_hf_events-b_lf"

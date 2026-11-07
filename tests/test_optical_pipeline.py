@@ -652,7 +652,7 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
         "--label",
         "mlp",
     ]
-    stem = result / "inference/best/gp_validation_hf_photons-cnp_train_lf"
+    stem = result / "inference/best/gp_validation_hf_events-cnp_train_lf"
     for _ in range(2):  # the second call reuses the inference file
         old, sys.argv = sys.argv, argv
         try:

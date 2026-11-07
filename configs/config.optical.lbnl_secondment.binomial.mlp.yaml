@@ -13,8 +13,8 @@ evaluation:
 - {partition: gp_validation, fidelity: hf}
 covariate:
   inference:
-    gp_train/hf: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_train_hf_photons-gp_unlabeled_lf.npz
-    gp_validation/hf: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_validation_hf_photons-gp_unlabeled_lf.npz
+    gp_train/hf: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_train_hf_events-gp_unlabeled_lf.npz
+    gp_validation/hf: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_validation_hf_events-gp_unlabeled_lf.npz
 kernel: matern52
 n_restarts: 2
 seed: 0

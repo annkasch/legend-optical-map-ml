@@ -52,4 +52,4 @@ in the same order; `reference` names the model for the paired NLL difference. Te
 partitions need `unblind_test: true`.
 
 `output_directory` receives `report.md` (table, definitions, runs), `benchmark.csv`,
-`benchmark.json` and `benchmark.{png,pdf}`; the report is rewritten on every call.
+`benchmark.json` and `benchmark.png`; the report is rewritten on every call.

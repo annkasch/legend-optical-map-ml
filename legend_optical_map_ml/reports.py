@@ -139,10 +139,9 @@ def generate_reports(runs, assignments, excluded, config, manifest):
                 }
             )
             if not selected:
-                for ext in ("png", "pdf"):
-                    stale = target / f"{fidelity}_coverage.{ext}"
-                    if stale.exists():
-                        stale.unlink()
+                stale = target / f"{fidelity}_coverage.png"
+                if stale.exists():
+                    stale.unlink()
                 continue
             centers = np.array([center(r, config) for r in selected])
             fig, axes = plt.subplots(2, 3, figsize=(13, 7))
@@ -161,7 +160,6 @@ def generate_reports(runs, assignments, excluded, config, manifest):
             axes[1, 2].set(xlabel="Hits in detector within voxel", ylabel="Detector–voxel pairs")
             fig.suptitle(f"{split} / {fidelity.upper()} — {len(selected)} files")
             fig.tight_layout()
-            for ext in ("png", "pdf"):
-                fig.savefig(target / f"{fidelity}_coverage.{ext}", dpi=150)
+            fig.savefig(target / f"{fidelity}_coverage.png", dpi=150)
             plt.close(fig)
         write_csv(target / "summary.csv", summaries)
