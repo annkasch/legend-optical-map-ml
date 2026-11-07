@@ -18,4 +18,4 @@ seed: 0
 data_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_config: config.optical.lbnl_secondment.data.yaml
-output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_raw_lf_hf_log/seed0
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_raw_lf_hf_log/v1/seed0

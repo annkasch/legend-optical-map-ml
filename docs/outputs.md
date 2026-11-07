@@ -8,11 +8,11 @@ outputs/
   slurm_logs/                  job logs (slurm.md)
   voxel_sets_<volume>/         one voxel campaign
     data/                      prepared view: the data YAML's output_directory
-    event_learning/<run>/seedN networks: MLP, CNP, BLL MLP, neural field
-    regression/<run>/seedN     GPs: binomial_*, mfgp_*
+    event_learning/<model>/vN/seedN  networks: MLP, CNP, BLL MLP, neural field
+    regression/<model>/vN/seedN      GPs: binomial_*, mfgp_*
   photon_<volume>/             one homogeneous photon box
     data/                      photon store: the store YAML's `store:` (photon-store.md)
-    event_learning/<run>/seedN networks trained on that photon store
+    event_learning/<model>/vN/seedN  networks trained on that photon store
 ```
 
 - `<volume>` is the volume as in the raw campaign's name, e.g.
@@ -23,9 +23,14 @@ outputs/
 - **A run goes in the folder of the data it was trained on**, not the data it is scored on:
   a neural field trained on the photon store goes under `photon_<volume>/`, even though it is
   scored on the voxel campaign's `gp_validation`.
-- Run names omit the dataset; GP runs start with their type (`binomial_mlp_lf2_hf`,
-  `mfgp_mlp_v2_hf_log`). A GP that uses an MLP's inference reads it from the `event_learning/`
-  run of the same folder.
+- Model names omit the dataset; GP models start with their type (`binomial_mlp_lf2_hf`,
+  `mfgp_mlp_hf_log`). A different model (another noise model, input or architecture:
+  `mfgp_mlp_hf_log_hetnoise`, `cnp_mixup`, `field_f4`) gets its own folder.
+- **Versions are subfolders** `vN`: a rerun of the same model with new settings is the next
+  version, e.g. `mlp_bll/v1` (LF train) and `mlp_bll/v2` (LF2 + HF train),
+  `mfgp_mlp_hf_log/v2` (GP_val split 250/250). A new version never overwrites an old one.
+- GP names leave out the input MLP's version; the run's records and config name the MLP run
+  (`event_learning/mlp/vN`) whose inference it reads, in the same dataset folder.
 - Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
   `output_directory`) would start an empty cache inside the dataset folder.
 
@@ -33,5 +38,5 @@ All runs made before this layout were moved here on 2026-11-07; their JSON recor
 view provenance) were rewritten to the new folders, including the centered runs' older
 `RESUM_FLEX/outputs/...` paths from before the repository split. Runs whose recorded view hash
 was already stale before the move still fail the residual stage's provenance check: lbnl
-`mlp_v1`, `mlp_v2`, `mfgp_mlp_v2_hf_log*` (made before the lbnl view was
-rebuilt on 2026-11-02) and every centered run (made from views built in RESUM_FLEX).
+`mlp/v1`, `mlp/v2`, `mfgp_mlp_hf_log/v1`, `/v2` and `mfgp_mlp_hf_log_hetnoise/v1` (made
+before the lbnl view was rebuilt on 2026-11-02) and every centered run (made from views built in RESUM_FLEX).

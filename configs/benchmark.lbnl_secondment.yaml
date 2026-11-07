@@ -11,49 +11,49 @@ output_directory: /global/cfs/projectdirs/m2676/users/aschuetz/data/benchmarks/l
 models:
 - label: Binomial GP
   kind: binomial_gp
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial/v1/seed0
   compute: [{slurm_job: 60723878}]
 - label: GP + MLP (LF2 + HF)
   kind: binomial_gp
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial_mlp_lf2_hf/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial_mlp_lf2_hf/v1/seed0
   note: MLP v2 as covariate; compute = MLP training + donor inference + GP fit.
   compute: [{slurm_job: 60576744}, {slurm_job: 60755892}, {slurm_job: 60756277}]
 - label: GP + MLP (HF)
   kind: binomial_gp
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial_mlp_hf/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial_mlp_hf/v1/seed0
   note: Ablation, GP on HF train only; compute = MLP training + donor inference + GP fit.
   compute: [{slurm_job: 60576744}, {slurm_job: 60755892}, {slurm_job: 60756276}]
 - label: RESuM MLP → MFGP
   kind: mfgp
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_mlp_v2_hf_log_split/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_mlp_hf_log/v2/seed0
   note: compute = MLP training + LF2 inference + MFGP fit.
   compute: [{slurm_job: 60576744}, {slurm_job: 60576745}, {slurm_job: 60715038}]
 - label: MFGP raw LF
   kind: mfgp
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_raw_lf_hf_log/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_raw_lf_hf_log/v1/seed0
   compute: [{slurm_job: 60715028}]
 - label: MLP + BLL
   kind: event_model
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v1/seed0
   note: Trained on LF train; HF scoring compute not recorded.
   compute: [{slurm_job: 60776076}]
 - label: Field f1
   kind: event_model
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f1/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f1/v1/seed0
   note: Trained on LF train; HF scoring compute not recorded.
   compute: [{slurm_job: 60776077}]
 - label: Field f2
   kind: event_model
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f2/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f2/v1/seed0
   note: Trained on LF train; HF scoring compute not recorded.
   compute: [{slurm_job: 60776078}]
 - label: Field f4
   kind: event_model
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f4/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f4/v1/seed0
   note: Trained on LF train; HF scoring compute not recorded.
   compute: [{slurm_job: 60776080}]
 - label: Field f8
   kind: event_model
-  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f8/seed0
+  run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f8/v1/seed0
   note: Trained on LF train; HF scoring compute not recorded.
   compute: [{slurm_job: 60776081}]

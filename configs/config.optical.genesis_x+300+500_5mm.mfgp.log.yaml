@@ -4,7 +4,7 @@ levels:
 - source: model_mean
   partition: gp_unlabeled
   fidelity: lf
-  inference: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/seed0/inference/best/gp_unlabeled_lf.npz
+  inference: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_unlabeled_lf.npz
 - source: observed_fraction
   partition: gp_train
   fidelity: hf
@@ -17,4 +17,4 @@ seed: 0
 data_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_config: config.optical.genesis_x+300+500_5mm.data.yaml
-output_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/regression/mfgp_mlp_hf_log/seed0
+output_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/regression/mfgp_mlp_hf_log/v1/seed0

@@ -45,6 +45,6 @@ train_sets:
 - {partition: gp_train, fidelity: hf}       # HF_train
 partitions: {validation: cnp_validation, test: cnp_test}
 data_config: config.optical.lbnl_secondment.data.yaml
-output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_lf2hf/seed0
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v2/seed0
 selection_max_voxels: 500
 evaluation_threads: 16

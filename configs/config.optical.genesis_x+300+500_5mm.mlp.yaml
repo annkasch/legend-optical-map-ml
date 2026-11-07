@@ -35,6 +35,6 @@ data_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 partitions: {train: cnp_train, validation: cnp_validation, test: cnp_test}
 data_config: config.optical.genesis_x+300+500_5mm.data.yaml
-output_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/seed0
+output_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0
 selection_max_voxels: 500
 evaluation_threads: 16
