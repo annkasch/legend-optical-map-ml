@@ -1,0 +1,40 @@
+# RESuM event model (MLP) on the genesis-remage voxel campaign x+300+500_y-100+100_z-100+100_5mm;
+# same settings as config.optical.lbnl_secondment.mlp.yaml.
+model:
+  kind: mlp
+  architecture:
+    hidden_dims: [256, 256, 256]
+    dropout: 0.0
+training:
+  backend: neural
+  loss: bernoulli
+  n_passes: 10
+  eval_every: 100
+  learning_rate: 0.001
+  batch_size: 16
+  n_events: 750
+  targets: disjoint
+  context:
+    size: random
+    n_min: 16
+    max_fraction: 0.5
+  seed: 0
+  device: cpu
+  focal_gamma: 0
+  objective:
+    strategy: single
+  sampling:
+    strategy: natural
+  weighting:
+    strategy: none
+selection: bernoulli_log_loss
+lf_validation: true
+hf_validation: false
+test_fidelities: [] # No dedicated CNP test list is provided in this dataset.
+data_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+partitions: {train: cnp_train, validation: cnp_validation, test: cnp_test}
+data_config: config.optical.genesis_x+300+500_5mm.data.yaml
+output_directory: ../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/seed0
+selection_max_voxels: 500
+evaluation_threads: 16
