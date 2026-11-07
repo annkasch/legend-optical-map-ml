@@ -9,6 +9,9 @@ python scripts/export_counts.py DATA_DIR OUT.npz gp_unlabeled/lf gp_train/hf gp_
 python scripts/export_photons.py DATA_DIR OUT.npz gp_unlabeled/lf gp_train/hf gp_validation/hf
 ```
 
+Exports and countfield runs go to `outputs/<voxel_sets_…>/countfield/` of their dataset
+(`docs/outputs.md`), e.g. `DATA_DIR` = `outputs/voxel_sets_…/data`.
+
 - `export_counts.py`: per voxel centre, hits k and events n, grouped by "partition/fidelity".
 - `export_photons.py`: additionally every photon per voxel (offset from the centre in mm,
   direction, energy, hit flag) in CSR layout.

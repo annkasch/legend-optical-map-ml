@@ -6,7 +6,7 @@
 # points of the cloud, never targets during training.
 # Photon file: scripts/export_photons.py (gp_test stays blinded and is not exported).
 data:
-  path: ../outputs/countfield/lbnl_secondment_5mm_photons.npz
+  path: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_photons.npz
   observations: [gp_unlabeled/lf, gp_train/hf]
   evaluation: [gp_validation/hf]
   merge_decimals: 6   # m; positions agreeing to 1 µm are the same voxel
@@ -28,4 +28,4 @@ training:
   eval_every: 100
 evaluation:
   coverage_ylim: [0, 0.0065]   # fixed y range of the coverage plots
-output_directory: ../outputs/countfield/lbnl_secondment_5mm_pt/seed0
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_pt/seed0

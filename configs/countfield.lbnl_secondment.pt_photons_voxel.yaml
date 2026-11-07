@@ -3,7 +3,7 @@
 # Same split, seed and regularization (graph thinning, random mask share, dropout, weight decay).
 # Observations as config.optical.lbnl_secondment.binomial.yaml; LF/HF twins pooled.
 data:
-  path: ../outputs/countfield/lbnl_secondment_5mm_photons.npz
+  path: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_photons.npz
   observations: [gp_unlabeled/lf, gp_train/hf]
   evaluation: [gp_validation/hf]
   merge_decimals: 6
@@ -32,4 +32,4 @@ training:
   eval_every: 100
 evaluation:
   coverage_ylim: [0, 0.0065]
-output_directory: ../outputs/countfield/lbnl_secondment_5mm_pt_photons_voxel/seed0
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_pt_photons_voxel/seed0
