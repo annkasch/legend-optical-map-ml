@@ -23,10 +23,6 @@ models:
   run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial_mlp_hf/seed0
   note: Ablation, GP on HF train only; compute = MLP training + donor inference + GP fit.
   compute: [{slurm_job: 60576744}, {slurm_job: 60755892}, {slurm_job: 60756276}]
-- label: Neural process
-  kind: countfield
-  run: ../outputs/countfield/lbnl_secondment_5mm/seed0
-  compute: [{slurm_job: 60721477}]
 - label: RESuM MLP → MFGP
   kind: mfgp
   run: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_mlp_v2_hf_log_split/seed0
