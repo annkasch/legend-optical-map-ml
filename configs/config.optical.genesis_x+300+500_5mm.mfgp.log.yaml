@@ -1,7 +1,5 @@
 # RESuM two-level MFGP on the genesis x+300+500 5 mm voxels: MLP mean on LF2_train -> observed
 # HF_train fraction, in log space. Same settings as config.optical.lbnl_secondment.mfgp.log.yaml.
-# The MLP inference below comes from the run of the matching .mlp.yaml in the new outputs tree
-# (docs/outputs.md): train and predict that MLP first.
 levels:
 - source: model_mean
   partition: gp_unlabeled

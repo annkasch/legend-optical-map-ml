@@ -27,7 +27,12 @@ outputs/
 - Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
   `output_directory`) would start an empty cache inside the dataset folder.
 
-Not yet moved (2026-11-07): `centered` (`optical_centered_cnp_v0`, its runs), `countfield/`,
-and runs made before this layout in `optical_resum/`, `optical_binomial/`, `optical_mfgp/`,
-`optical_photon_field/` (still valid; the benchmark config points at some of them). Delete
-those once the benchmark points only into the new folders.
+The lbnl_secondment and genesis runs made before this layout were moved here on 2026-11-07;
+their JSON records (paths, view provenance) were rewritten to the new folders. Runs whose
+recorded view hash was already stale before the move still fail the residual stage's
+provenance check: lbnl `mlp_v1`, `mlp_v2`, `mfgp_mlp_v2_hf_log*` and `mfgp_debug_*`, made
+before the lbnl view was rebuilt on 2026-11-02.
+
+Not yet moved: `centered` (`optical_centered_cnp_v0` and its runs in `optical_resum/`,
+`optical_mfgp/`) and `countfield/`. The old view `optical_lbnl_secondment_5mm` stays while the
+countfield exports and `smoke/` refer to it; `optical_genesis_x+300+500_5mm` is unused.

@@ -1,8 +1,6 @@
 # Two-level MFGP on the LBNL 5 mm voxel lists (2026-10-30): MLP mean on the unlabeled LF2_train
 # voxels -> observed HF_train fraction (target), in log space. GP choices are compared on
 # GP_val (gp_validation); gp_test stays blinded until all choices are final.
-# The MLP inference below comes from the run of the matching .mlp.yaml in the new outputs tree
-# (docs/outputs.md): train and predict that MLP first.
 levels:
 - source: model_mean
   partition: gp_unlabeled

@@ -1,8 +1,6 @@
 # Heteroscedastic variant of config.optical.lbnl_secondment.mfgp.log.yaml (MLP mean -> HF):
 # fixed binomial noise per observed voxel (observation_noise: binomial). Needs the
 # RESUM_FLEX heteroscedastic-noise branch.
-# The MLP inference below comes from the run of the matching .mlp.yaml in the new outputs tree
-# (docs/outputs.md): train and predict that MLP first.
 levels:
 - source: model_mean
   partition: gp_unlabeled
