@@ -1,0 +1,31 @@
+# countfield photon Point Transformer on the LBNL secondment data: the same observed voxels as
+# voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.yaml (LF2_train, 1500 photons per voxel, and HF_train,
+# 5000 per voxel). Points = voxels, point features = all their photons (emission offset,
+# direction, energy, hit). 320 HF voxels share their position with an LF2 voxel (independent
+# simulations); their photons are pooled. Masked training; gp_validation voxels are masked
+# points of the cloud, never targets during training.
+# Photon file: scripts/export_photons.py (gp_test stays blinded and is not exported).
+data:
+  path: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_photons.npz
+  observations: [gp_unlabeled/lf, gp_train/hf]
+  evaluation: [gp_validation/hf]
+  merge_decimals: 6   # m; positions agreeing to 1 µm are the same voxel
+model:
+  kind: point_transformer
+  dims: [32, 64, 64]
+  blocks: 1
+  neighbours: 16
+  downsample_ratio: 4
+  photon_hidden: 64
+  mask_fraction: 0.15
+  misses_per_point: 256
+  eval_misses_per_point: null   # all photons for holdout and evaluation passes
+training:
+  seed: 0
+  steps: 3000
+  learning_rate: 1.0e-3
+  holdout_fraction: 0.1
+  eval_every: 100
+evaluation:
+  coverage_ylim: [0, 0.0065]   # fixed y range of the coverage plots
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_pt/seed0

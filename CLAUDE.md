@@ -12,14 +12,14 @@ only what the task needs, using the table below; `docs/index.md` lists every doc
 | Task | Read | Code |
 |---|---|---|
 | Change library code | `docs/design.md` | the module it names |
-| A dataset: paths, roles, bad files | `docs/datasets.md` | `configs/config.optical.<dataset>.data.yaml` |
+| A dataset: paths, roles, bad files | `docs/datasets.md` | `configs/<dataset>/data.yaml` |
 | Write or change a data YAML | `docs/data-config.md` | `config.py`, `split.py` |
 | Preparation, sync, unlabeled inputs | `docs/preparation.md` | `pipeline.py`, `view.py`, `provider.py` |
 | Event cache | `docs/event-cache.md` | `event_cache.py` |
-| Where a data view or run goes in `outputs/` | `docs/outputs.md` | `configs/` |
+| Where a config, data view or run goes | `docs/outputs.md` | `configs/<dataset>/` |
 | Training or GP run config | `docs/run-config.md`, then RESUM_FLEX `docs/configs.md` | `configs/` |
 | Homogeneous campaign, neural field | `docs/photon-store.md` | `photon_store.py`, `photon_loader.py` |
-| Compare models, which data a model trains on | `docs/benchmark.md` | `benchmark.py`, `configs/benchmark.*.yaml` |
+| Compare models, which data a model trains on | `docs/benchmark.md` | `benchmark.py`, `configs/<dataset>/benchmark.yaml` |
 | countfield inputs | `docs/countfield.md` | `scripts/export_*.py` |
 | Submit or check jobs | `docs/slurm.md`, RESUM_FLEX `docs/nersc.md` | `scripts/slurm/` |
 | Earlier results of a question | `analysis/<date_topic>/README.md` (if present) | |
@@ -32,17 +32,19 @@ only what the task needs, using the table below; `docs/index.md` lists every doc
   `gp_test` (HF benchmark, blinded).
 - Rate models (binomial GP, MFGP, BLL MLP, neural field, countfield) all train on LF2 + HF
   train and are scored on `gp_validation/hf`; support networks feeding a GP train on LF train.
-- Datasets (config prefix): `centered` (Ian Wang), `lbnl_secondment` (Sofia Calgaro),
-  `genesis_x+300+500` (own, on `$PSCRATCH`: purge policy).
+- Datasets, named by volume (folder in `configs/` and `outputs/`): `centered` (Ian Wang) =
+  `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm`, `lbnl_secondment` (Sofia Calgaro) =
+  `voxel_sets_x-800-600_y+50+250_z+400+600_5mm`, genesis (own, raw data on `$PSCRATCH`: purge
+  policy) = `voxel_sets_x+300+500_y-100+100_z-100+100_5mm` and `photon_x+300+500_y-100+100_z-100+100`.
 
 ## Commands
 ```bash
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-.venv/bin/pytest -q                       # 70 tests, ~2 min on a login node
+.venv/bin/pytest -q                       # 108 tests, ~2 min on a login node
 .venv/bin/ruff check .                    # must stay clean
 .venv/bin/python -m core.surrogates train|mfgp|binomial|stream CONFIG.yaml
 .venv/bin/python -m core.surrogates predict RUN/checkpoints/best DATA_DIR PARTITION
-.venv/bin/python -m legend_optical_map_ml.benchmark configs/benchmark.<name>.yaml  # reads runs only
+.venv/bin/python -m legend_optical_map_ml.benchmark configs/<dataset>/benchmark.yaml  # reads runs only
 ```
 Login nodes: one single-threaded process of up to ~15 min; real data, GP fits and training
 go to Slurm (`docs/slurm.md`).

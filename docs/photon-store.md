@@ -2,11 +2,11 @@
 
 Homogeneous campaigns (photons uniform over a volume, any shape) are not voxels; the neural
 field trains on every photon of them. `photon_store.py` converts such LH5 files once into a
-photon store (config `configs/photons.*.yaml`, schema `config.py:PhotonStoreConfig`), and
+photon store (config `configs/photon_<volume>/photons.yaml`, schema `config.py:PhotonStoreConfig`), and
 `photon_loader.PhotonStream` reads it during training. Formats in the module docstrings.
 
 ```bash
-python -m legend_optical_map_ml.photon_store build configs/photons.genesis_box_x+300+500.yaml --workers 8
+python -m legend_optical_map_ml.photon_store build configs/photon_x+300+500_y-100+100_z-100+100/photons.yaml --workers 8
 python -m legend_optical_map_ml.photon_store info outputs/photon_x+300+500_y-100+100_z-100+100/data
 # Large campaigns: plan once, convert tasks in a Slurm array, then finalize
 python -m legend_optical_map_ml.photon_store plan CONFIG.yaml
@@ -37,7 +37,7 @@ python -m legend_optical_map_ml.photon_store finalize CONFIG.yaml
 
 ## Training and evaluation
 
-`configs/photon_field.*.yaml` are RESUM_FLEX stream configs (`core.surrogates stream`,
+`configs/photon_<volume>/field_*.yaml` are RESUM_FLEX stream configs (`core.surrogates stream`,
 RESUM_FLEX `docs/stream.md`), trained on GPU with `scripts/slurm/train_photon_field.sbatch`
 (`docs/slurm.md`). The field is selected on the store's validation photons and evaluated on
 the voxel campaign through the usual provider with `scripts/score_event_model.py`.

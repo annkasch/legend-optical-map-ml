@@ -1,0 +1,22 @@
+# Heteroscedastic variant of voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mfgp.raw_lf.log.yaml (raw LF -> HF):
+# fixed binomial noise per observed voxel (observation_noise: binomial). Needs the
+# RESUM_FLEX heteroscedastic-noise branch.
+levels:
+- source: observed_fraction
+  partition: gp_unlabeled   # LF2_train, 1500 events per voxel
+  fidelity: lf
+- source: observed_fraction
+  partition: gp_train       # HF_train, 5000 events per voxel (target)
+  fidelity: hf
+evaluation:
+- {partition: gp_validation, fidelity: hf}
+output_transform: log   # log of the rate; observed fractions smoothed to (m + 0.5)/(N + 1)
+kernel: rbf
+n_restarts: 5
+seed: 0
+data_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_config: data.yaml
+observation_noise: binomial
+coverage_ylim: [0, 0.0065]
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_raw_lf_hf_log_hetnoise/v1/seed0

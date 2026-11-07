@@ -8,7 +8,7 @@ view and split metadata; it never trains.
 from legend_optical_map_ml import prepare_optical_data
 from legend_optical_map_ml.config import load_optical_config
 
-prepared = prepare_optical_data(load_optical_config("configs/config.optical.centered.cnp.data.yaml"))
+prepared = prepare_optical_data(load_optical_config("configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/data.yaml"))
 ```
 
 Usually not needed by hand: a run config with `data_config` calls

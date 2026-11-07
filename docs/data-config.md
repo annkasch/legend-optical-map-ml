@@ -1,9 +1,9 @@
 # Data config
 
-A data YAML (`configs/config.optical.<dataset>.data.yaml`, schema `config.py:OpticalDataConfig`)
+A data YAML (`configs/<dataset>/data.yaml`, schema `config.py:OpticalDataConfig`)
 describes the raw LH5 inputs and how they become a prepared view. Unknown keys are rejected.
 Relative paths resolve from the YAML's directory, not the shell's. Example:
-[`config.optical.centered.cnp.data.yaml`](../configs/config.optical.centered.cnp.data.yaml).
+[`configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/data.yaml`](../configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/data.yaml).
 
 | Setting | Meaning |
 |---|---|

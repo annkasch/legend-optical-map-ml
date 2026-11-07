@@ -32,7 +32,7 @@ from each run's `compute.json`).
 ## Running the benchmark
 
 ```bash
-python -m legend_optical_map_ml.benchmark configs/benchmark.lbnl_secondment.yaml
+python -m legend_optical_map_ml.benchmark configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/benchmark.yaml
 ```
 
 The tool only reads finished runs, so it is cheap (fine on a login node). Each entry of

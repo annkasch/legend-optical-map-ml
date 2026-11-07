@@ -1,6 +1,6 @@
 #!/bin/bash
 # Train a neural field on a photon store on Perlmutter GPU nodes, from the repository root:
-#   sbatch scripts/slurm/train_photon_field.sbatch configs/photon_field.CONFIG.yaml
+#   sbatch scripts/slurm/train_photon_field.sbatch configs/photon_<volume>/field_CONFIG.yaml
 # Uses the NERSC pytorch module (CUDA PyTorch) with RESUM_FLEX and this package on PYTHONPATH
 # (RESUM_FLEX checkout: RESUM_FLEX_ROOT, default ../RESUM_FLEX). Several GPUs per node:
 #   sbatch --gpus-per-node=4 scripts/slurm/train_photon_field.sbatch CONFIG.yaml

@@ -17,7 +17,7 @@ RESUM_FLEX `docs/configs.md` (models `docs/models.md`, Bayesian last layer
 
 ## Event-model training
 
-Examples: `config.optical.centered.mlp.yaml`, `config.optical.lbnl_secondment.mlp.yaml`
+Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp.yaml`
 (`mlp_bll`, `field_f*` for rate models).
 
 - `train` reads `cnp_train`, `cnp_validation` (`lf_validation: true`) and `cnp_test`
@@ -32,7 +32,7 @@ Examples: `config.optical.centered.mlp.yaml`, `config.optical.lbnl_secondment.ml
 
 ## GP runs (`mfgp`, `binomial`)
 
-Example: `config.optical.centered.mfgp.yaml`, run after `predict` wrote the level-0 file.
+Example: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml`, run after `predict` wrote the level-0 file.
 
 - `levels` from lowest to highest fidelity; the last is predicted. Typical: `model_mean` of
   the MLP on `gp_unlabeled/lf`, then `observed_fraction` of `gp_train/hf`. Variants:

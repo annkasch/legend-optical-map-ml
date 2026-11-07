@@ -1,0 +1,34 @@
+# Own genesis-remage voxel campaign (same sampling as LBNL secondment, box x 300..500 mm,
+# y -100..100, z -100..100, 5 mm voxels): LF 1500 / HF 5000 photons per voxel.
+# Roles as in voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml. Raw data on $PSCRATCH (purge policy).
+source:
+  manifests:
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_LF_train.csv
+    role: cnp_train
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_CNP_val.csv
+    role: cnp_validation
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_LF2_train.csv
+    role: gp_unlabeled
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_HF_train.csv
+    role: gp_train
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_GP_val.csv
+    fractions: {gp_validation: 0.5, gp_test: 0.5}
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
+cache_directory: ../../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
+theta:
+  coordinates: cartesian
+  center_source: filename # CSV x_mm/y_mm/z_mm override the rounded filename center.
+phi:
+  vertex:
+    representation: offset
+    coordinates: cartesian
+  momentum:
+    representation: components
+target:
+  kind: any_channel
+split:
+  seed: 42
+  manifest: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/splits/voxel_split.json
+normalization:
+  method: standard
+  fit_on: training

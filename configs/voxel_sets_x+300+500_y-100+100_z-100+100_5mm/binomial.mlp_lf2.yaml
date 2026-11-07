@@ -1,0 +1,20 @@
+# Binomial GP + MLP covariate on the genesis x+300+500 5 mm voxels: LF2_train + HF_train counts
+# with the MLP rate (donor emission inputs) as covariate. Same settings as
+# voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.mlp_lf2.yaml.
+observations:
+- {partition: gp_unlabeled, fidelity: lf}   # LF2_train
+- {partition: gp_train, fidelity: hf}       # HF_train
+evaluation:
+- {partition: gp_validation, fidelity: hf}
+covariate:
+  inference:
+    gp_unlabeled/lf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_unlabeled_lf_photons-gp_unlabeled_lf.npz
+    gp_train/hf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_train_hf_photons-gp_unlabeled_lf.npz
+    gp_validation/hf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_validation_hf_photons-gp_unlabeled_lf.npz
+kernel: matern52
+n_restarts: 2
+seed: 0
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_config: data.yaml
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/regression/binomial_mlp_lf2_hf/v1/seed0

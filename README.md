@@ -8,13 +8,13 @@ specific to the optical-map application:
   role-based splits, features and reports, and `provider.OpticalDataset`, the dataset
   provider RESUM_FLEX reads the prepared data through.
 - `configs/`: data, event-model (CNP, MLP, mixup ablation) and GP configs for Ian Wang's
-  centered box (`centered_425_375_375`), plus [LBNL CSV-manifest data](configs/config.optical.lbnl_secondment.data.yaml)
+  centered box (`centered_425_375_375`), plus [LBNL CSV-manifest data](configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml)
   with the models compared on it (see the [benchmark protocol](docs/benchmark.md)):
-  - event models: [MLP](configs/config.optical.lbnl_secondment.mlp.yaml), MLP with a Bayesian
+  - event models: [MLP](configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp.yaml), MLP with a Bayesian
     last layer (`mlp_bll`), neural fields (`field_f1` … `field_f8`, maximum Fourier frequency);
   - GPs: binomial count GP (`binomial`, with the MLP covariate: `binomial.mlp`,
     `binomial.mlp_lf2`), log-space MFGP on the MLP mean (`mfgp.log`) or raw LF (`mfgp.raw_lf.log`);
-  - [countfield](https://github.com/annkasch/countfield) runs (`countfield.lbnl_secondment*`):
+  - [countfield](https://github.com/annkasch/countfield) runs (`configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield*.yaml`):
     neural process and Point Transformer variants.
 - `scripts/`: `export_counts.py` / `export_photons.py` (countfield inputs),
   `score_event_model.py` (a Bayesian-last-layer checkpoint scored on HF validation voxels).
@@ -50,12 +50,12 @@ from another checkout is not required.
 ```bash
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 # 1. Train an event model; the data are prepared (or updated) from data_config first
-.venv/bin/python -m core.surrogates train configs/config.optical.centered.mlp.yaml
+.venv/bin/python -m core.surrogates train configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml
 # 2. Mean predicted p for the unlabeled LF voxels (LF_primaries)
 .venv/bin/python -m core.surrogates predict outputs/optical_resum/centered_mlp_v1/seed0/checkpoints/best \
     outputs/optical_centered_cnp_v0 gp_unlabeled --threads 8
 # 3. Two-level GP: MLP mean -> observed HF fraction
-.venv/bin/python -m core.surrogates mfgp configs/config.optical.centered.mfgp.yaml
+.venv/bin/python -m core.surrogates mfgp configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml
 ```
 
 On Perlmutter, create the Slurm log directory and submit each step from the repository root:
@@ -69,8 +69,8 @@ To submit training, mean prediction, and GP fitting as dependent jobs, use:
 
 ```bash
 scripts/slurm/submit_surrogate_pipeline.sh \
-  configs/config.optical.centered.mlp.yaml \
-  configs/config.optical.centered.mfgp.yaml \
+  configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml \
+  configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml \
   -q regular -t 01:00:00
 ```
 

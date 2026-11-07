@@ -1,0 +1,35 @@
+# Point Transformer ablation on LBNL (2026-11-03), variant C: point_features=photons, loss=photon.
+# A = counts / voxel loss, B = photons / voxel loss, C = photons / photon loss (photon head).
+# Same split, seed and regularization (graph thinning, random mask share, dropout, weight decay).
+# Observations as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.yaml; LF/HF twins pooled.
+data:
+  path: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_photons.npz
+  observations: [gp_unlabeled/lf, gp_train/hf]
+  evaluation: [gp_validation/hf]
+  merge_decimals: 6
+model:
+  kind: point_transformer
+  point_features: photons
+  loss: photon
+  dims: [32, 64, 64]
+  blocks: 1
+  neighbours: 16
+  downsample_ratio: 4
+  photon_hidden: 64
+  dropout: 0.1
+  keep_fraction_min: 0.7
+  mask_fraction: 0.1
+  mask_fraction_max: 0.3
+  misses_per_point: 256
+  eval_misses_per_point: null
+  prediction_photons: 1024
+training:
+  seed: 0
+  steps: 3000
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  holdout_fraction: 0.1
+  eval_every: 100
+evaluation:
+  coverage_ylim: [0, 0.0065]
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_pt_photons_photon/seed0

@@ -1,0 +1,20 @@
+# RESuM two-level MFGP on the genesis x+300+500 5 mm voxels: MLP mean on LF2_train -> observed
+# HF_train fraction, in log space. Same settings as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mfgp.log.yaml.
+levels:
+- source: model_mean
+  partition: gp_unlabeled
+  fidelity: lf
+  inference: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_unlabeled_lf.npz
+- source: observed_fraction
+  partition: gp_train
+  fidelity: hf
+evaluation:
+- {partition: gp_validation, fidelity: hf}
+output_transform: log   # log of the rate; observed fractions smoothed to (m + 0.5)/(N + 1)
+kernel: rbf
+n_restarts: 5
+seed: 0
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_config: data.yaml
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/regression/mfgp_mlp_hf_log/v1/seed0

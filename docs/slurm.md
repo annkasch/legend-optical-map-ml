@@ -21,7 +21,7 @@ lowered with `scontrol` but usually not raised.
 
 ```bash
 scripts/slurm/submit_surrogate_pipeline.sh \
-  configs/config.optical.centered.mlp.yaml configs/config.optical.centered.mfgp.yaml \
+  configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml \
   -q regular -t 01:00:00
 ```
 

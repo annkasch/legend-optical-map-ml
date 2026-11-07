@@ -1,7 +1,6 @@
 """Files without optical hit data: cache, gp_unlabeled role, inputs-only loading, inference."""
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -260,20 +259,3 @@ def test_inference_file_level_matches_prepared_voxels(tmp_path):
     with pytest.raises(ValueError, match="holds gp_unlabeled/lf"):
         run_mfgp_config(wrong)
 
-
-def test_repository_configs_load():
-    from schemas.surrogates import load_mfgp_config, load_surrogate_config
-
-    from legend_optical_map_ml.config import load_optical_config
-
-    configs = Path(__file__).resolve().parents[1] / "configs"
-    load_optical_config(configs / "config.optical.centered.cnp.data.yaml")
-    kinds = {
-        name: load_surrogate_config(configs / f"config.optical.centered.{name}.yaml").model.kind
-        for name in ("cnp", "cnp.mixup", "mlp")
-    }
-    assert kinds == {"cnp": "cnp", "cnp.mixup": "cnp", "mlp": "mlp"}
-    for name in ("mfgp", "mfgp.log"):
-        config = load_mfgp_config(configs / f"config.optical.centered.{name}.yaml")
-        assert len(config.levels) == 2
-        assert config.data_provider == "legend_optical_map_ml.provider:OpticalDataset"

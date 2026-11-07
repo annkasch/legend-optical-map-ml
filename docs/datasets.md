@@ -1,13 +1,14 @@
 # Datasets
 
 All 5 mm voxels, LF = 1500 and HF = 5000 photons (one primary each) per voxel unless noted.
-Config prefix in brackets. Check sizes and states against the data before relying on them.
+Short name in brackets; configs in `configs/<folder>/`, outputs in `outputs/<folder>/`
+(`docs/outputs.md`). Check sizes and states against the data before relying on them.
 
-## Ian Wang's centered box [`centered`]
+## Ian Wang's centered box [`centered`] — `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm`
 
 `/global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375`, box x 0.365-0.485,
 y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
-`run{i}_v{voxel}_x_y_z.stp.lh5`. Data config: `config.optical.centered.cnp.data.yaml`; outputs in
+`run{i}_v{voxel}_x_y_z.stp.lh5`. Data config: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/data.yaml`; outputs in
 `outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm` (`docs/outputs.md`).
 
 | Folder | Voxels | Role |
@@ -26,12 +27,12 @@ y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
   raw outputs (checked 2026-11-02, `analysis/2026-11-02_hf_maps`); use the raw outputs. Only
   per-channel maps would add information (a different target).
 
-## LBNL secondment [`lbnl_secondment`]
+## LBNL secondment [`lbnl_secondment`] — `voxel_sets_x-800-600_y+50+250_z+400+600_5mm`
 
 Sofia Calgaro's voxel sets
 `/global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm`,
 CSV manifests per role (`voxels_{LF_train,CNP_val,LF2_train,HF_train,GP_val}.csv`). Data
-config: `config.optical.lbnl_secondment.data.yaml`. About 6400 LF2 / 640 HF train voxels;
+config: `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml`. About 6400 LF2 / 640 HF train voxels;
 GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`.
 
 - 11 GP_val voxels share positions with CNP_val (lists sampled independently). Accepted for
@@ -40,17 +41,17 @@ GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`.
 - Its reboost maps (`.../voxel_sets_x+600+800_y-250-50_z+400+600_5mm/maps`) are empty: y
   binning typo (-0.5 instead of -0.05 m). Not needed: the raw outputs are used.
 - Results so far: `analysis/2026-11-03_lbnl_model_comparison/README.md`; benchmark config
-  `configs/benchmark.lbnl_secondment.yaml`.
+  `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/benchmark.yaml`.
 
-## Own genesis-remage campaign [`genesis_x+300+500`]
+## Own genesis-remage campaign [`genesis`] — `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, `photon_x+300+500_y-100+100_z-100+100`
 
 On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data can vanish):
 
 - Voxel sets `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, same sampling and roles as LBNL.
-  Data config: `config.optical.genesis_x+300+500_5mm.data.yaml`.
+  Data config: `configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml`.
 - Homogeneous box `box_x+300+500_y-100+100_z-100+100` (32 chunks of 400k isotropic photons,
   9.68 ± 0.22 eV) → photon store `outputs/photon_x+300+500_y-100+100_z-100+100/data` (moved from `$PSCRATCH`
-  2026-11-07; `configs/photons.genesis_box_x+300+500.yaml`, `docs/photon-store.md`).
+  2026-11-07; `configs/photon_x+300+500_y-100+100_z-100+100/photons.yaml`, `docs/photon-store.md`).
 
 ## Older by-primaries layout
 

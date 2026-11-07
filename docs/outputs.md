@@ -1,6 +1,10 @@
-# Outputs layout
+# Outputs and configs layout
 
-Run and data folders under `outputs/` are grouped by the data set they were built from.
+Run and data folders under `outputs/` are grouped by the data set they were built from; the
+configs that make them sit in `configs/<same folder>/` with short names: `data.yaml`,
+`photons.yaml`, `benchmark.yaml`, one file per model (`mlp.yaml`, `mlp_bll.yaml`,
+`binomial.mlp_lf2.yaml`, `mfgp.log.yaml`, `field_f4.yaml`, `countfield.pt.yaml`). A run config
+lives in the folder of its training data, like its run (`tests/test_configs.py` checks both).
 
 ```
 outputs/

@@ -1,0 +1,17 @@
+# Binomial count GP on the LBNL secondment data: one latent hit probability fitted directly to
+# the hit counts of LF2_train (1500 events per voxel) and HF_train (5000 events per voxel).
+# Fidelities differ only in N, which enters the likelihood exactly. No event model is involved;
+# compare with voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mfgp.raw_lf.log.yaml.
+observations:
+- {partition: gp_unlabeled, fidelity: lf}   # LF2_train
+- {partition: gp_train, fidelity: hf}       # HF_train
+evaluation:
+- {partition: gp_validation, fidelity: hf}
+kernel: matern52
+n_restarts: 2
+seed: 0
+coverage_ylim: [0, 0.0065]   # fixed y range of the coverage plots
+data_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_config: data.yaml
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial/v1/seed0

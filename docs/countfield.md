@@ -16,5 +16,5 @@ Exports and countfield runs go to `outputs/<voxel_sets_…>/countfield/` of thei
 - `export_photons.py`: additionally every photon per voxel (offset from the centre in mm,
   direction, energy, hit flag) in CSR layout.
 - Groups named `*test*` are refused unless `--unblind-test` is given.
-- Run configs: `configs/countfield.lbnl_secondment*.yaml` (read by countfield). Its
+- Run configs: `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield*.yaml` (read by countfield). Its
   predictions enter the benchmark as `kind: countfield` (`docs/benchmark.md`).

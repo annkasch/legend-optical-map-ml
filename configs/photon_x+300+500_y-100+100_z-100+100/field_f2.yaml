@@ -1,0 +1,45 @@
+# Neural field trained on every photon of the homogeneous genesis-remage box x 300..500 mm
+# (photon store from configs/photon_x+300+500_y-100+100_z-100+100/photons.yaml): continuous emission point
+# (Fourier, max_frequency 2 (frequency scan; half-period 1/(2·2) store std)) and photon direction
+# (spherical harmonics), same network as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/field_f2.yaml.
+# Selected on the store's validation photons; evaluated on the voxel campaign
+# (voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml, GP_val HF) with scripts/score_event_model.py.
+#   sbatch scripts/slurm/train_photon_field.sbatch configs/photon_x+300+500_y-100+100_z-100+100/field_f2.yaml
+model:
+  kind: field
+  architecture:
+    hidden_dims: [256, 256, 256]
+    dropout: 0.0
+  position: {phi_columns: [0, 1, 2]}    # voxel offset columns at evaluation (theta + offset)
+  direction: {phi_columns: [3, 4, 5], degree: 4}
+  encoding: {kind: fourier, n_frequencies: 8, max_frequency: 2.0}
+  last_layer:
+    prior_precision: evidence
+    draws: 1000
+    seed: 0
+training:
+  batch_size: 65536
+  n_passes: 10
+  learning_rate: 0.001
+  eval_every: 50
+  seed: 0
+  device: cuda
+  precision: bf16
+  compile: false
+  validation_events: null     # all 800k validation photons
+event_store: ../../outputs/photon_x+300+500_y-100+100_z-100+100/data
+event_source: legend_optical_map_ml.photon_loader:PhotonStream
+dim_theta: 3                 # voxel centre
+dim_phi: 6                   # emission offset (3) + momentum (3)
+event_source_options:
+  in_memory: true            # 10.8M train photons = 300 MB
+# Voxel evaluation: same metrics and plots as voxel-trained fields (LF = CNP_val, HF = GP_val
+# half of the voxel campaign; GP_val's other half is the blinded gp_test).
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
+data_config: ../voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml
+evaluation:
+- {split: validation, partition: cnp_validation, fidelity: lf}
+- {split: validation, partition: gp_validation, fidelity: hf}
+history_voxels: 500
+output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/field_f2/v1/seed0
