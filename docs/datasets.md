@@ -7,7 +7,8 @@ Config prefix in brackets. Check sizes and states against the data before relyin
 
 `/global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375`, box x 0.365-0.485,
 y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
-`run{i}_v{voxel}_x_y_z.stp.lh5`. Data config: `config.optical.centered.cnp.data.yaml`.
+`run{i}_v{voxel}_x_y_z.stp.lh5`. Data config: `config.optical.centered.cnp.data.yaml`; outputs in
+`outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm` (`docs/outputs.md`).
 
 | Folder | Voxels | Role |
 |---|---|---|
@@ -18,7 +19,7 @@ y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
 | `validation/hf/hf` | 500 | `gp_validation` / `gp_test` 50/50 |
 
 - Crashed or truncated files are listed in `exclude_files` of the data config (file survey,
-  2026-10-22: `outputs/iwang_centered_survey/per_file.csv`).
+  2026-10-22; its `per_file.csv` is no longer kept).
 - 7 LF_sim voxels near x≈0.425, y≈0.37 are only partly filled (they overlap a Ge detector);
   they stay as normal voxels.
 - Ian's reboost HF maps (`iwang/output_maps_new`) store the same per-voxel hit ratio as the

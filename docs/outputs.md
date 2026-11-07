@@ -18,7 +18,8 @@ outputs/
 - `<volume>` is the volume as in the raw campaign's name, e.g.
   `voxel_sets_x-800-600_y+50+250_z+400+600_5mm` (lbnl_secondment),
   `voxel_sets_x+300+500_y-100+100_z-100+100_5mm` and `photon_x+300+500_y-100+100_z-100+100`
-  (genesis).
+  (genesis), `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm` (centered; Ian's folder is
+  named after the box centre, `centered_425_375_375`).
 - **A run goes in the folder of the data it was trained on**, not the data it is scored on:
   a neural field trained on the photon store goes under `photon_<volume>/`, even though it is
   scored on the voxel campaign's `gp_validation`.
@@ -28,12 +29,9 @@ outputs/
 - Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
   `output_directory`) would start an empty cache inside the dataset folder.
 
-The lbnl_secondment and genesis runs made before this layout were moved here on 2026-11-07;
-their JSON records (paths, view provenance) were rewritten to the new folders. Runs whose
-recorded view hash was already stale before the move still fail the residual stage's
-provenance check: lbnl `mlp_v1`, `mlp_v2`, `mfgp_mlp_v2_hf_log*` and `mfgp_debug_*`, made
-before the lbnl view was rebuilt on 2026-11-02.
-
-Not yet moved: `centered` (`optical_centered_cnp_v0` and its runs in `optical_resum/`,
-`optical_mfgp/`) and `countfield/`. The old view `optical_lbnl_secondment_5mm` stays while the
-countfield exports and `smoke/` refer to it; `optical_genesis_x+300+500_5mm` is unused.
+All runs made before this layout were moved here on 2026-11-07; their JSON records (paths,
+view provenance) were rewritten to the new folders, including the centered runs' older
+`RESUM_FLEX/outputs/...` paths from before the repository split. Runs whose recorded view hash
+was already stale before the move still fail the residual stage's provenance check: lbnl
+`mlp_v1`, `mlp_v2`, `mfgp_mlp_v2_hf_log*`, `mfgp_debug_*` (made before the lbnl view was
+rebuilt on 2026-11-02) and every centered run (made from views built in RESUM_FLEX).

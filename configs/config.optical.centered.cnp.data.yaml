@@ -30,7 +30,8 @@ source:
   - lf/run01461_v00010772_x+0.4300_y+0.3700_z+0.3975.stp.lh5
   # validation/hf: truncated run (3102 of 5000 events).
   - hf/run00147_v00009983_x+0.4250_y+0.3700_z+0.4525.stp.lh5
-output_directory: ../outputs/optical_centered_cnp_v0
+output_directory: ../outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/data
+cache_directory: ../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
 theta:
   coordinates: cartesian
   center_source: filename
@@ -45,7 +46,7 @@ target:
   detector_id: null
 split:
   seed: 42
-  manifest: ../outputs/optical_centered_cnp_v0/splits/voxel_split.json
+  manifest: ../outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/data/splits/voxel_split.json
 normalization:
   method: standard
   fit_on: training
