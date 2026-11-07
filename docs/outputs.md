@@ -1,0 +1,33 @@
+# Outputs layout
+
+Run and data folders under `outputs/` are grouped by the data set they were built from.
+
+```
+outputs/
+  event_cache/                 shared event cache of all datasets (event-cache.md)
+  slurm_logs/                  job logs (slurm.md)
+  voxel_sets_<volume>/         one voxel campaign
+    data/                      prepared view: the data YAML's output_directory
+    event_learning/<run>/seedN networks: MLP, CNP, BLL MLP, neural field
+    regression/<run>/seedN     GPs: binomial_*, mfgp_*
+  photon_<volume>/             one homogeneous photon box (its store stays at `store:`)
+    event_learning/<run>/seedN networks trained on that photon store
+```
+
+- `<volume>` is the volume as in the raw campaign's name, e.g.
+  `voxel_sets_x-800-600_y+50+250_z+400+600_5mm` (lbnl_secondment),
+  `voxel_sets_x+300+500_y-100+100_z-100+100_5mm` and `photon_x+300+500_y-100+100_z-100+100`
+  (genesis).
+- **A run goes in the folder of the data it was trained on**, not the data it is scored on:
+  a neural field trained on the photon store goes under `photon_<volume>/`, even though it is
+  scored on the voxel campaign's `gp_validation`.
+- Run names omit the dataset; GP runs start with their type (`binomial_mlp_lf2_hf`,
+  `mfgp_mlp_v2_hf_log`). A GP that uses an MLP's inference reads it from the `event_learning/`
+  run of the same folder.
+- Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
+  `output_directory`) would start an empty cache inside the dataset folder.
+
+Not yet moved (2026-11-07): `centered` (`optical_centered_cnp_v0`, its runs), `countfield/`,
+and runs made before this layout in `optical_resum/`, `optical_binomial/`, `optical_mfgp/`,
+`optical_photon_field/` (still valid; the benchmark config points at some of them). Delete
+those once the benchmark points only into the new folders.

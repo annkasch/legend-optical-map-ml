@@ -1,11 +1,13 @@
 # Two-level MFGP on the LBNL 5 mm voxel lists (2026-10-30): MLP mean on the unlabeled LF2_train
 # voxels -> observed HF_train fraction (target), in log space. GP choices are compared on
 # GP_val (gp_validation); gp_test stays blinded until all choices are final.
+# The MLP inference below comes from the run of the matching .mlp.yaml in the new outputs tree
+# (docs/outputs.md): train and predict that MLP first.
 levels:
 - source: model_mean
   partition: gp_unlabeled
   fidelity: lf
-  inference: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v2/seed0/inference/best/gp_unlabeled_lf.npz
+  inference: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_unlabeled_lf.npz
 - source: observed_fraction
   partition: gp_train
   fidelity: hf
@@ -15,7 +17,7 @@ output_transform: log   # log of the rate; observed fractions smoothed to (m + 0
 kernel: rbf
 n_restarts: 5
 seed: 0
-data_directory: ../outputs/optical_lbnl_secondment_5mm
+data_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_config: config.optical.lbnl_secondment.data.yaml
-output_directory: ../outputs/optical_mfgp/lbnl_secondment_5mm_mlp_v2_hf_log_split/seed0  # GP_val split 250/250
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_mlp_v2_hf_log_split/seed0  # GP_val split 250/250

@@ -16,6 +16,7 @@ only what the task needs, using the table below; `docs/index.md` lists every doc
 | Write or change a data YAML | `docs/data-config.md` | `config.py`, `split.py` |
 | Preparation, sync, unlabeled inputs | `docs/preparation.md` | `pipeline.py`, `view.py`, `provider.py` |
 | Event cache | `docs/event-cache.md` | `event_cache.py` |
+| Where a data view or run goes in `outputs/` | `docs/outputs.md` | `configs/` |
 | Training or GP run config | `docs/run-config.md`, then RESUM_FLEX `docs/configs.md` | `configs/` |
 | Homogeneous campaign, neural field | `docs/photon-store.md` | `photon_store.py`, `photon_loader.py` |
 | Compare models, which data a model trains on | `docs/benchmark.md` | `benchmark.py`, `configs/benchmark.*.yaml` |

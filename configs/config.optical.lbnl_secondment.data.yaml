@@ -15,7 +15,8 @@ source:
     role: gp_train
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_GP_val.csv
     fractions: {gp_validation: 0.5, gp_test: 0.5}
-output_directory: ../outputs/optical_lbnl_secondment_5mm
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
+cache_directory: ../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
 theta:
   coordinates: cartesian
   center_source: filename # CSV x_mm/y_mm/z_mm override the rounded filename center.
@@ -29,7 +30,7 @@ target:
   kind: any_channel
 split:
   seed: 42
-  manifest: ../outputs/optical_lbnl_secondment_5mm/splits/voxel_split.json
+  manifest: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data/splits/voxel_split.json
 normalization:
   method: standard
   fit_on: training

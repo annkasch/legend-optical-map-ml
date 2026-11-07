@@ -1,5 +1,7 @@
 # As config.optical.lbnl_secondment.binomial.mlp.yaml, but with the LF2_train counts as well:
 # the same observations as config.optical.lbnl_secondment.binomial.yaml plus the MLP covariate.
+# The MLP inference below comes from the run of the matching .mlp.yaml in the new outputs tree
+# (docs/outputs.md): train and predict that MLP first.
 observations:
 - {partition: gp_unlabeled, fidelity: lf}   # LF2_train
 - {partition: gp_train, fidelity: hf}       # HF_train
@@ -7,14 +9,14 @@ evaluation:
 - {partition: gp_validation, fidelity: hf}
 covariate:
   inference:
-    gp_unlabeled/lf: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v2/seed0/inference/best/gp_unlabeled_lf_photons-gp_unlabeled_lf.npz
-    gp_train/hf: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v2/seed0/inference/best/gp_train_hf_photons-gp_unlabeled_lf.npz
-    gp_validation/hf: ../outputs/optical_resum/lbnl_secondment_5mm_mlp_v2/seed0/inference/best/gp_validation_hf_photons-gp_unlabeled_lf.npz
+    gp_unlabeled/lf: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_unlabeled_lf_photons-gp_unlabeled_lf.npz
+    gp_train/hf: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_train_hf_photons-gp_unlabeled_lf.npz
+    gp_validation/hf: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_v2/seed0/inference/best/gp_validation_hf_photons-gp_unlabeled_lf.npz
 kernel: matern52
 n_restarts: 2
 seed: 0
 coverage_ylim: [0, 0.0065]   # fixed y range of the coverage plots
-data_directory: ../outputs/optical_lbnl_secondment_5mm
+data_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_config: config.optical.lbnl_secondment.data.yaml
-output_directory: ../outputs/optical_binomial/lbnl_secondment_5mm_mlp_lf2_hf/seed0
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/binomial_mlp_lf2_hf/seed0

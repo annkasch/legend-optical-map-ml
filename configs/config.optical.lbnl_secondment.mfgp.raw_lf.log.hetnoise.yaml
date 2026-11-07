@@ -14,9 +14,9 @@ output_transform: log   # log of the rate; observed fractions smoothed to (m + 0
 kernel: rbf
 n_restarts: 5
 seed: 0
-data_directory: ../outputs/optical_lbnl_secondment_5mm
+data_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_config: config.optical.lbnl_secondment.data.yaml
 observation_noise: binomial
 coverage_ylim: [0, 0.0065]
-output_directory: ../outputs/optical_mfgp/lbnl_secondment_5mm_raw_lf_hf_log_hetnoise/seed0
+output_directory: ../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/regression/mfgp_raw_lf_hf_log_hetnoise/seed0

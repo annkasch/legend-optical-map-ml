@@ -10,6 +10,7 @@ GP, metrics, run outputs, stream training) are documented in RESUM_FLEX `docs/in
 | [datasets.md](datasets.md) | Working with a dataset: paths, sizes, roles, known bad files, open issues |
 | [data-config.md](data-config.md) | Writing or changing a data YAML: sources, manifests, roles, features, target |
 | [preparation.md](preparation.md) | How data are prepared and kept in sync; unlabeled inputs and `predict` |
+| [outputs.md](outputs.md) | Where a data view or run goes in `outputs/`: one folder per data set |
 | [event-cache.md](event-cache.md) | Event cache layout, `update` / `compact`, locks, large inputs |
 | [run-config.md](run-config.md) | Writing a training or GP run config for optical data |
 | [photon-store.md](photon-store.md) | Homogeneous campaigns: photon store, loader, neural-field stream training |
