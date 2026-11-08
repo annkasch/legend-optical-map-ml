@@ -1,0 +1,9 @@
+# Within-design-point metrics (RESUM_FLEX `within_point` stage, docs/evaluation.md) on the
+# finished genesis BLL MLP run, which was trained before the read-out had them. Reads the
+# run's saved logits and labels of its best checkpoint; the run itself is not changed.
+# The run scored LF validation only (cnp_validation, hf_validation: false).
+run: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll/v1/seed0
+checkpoints: [best]
+sets: [validation/lf]
+within_point_null_draws: 1000
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/evaluation/mlp_bll/v1/seed0/within_point

@@ -40,10 +40,11 @@ only what the task needs, using the table below; `docs/index.md` lists every doc
 ## Commands
 ```bash
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-.venv/bin/pytest -q                       # 108 tests, ~2 min on a login node
+.venv/bin/pytest -q                       # 109 tests, ~2 min on a login node
 .venv/bin/ruff check .                    # must stay clean
 .venv/bin/python -m core.surrogates train|mfgp|binomial|stream CONFIG.yaml
 .venv/bin/python -m core.surrogates predict RUN/checkpoints/best DATA_DIR PARTITION
+.venv/bin/python -m core.surrogates within_point configs/<dataset>/within_point.<model>.yaml  # finished run
 .venv/bin/python -m legend_optical_map_ml.benchmark configs/<dataset>/benchmark.yaml  # reads runs only
 ```
 Login nodes: one single-threaded process of up to ~15 min; real data, GP fits and training

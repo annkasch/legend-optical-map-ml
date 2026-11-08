@@ -24,6 +24,7 @@ def load(path: Path):
         load_mfgp_config,
         load_stream_config,
         load_surrogate_config,
+        load_within_point_config,
     )
 
     from legend_optical_map_ml.benchmark import load_benchmark_config
@@ -40,6 +41,8 @@ def load(path: Path):
         return None  # read by the countfield repository
     if name.startswith("binomial"):
         return load_binomial_config(path)
+    if name.startswith("within_point"):
+        return load_within_point_config(path)
     if name.startswith("mfgp"):
         return load_mfgp_config(path)
     if "event_store" in yaml.safe_load(path.read_text()):
@@ -68,6 +71,10 @@ def test_config_loads_and_writes_into_its_dataset(path):
     if config is None or path.name == "benchmark.yaml":
         return
     out = config.output_directory.relative_to(dataset)  # a run goes with its training data
+    if path.name.startswith("within_point"):  # scores a run of this dataset, beside its path
+        run = config.run.relative_to(dataset)
+        assert out == Path("evaluation") / run.relative_to(run.parts[0]) / "within_point", out
+        return
     assert re.fullmatch(r"(event_learning|regression)/[^/]+/v\d+/seed\d+", str(out)), out
     if hasattr(config, "data_config") and config.data_config is not None:
         from legend_optical_map_ml.config import load_optical_config

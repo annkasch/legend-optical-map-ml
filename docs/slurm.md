@@ -7,7 +7,7 @@ the repository root, default to account m2676, `debug` QOS and 15 min, and log t
 
 | Script | Runs |
 |---|---|
-| `train_surrogate.sbatch CONFIG.yaml [train\|mfgp\|binomial]` | CPU node, one stage; `BLAS_THREADS` (default 1) |
+| `train_surrogate.sbatch CONFIG.yaml [train\|mfgp\|binomial\|within_point]` | CPU node, one stage; `BLAS_THREADS` (default 1) |
 | `predict_surrogate.sbatch CHECKPOINT DATA_DIR PARTITION [options]` | CPU node, context-free mean prediction |
 | `submit_surrogate_pipeline.sh RUN.yaml GP.yaml [sbatch options]` | train → predict → MFGP as dependent jobs |
 | `train_photon_field.sbatch CONFIG.yaml` | GPU node, `core.surrogates stream`; NERSC `pytorch` module, RESUM_FLEX from `RESUM_FLEX_ROOT` (default `../RESUM_FLEX`); `--gpus-per-node=4` runs DDP via torchrun |
