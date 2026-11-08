@@ -15,7 +15,6 @@ outputs/
     event_learning/<model>/vN/seedN  networks: MLP, CNP, BLL MLP, neural field
     regression/<model>/vN/seedN      GPs: binomial_*, mfgp_*
     countfield/                exports (*_counts.npz, *_photons.npz) and countfield runs
-    evaluation/<model>/vN/seedN/within_point  finished run re-scored (RESUM_FLEX within_point)
   photon_<volume>/             one homogeneous photon box
     data/                      photon store: the store YAML's `store:` (photon-store.md)
     event_learning/<model>/vN/seedN  networks trained on that photon store
@@ -37,9 +36,10 @@ outputs/
   `mfgp_mlp_hf_log/v2` (GP_val split 250/250). A new version never overwrites an old one.
 - GP names leave out the input MLP's version; the run's records and config name the MLP run
   (`event_learning/mlp/vN`) whose inference it reads, in the same dataset folder.
-- A stage that re-scores a finished run (`within_point`) writes to
-  `evaluation/<same model/vN/seedN as the run>/<stage>/`, never into the run; its config is
-  `configs/<dataset>/<stage>.<model>.yaml`, e.g. `within_point.mlp_bll.yaml`.
+- An added evaluation of a finished run (RESUM_FLEX `within_point`) is not a new run: it
+  writes into the run's folder, next to its read-out (`within_point.json`, arrays, plot), and
+  leaves the run's own files unchanged. Config: `configs/<dataset>/<stage>.<model>.yaml`, e.g.
+  `within_point.mlp_bll.yaml`.
 - Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
   `output_directory`) would start an empty cache inside the dataset folder.
 

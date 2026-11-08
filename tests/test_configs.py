@@ -70,11 +70,11 @@ def test_config_loads_and_writes_into_its_dataset(path):
         return
     if config is None or path.name == "benchmark.yaml":
         return
-    out = config.output_directory.relative_to(dataset)  # a run goes with its training data
-    if path.name.startswith("within_point"):  # scores a run of this dataset, beside its path
+    if path.name.startswith("within_point"):  # an added evaluation, written into the run
         run = config.run.relative_to(dataset)
-        assert out == Path("evaluation") / run.relative_to(run.parts[0]) / "within_point", out
+        assert re.fullmatch(r"(event_learning|regression)/[^/]+/v\d+/seed\d+", str(run)), run
         return
+    out = config.output_directory.relative_to(dataset)  # a run goes with its training data
     assert re.fullmatch(r"(event_learning|regression)/[^/]+/v\d+/seed\d+", str(out)), out
     if hasattr(config, "data_config") and config.data_config is not None:
         from legend_optical_map_ml.config import load_optical_config
