@@ -1,7 +1,6 @@
 """Benchmark report from synthetic finished runs of every supported kind."""
 
 import json
-import subprocess
 
 import numpy as np
 import pytest
@@ -11,10 +10,9 @@ from scipy.stats import binom
 
 from legend_optical_map_ml.benchmark import (
     BenchmarkConfig,
-    _seconds,
+    donor_stem,
     load_benchmark_config,
     run_benchmark,
-    slurm_compute,
 )
 
 B, N = 40, 5000
@@ -170,39 +168,10 @@ def test_missing_scoring_file_and_blinded_test(tmp_path):
     BenchmarkConfig(**raw, partition="gp_test", unblind_test=True)
     with pytest.raises(ValidationError, match="unique"):
         BenchmarkConfig(**{**raw, "models": raw["models"] * 2})
-    with pytest.raises(ValidationError, match="exactly one"):
-        BenchmarkConfig(**{**raw, "models": [{**raw["models"][0], "compute": [{}]}]})
+    with pytest.raises(ValidationError, match="slurm_job"):  # runs record compute.json
+        BenchmarkConfig(**{**raw, "models": [{**raw["models"][0], "compute": [{"slurm_job": 1}]}]})
 
 
-def test_slurm_accounting():
-    assert _seconds("00:00.195") == pytest.approx(0.195)
-    assert _seconds("13:20:12") == 13 * 3600 + 20 * 60 + 12
-    assert _seconds("1-02:00:00") == 26 * 3600
-    lines = "\n".join(
-        [
-            "60723878|2051|256|13:20:12",
-            "60723878.batch|2051|256|00:00.256",
-            "60723878.0|2047|32|13:20:12",
-        ]
-    )
-
-    def fake(args, **kwargs):
-        assert args[:2] == ["sacct", "-j"]
-        return subprocess.CompletedProcess(args, 0, stdout=lines + "\n")
-
-    record = slurm_compute(60723878, 2, run=fake)
-    assert record["cpu_seconds"] == 13 * 3600 + 20 * 60 + 12
-    assert record["core_hours"] == pytest.approx(2051 * 128 / 3600)
-    with pytest.raises(ValueError, match="no record"):
-        slurm_compute(1, 2, run=fake)
-
-
-def test_donor_stem_prefers_the_new_name_and_finds_old_runs(tmp_path):
-    from legend_optical_map_ml.benchmark import donor_stem
-
-    assert donor_stem(tmp_path, "gp_validation_hf", None) == "gp_validation_hf"
-    assert donor_stem(tmp_path, "a_hf", "b/lf") == "a_hf_events-b_lf"
-    (tmp_path / "a_hf_photons-b_lf.npz").touch()  # predicted before 2026-11-06
-    assert donor_stem(tmp_path, "a_hf", "b/lf") == "a_hf_photons-b_lf"
-    (tmp_path / "a_hf_events-b_lf.npz").touch()
-    assert donor_stem(tmp_path, "a_hf", "b/lf") == "a_hf_events-b_lf"
+def test_donor_stem():
+    assert donor_stem("gp_validation_hf", None) == "gp_validation_hf"
+    assert donor_stem("a_hf", "b/lf") == "a_hf_events-b_lf"

@@ -43,9 +43,6 @@ outputs/
 - Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
   `output_directory`) would start an empty cache inside the dataset folder.
 
-All runs made before this layout were moved here on 2026-11-07; their JSON records (paths,
-view provenance) were rewritten to the new folders, including the centered runs' older
-`RESUM_FLEX/outputs/...` paths from before the repository split. Runs whose recorded view hash
-was already stale before the move still fail the residual stage's provenance check: lbnl
-`mlp/v1`, `mlp/v2`, `mfgp_mlp_hf_log/v1`, `/v2` and `mfgp_mlp_hf_log_hetnoise/v1` (made
-before the lbnl view was rebuilt on 2026-11-02) and every centered run (made from views built in RESUM_FLEX).
+Runs made before the RESUM_FLEX design point rename (a0469c0, 2026-11-10) no longer load in
+RESUM_FLEX; they sit in `outputs/<dataset>/archive_pre_rename/` with their folder structure
+and keep their `vN`, so new runs take the next version.

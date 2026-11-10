@@ -52,7 +52,7 @@ def main():
     if getattr(model, "last_layer", None) is None:
         raise SystemExit("The checkpoint has no Bayesian last layer")
     folder = args.checkpoint.parent.parent / "inference" / args.checkpoint.name
-    path = folder / (donor_stem(folder, f"{args.partition}_{args.fidelity}", args.donors) + ".npz")
+    path = folder / (donor_stem(f"{args.partition}_{args.fidelity}", args.donors) + ".npz")
     if path.exists():  # inference files are never overwritten: reuse the earlier prediction
         saved = json.loads(path.with_suffix(".json").read_text())["event_inputs"]
         if saved["seed"] != args.seed:

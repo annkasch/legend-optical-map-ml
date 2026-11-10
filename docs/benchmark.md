@@ -44,10 +44,9 @@ The tool only reads finished runs, so it is cheap (fine on a login node). Each e
 | `countfield` | `evaluation_<partition>_<fidelity>.npz` |
 | `event_model` | `inference/<checkpoint>/…_predictive.npz` and `_scores.json`; score the checkpoint first with `scripts/score_event_model.py` (`checkpoint`, `donors` select the file) |
 
-`compute` lists every run of the model's pipeline: a run directory (`compute.json`), a json
-file with a `compute` entry, or `slurm_job: ID` for runs from before `compute.json` (wall
-time, `TotalCPU` and `AllocCPUS` from `sacct`; `threads_per_core` converts logical CPUs to
-cores). Without it, the run's own records are used. All models must score the same voxels
+`compute` lists every run of the model's pipeline (`path:`): a run directory (`compute.json`)
+or a json file with a `compute` entry. Without it, the run's own records are used; countfield
+runs record none. All models must score the same voxels
 in the same order; `reference` names the model for the paired NLL difference. Test
 partitions need `unblind_test: true`.
 

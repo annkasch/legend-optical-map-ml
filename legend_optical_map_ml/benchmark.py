@@ -18,7 +18,7 @@ event_model     ``inference/<checkpoint>/<partition>_<fidelity>[_events-<donors>
 From these arrays (hits k, trials n, predictive mean, 1/2/3 sigma intervals) every model gets
 the same metrics; see ``docs/benchmark.md``. All models must cover the same voxels in the same
 order. Compute is summed over the runs listed per model (``compute.json`` of RESUM_FLEX runs,
-the ``compute`` entry of score/inference files, or Slurm accounting for older runs).
+or the ``compute`` entry of score/inference files).
 
 Writes ``report.md``, ``benchmark.csv``, ``benchmark.json`` and ``benchmark.png`` into
 ``output_directory``; a report is derived data and is rewritten on every call.
@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import csv
 import json
-import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -44,16 +43,9 @@ NOMINAL = {1: 0.6827, 2: 0.9545, 3: 0.9973}
 
 
 class ComputeSource(StrictModel):
-    """One run of a pipeline: a run directory / json file, or a Slurm job id."""
+    """One run of a pipeline: a run directory (compute.json) or a json file with compute."""
 
-    path: Path | None = None
-    slurm_job: int | None = None
-
-    @model_validator(mode="after")
-    def _one_source(self):
-        if (self.path is None) == (self.slurm_job is None):
-            raise ValueError("A compute source needs exactly one of path or slurm_job")
-        return self
+    path: Path
 
 
 class BenchmarkModel(StrictModel):
@@ -79,8 +71,6 @@ class BenchmarkConfig(StrictModel):
     reference: str | None = None
     # Rates (MAE, RMSE, CRPS) are reported in units of this value.
     rate_unit: float = Field(1e-4, gt=0)
-    # Logical CPUs per physical core, for Slurm AllocCPUS (2 on Perlmutter CPU nodes).
-    threads_per_core: int = Field(2, ge=1)
     output_directory: Path
     models: list[BenchmarkModel] = Field(min_length=1)
 
@@ -162,17 +152,12 @@ def _native(row: dict, *, count_nll: bool) -> dict:
     return dict(crps=row.get("crps"), predictive_nll=nll)
 
 
-def donor_stem(folder: Path, base: str, donors: str | None) -> str:
+def donor_stem(base: str, donors: str | None) -> str:
     """Inference file stem of ``base`` (partition_fidelity) with donor events ``donors``
-    ("partition/fidelity"): ``<base>_events-<donors>`` as RESUM_FLEX writes it; runs predicted
-    before 2026-11-06 used ``_photons-`` and are found under that name."""
+    ("partition/fidelity"): ``<base>_events-<donors>`` as RESUM_FLEX writes it."""
     if donors is None:
         return base
-    suffix = donors.replace("/", "_")
-    old = f"{base}_photons-{suffix}"
-    if not any(folder.glob(f"{base}_events-{suffix}*")) and any(folder.glob(f"{old}*")):
-        return old
-    return f"{base}_events-{suffix}"
+    return f"{base}_events-{donors.replace('/', '_')}"
 
 
 def load_prediction(model: BenchmarkModel, partition: str, fidelity: str) -> VoxelPrediction:
@@ -198,7 +183,7 @@ def load_prediction(model: BenchmarkModel, partition: str, fidelity: str) -> Vox
         native = _native(rows[0], count_nll=True)
     else:
         folder = run / "inference" / model.checkpoint
-        stem = donor_stem(folder, f"{partition}_{fidelity}", model.donors)
+        stem = donor_stem(f"{partition}_{fidelity}", model.donors)
         scores = folder / f"{stem}_scores.json"
         if not scores.is_file():
             raise FileNotFoundError(
@@ -251,44 +236,12 @@ def score(pred: VoxelPrediction) -> dict:
     )
 
 
-def _seconds(value: str) -> float:
-    """Slurm duration [D-]HH:MM:SS, MM:SS(.ms) or HH:MM:SS(.ms) in seconds."""
-    days, _, rest = value.rpartition("-")
-    parts = [float(p) for p in rest.split(":")]
-    while len(parts) < 3:
-        parts.insert(0, 0.0)
-    hours, minutes, seconds = parts
-    return (float(days) if days else 0.0) * 86400 + hours * 3600 + minutes * 60 + seconds
-
-
-def slurm_compute(job: int, threads_per_core: int, *, run=subprocess.run) -> dict:
-    """Wall time, CPU time used (all steps) and allocated core-hours of a finished job."""
-    out = run(
-        ["sacct", "-j", str(job), "-n", "-P", "-o", "JobIDRaw,ElapsedRaw,AllocCPUS,TotalCPU"],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout
-    for line in out.splitlines():
-        job_id, elapsed, cpus, total_cpu = line.split("|")
-        if job_id == str(job):
-            wall = float(elapsed)
-            cores = int(cpus) / threads_per_core
-            return dict(
-                source=f"slurm job {job}",
-                wall_seconds=wall,
-                cpu_seconds=_seconds(total_cpu),
-                core_hours=wall * cores / 3600,
-            )
-    raise ValueError(f"sacct has no record of job {job}")
-
-
 def _file_compute(path: Path) -> list[dict]:
     """Total records of a run directory (compute.json) or a json file with a compute entry."""
     if path.is_dir():
         path = path / "compute.json"
         if not path.is_file():
-            raise FileNotFoundError(f"{path} not found; give the run's slurm_job instead")
+            raise FileNotFoundError(f"{path} not found")
         records = [json.loads(path.read_text())]
     else:
         entry = json.loads(path.read_text()).get("compute")
@@ -307,7 +260,7 @@ def _file_compute(path: Path) -> list[dict]:
     ]
 
 
-def model_compute(model: BenchmarkModel, config: BenchmarkConfig, *, run=subprocess.run):
+def model_compute(model: BenchmarkModel, config: BenchmarkConfig):
     """Summed compute of a model's pipeline, or None when nothing is recorded."""
     sources = list(model.compute)
     if not sources:
@@ -315,7 +268,7 @@ def model_compute(model: BenchmarkModel, config: BenchmarkConfig, *, run=subproc
             sources.append(ComputeSource(path=model.run))
         if model.kind == "event_model":
             folder = model.run / "inference" / model.checkpoint
-            stem = donor_stem(folder, f"{config.partition}_{config.fidelity}", model.donors)
+            stem = donor_stem(f"{config.partition}_{config.fidelity}", model.donors)
             scores = folder / f"{stem}_scores.json"
             if scores.is_file() and "compute" in json.loads(scores.read_text()):
                 sources.append(ComputeSource(path=scores))
@@ -323,10 +276,7 @@ def model_compute(model: BenchmarkModel, config: BenchmarkConfig, *, run=subproc
         return None
     records = []
     for source in sources:
-        if source.slurm_job is not None:
-            records.append(slurm_compute(source.slurm_job, config.threads_per_core, run=run))
-        else:
-            records.extend(_file_compute(source.path))
+        records.extend(_file_compute(source.path))
     return dict(
         cpu_hours=sum(r["cpu_seconds"] for r in records) / 3600,
         core_hours=sum(r["core_hours"] for r in records),
@@ -335,7 +285,7 @@ def model_compute(model: BenchmarkModel, config: BenchmarkConfig, *, run=subproc
     )
 
 
-def run_benchmark(config: BenchmarkConfig, *, run=subprocess.run) -> Path:
+def run_benchmark(config: BenchmarkConfig) -> Path:
     """Score every model, write the report files and return the report path."""
     predictions = {
         m.label: load_prediction(m, config.partition, config.fidelity) for m in config.models
@@ -366,7 +316,7 @@ def run_benchmark(config: BenchmarkConfig, *, run=subprocess.run) -> Path:
                 prediction=str(pred.source),
                 note=model.note,
                 scores=scores,
-                compute=model_compute(model, config, run=run),
+                compute=model_compute(model, config),
             )
         )
     directory = config.output_directory
