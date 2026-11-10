@@ -44,5 +44,5 @@ validation_context_sweep: [16, 64, 128, 256, 375]
 validation_seed: 12345
 # Checkpoint selection uses at most 5000 validation voxels (v0 has ~250, so all of them);
 # full validation and test sets are evaluated once at the end.
-selection_max_voxels: 5000
+selection_max_design_points: 5000
 evaluation_threads: 16

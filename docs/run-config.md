@@ -25,7 +25,7 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   levels and benchmark sets.
 - Checkpoints are selected on LF validation; `selection: bernoulli_log_loss` for natural
   sampling (`average_precision` only for the mixup ablation).
-- Large validation sets: `selection_max_voxels: N` selects on a seeded subset (`validation_seed`;
+- Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).
 - LBNL lists have no CNP test set; those runs evaluate train and validation only.

@@ -72,7 +72,7 @@ def main():
     provider = load_provider(model.metadata.get("data_provider"), args.data_directory)
     batch, _ = provider.load(args.partition, args.fidelity)
     hits = np.where(batch.event_mask, batch.labels, 0).sum(axis=1)
-    trials = batch.events_per_voxel
+    trials = batch.events_per_design_point
     with np.load(path) as arrays:
         draws = arrays["probability_draws"].astype(float)  # [S, B]
         plugin = arrays["mean_probability"]  # [B] mean p with the trained weights

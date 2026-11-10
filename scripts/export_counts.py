@@ -19,7 +19,7 @@ from legend_optical_map_ml.provider import OpticalDataset
 def counts(provider: OpticalDataset, partition: str, fidelity: str):
     batch, provenance = provider.load(partition, fidelity)
     hits = np.where(batch.event_mask, batch.labels, 0).sum(axis=1).astype(np.int64)  # [B]
-    events = np.asarray(batch.events_per_voxel, dtype=np.int64)  # [B]
+    events = np.asarray(batch.events_per_design_point, dtype=np.int64)  # [B]
     centres = np.asarray(provider.coordinates(partition, fidelity), dtype=float)  # [B, 3] m
     if len(centres) != len(hits):
         raise RuntimeError(f"{partition}/{fidelity}: {len(centres)} centres, {len(hits)} voxels")

@@ -284,7 +284,7 @@ def test_design_only_and_unequal_event_counts(tmp_path):
     result = prepare_optical_data(c, update_manifest=True)
     files = result.metadata["train"]["lf"]["files"]
     batch = result.batch("train", "lf")
-    counts = batch.events_per_voxel
+    counts = batch.events_per_design_point
     assert batch.is_ragged and batch.n_events == 9 and sorted(set(counts)) == [8, 9]
     assert result.metadata["train"]["lf"]["event_counts"] == counts.tolist()
     # Padding is zero and excluded; reloading preserves counts.
@@ -628,6 +628,8 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
         "architecture": {"hidden_dims": [8]},
         "last_layer": {"draws": 100},
     }
+    for key in ("n_context_min", "n_context_max"):  # context-free: scores all n_events events
+        del run_config["training"][key]
     run_config["hf_validation"] = False
     run_config["test_fidelities"] = []
     result = run_experiment(SurrogateRunConfig.model_validate(run_config))
@@ -778,12 +780,12 @@ def test_cnp_selection_subset_and_evaluation_threads(tmp_path):
         assert torch.get_num_threads() == 1  # only evaluation calls switch threads
     config = SurrogateRunConfig.model_validate({
         **yaml_safe_config(c.output_directory, tmp_path / "run"),
-        "hf_validation": False, "selection_max_voxels": 2, "evaluation_threads": 2,
+        "hf_validation": False, "selection_max_design_points": 2, "evaluation_threads": 2,
     })
     output = run_experiment(config)
     experiment = json.loads((output / "experiment.json").read_text())
-    assert experiment["selection_voxels"] == {"available": 6, "used": 2}
+    assert experiment["selection_design_points"] == {"available": 6, "used": 2}
     metrics = json.loads((output / "metrics.json").read_text())
     # The final evaluation still covers every validation voxel.
-    assert {m["voxels"] for m in metrics if m["split"] == "validation"} == {6}
+    assert {m["design_points"] for m in metrics if m["split"] == "validation"} == {6}
     assert torch.get_num_threads() == 1

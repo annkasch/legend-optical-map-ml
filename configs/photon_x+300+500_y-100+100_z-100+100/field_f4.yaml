@@ -41,5 +41,5 @@ data_config: ../voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml
 evaluation:
 - {split: validation, partition: cnp_validation, fidelity: lf}
 - {split: validation, partition: gp_validation, fidelity: hf}
-history_voxels: 500
+history_design_points: 500
 output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/field_f4/v1/seed0

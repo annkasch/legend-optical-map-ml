@@ -9,8 +9,6 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 CONFIGS = ROOT / "configs"
 OUTPUTS = ROOT / "outputs"
-# Known not to load: observation_noise is not (yet) an MFGP config key.
-KNOWN_BROKEN = {"mfgp.log.hetnoise.yaml", "mfgp.raw_lf.log.hetnoise.yaml"}
 
 
 def config_files():
@@ -58,10 +56,6 @@ def test_configs_are_grouped_by_dataset():
 
 @pytest.mark.parametrize("path", config_files(), ids=lambda p: f"{p.parent.name[:14]}/{p.name}")
 def test_config_loads_and_writes_into_its_dataset(path):
-    if path.name in KNOWN_BROKEN:
-        with pytest.raises(ValueError, match="observation_noise"):
-            load(path)
-        return
     config = load(path)
     dataset = OUTPUTS / path.parent.name
     if path.name in ("data.yaml", "photons.yaml"):

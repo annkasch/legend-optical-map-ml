@@ -127,7 +127,7 @@ def test_inference_writes_mean_probability_per_voxel(tmp_path):
         assert arrays["coordinates"].shape == (4, 3)
         assert (arrays["event_counts"] == 8).all()
     meta = json.loads(path.with_suffix(".json").read_text())
-    assert meta["step"] == 7 and meta["voxels"] == 4
+    assert meta["step"] == 7 and meta["design_points"] == 4
     with pytest.raises(FileExistsError):
         predict_partition(checkpoint, c.output_directory, "gp_unlabeled")
 
@@ -212,7 +212,7 @@ def test_two_level_gp_from_inference_and_hf(tmp_path):
         MFGPRunConfig(**settings, evaluation=[{"partition": "gp_validation", "fidelity": "hf"}])
     )
     rows = json.loads((out / "metrics.json").read_text())
-    assert [(r["partition"], r["fidelity"], r["level"], r["voxels"]) for r in rows] == [
+    assert [(r["partition"], r["fidelity"], r["level"], r["design_points"]) for r in rows] == [
         ("gp_validation", "hf", 1, 2)
     ]
     with np.load(out / "training_arrays.npz") as arrays:
@@ -246,7 +246,7 @@ def test_inference_file_level_matches_prepared_voxels(tmp_path):
         np.testing.assert_array_equal(arrays["Y_0"].ravel(), saved["mean_probability"])
         np.testing.assert_array_equal(arrays["X_0"], saved["theta"])
     records = json.loads((out / "levels.json").read_text())
-    assert records[0]["data"]["inference"] == str(inference) and records[0]["voxels"] == 4
+    assert records[0]["data"]["inference"] == str(inference) and records[0]["design_points"] == 4
     wrong = config.model_copy(
         update={
             "output_directory": tmp_path / "gp2",

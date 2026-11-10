@@ -49,5 +49,5 @@ train_sets:
 partitions: {validation: cnp_validation, test: cnp_test}
 data_config: data.yaml
 output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f2/v2/seed0
-selection_max_voxels: 500
+selection_max_design_points: 500
 evaluation_threads: 16
