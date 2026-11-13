@@ -41,8 +41,8 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   (`theta.model_input: false`) suits `mlp` and `mlp_bll`, not the field model (needs θ).
   The `score` stage (`docs/benchmark.md`) scores it on the run's view; the provider moves
   donor photons into the scored voxel (`transfer_events`: absolute positions shifted by the
-  centre difference, offsets unchanged). A support model whose
-  `predict` output feeds a GP needs a view with θ for now (`docs/data-config.md`).
+  centre difference, offsets unchanged). As a support model its `predict` output feeds a GP
+  like any other (`docs/data-config.md`).
 
 ## GP runs (`mfgp`, `binomial`)
 

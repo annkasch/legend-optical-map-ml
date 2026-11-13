@@ -167,6 +167,10 @@ def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path):
         assert p.shape == (4,) and np.all((p > 0) & (p < 1))
         assert arrays["design_point_ids"].tolist() == provider.theta("gp_unlabeled", "lf")[1]
         assert np.array_equal(arrays["coordinates"], provider.coordinates("gp_unlabeled", "lf"))
+        # The voxel centres GP stages check (binomial covariate, MFGP level), without theta input.
+        np.testing.assert_allclose(
+            arrays["theta"], provider.theta("gp_unlabeled", "lf")[0], rtol=0, atol=1e-12
+        )
     # Score stage: donors from the scored set itself, never the voxel's own, moved into the voxel.
     from core.surrogates.score_stage import run_score
     from schemas.surrogates import ScoreRunConfig
