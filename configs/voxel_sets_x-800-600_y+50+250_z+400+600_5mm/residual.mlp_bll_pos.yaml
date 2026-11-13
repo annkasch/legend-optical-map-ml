@@ -1,0 +1,10 @@
+# Residual learnability test (RESUM_FLEX `residual` stage, docs/evaluation.md) on the finished
+# MLP + BLL run on the emission point via the field model (mlp_bll_pos/v1, 2026-11-12, trained
+# without residual_test); as residual.mlp_bll.yaml for mlp_bll/v2. Results and the correction
+# plot go to the run's residual_test/ subfolder; the run's own files stay unchanged.
+run: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_pos/v1/seed0
+checkpoints: [best]
+sets: [validation/lf]
+residual_test:
+  threads: 16
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_pos/v1/seed0/residual_test

@@ -34,3 +34,17 @@ split:
 normalization:
   method: standard
   fit_on: training
+# Further views of the same files and split (docs/data-config.md, Views); written to
+# data/views/<name>/, picked by a run's data_directory.
+views:
+  emission:   # emission point (absolute vertex) + momentum only; voxel centre no network input
+    theta:
+      model_input: false
+      coordinates: cartesian
+      center_source: filename
+    phi:
+      vertex:
+        representation: absolute
+        coordinates: cartesian
+      momentum:
+        representation: components
