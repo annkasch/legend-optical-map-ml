@@ -15,6 +15,7 @@ Relative paths resolve from the YAML's directory, not the shell's. Example:
 | `target` | Which hit outcome is predicted |
 | `split` | `seed` and `manifest` (stored assignment, reused by later preparations) |
 | `normalization` | `standard`, `minmax` or `none`, fitted on training roles only |
+| `views` | Optional named input representations of the same data (below) |
 
 ## Sources and roles
 
@@ -69,3 +70,25 @@ zero-padded with per-voxel `event_counts`).
   `single_channel` with `detector_id`.
 - `normalization.fit_fidelities` optionally restricts which fidelities enter the statistics.
   Inference checks that the checkpoint's normalization equals the view's.
+
+## Views
+
+The top-level `theta`, `phi` and `normalization` define the view at `output_directory`.
+`views` adds named views of the same files, roles and split, each with its own features and
+normalization, written to `<output_directory>/views/<name>/`:
+
+```yaml
+views:
+  absolute:                        # name: lower case, digits, underscores
+    phi:
+      vertex: {representation: absolute}
+```
+
+- A view sets any of `theta`, `phi`, `normalization`; unset ones take the top-level value.
+  Source, target, split and cache are shared.
+- A view's `theta` must group voxels like the top-level one (same `center_source`, same
+  azimuth setting), because the split is assigned once for all views.
+- A run picks its view with `data_directory` (`.../data` or `.../data/views/<name>`); the
+  run's `experiment.json` records it (`view`).
+- Adding a view or changing one rewrites only that view; the others, their provenance and the
+  split stay unchanged (`docs/preparation.md`).

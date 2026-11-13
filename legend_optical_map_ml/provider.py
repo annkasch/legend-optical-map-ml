@@ -52,10 +52,11 @@ class OpticalDataset:
 
         preparation = load_optical_config(data_config)
         data_directory = Path(data_directory).resolve()
-        if preparation.output_directory != data_directory:
+        directories = [v.output_directory for v in preparation.view_configs().values()]
+        if data_directory not in directories:
             raise ValueError(
-                f"data_config writes to {preparation.output_directory}, "
-                f"but data_directory is {data_directory}"
+                f"data_directory {data_directory} is none of the views data_config writes: "
+                + ", ".join(map(str, directories))
             )
         # config.json is written only by a full preparation.
         saved = data_directory / "config.json"
@@ -70,4 +71,5 @@ class OpticalDataset:
             path=str(data_config),
             regenerated=regenerated,
             settings=preparation.model_dump(mode="json"),
+            view=data_directory.relative_to(preparation.output_directory).as_posix(),
         )

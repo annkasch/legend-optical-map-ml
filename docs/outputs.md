@@ -12,6 +12,7 @@ outputs/
   slurm_logs/                  job logs (slurm.md)
   voxel_sets_<volume>/         one voxel campaign
     data/                      prepared view: the data YAML's output_directory
+      views/<name>/            further views of the same data (data-config.md, Views)
     event_learning/<model>/vN/seedN  networks: MLP, CNP, BLL MLP, neural field
     regression/<model>/vN/seedN      GPs: binomial_*, mfgp_*
     countfield/                exports (*_counts.npz, *_photons.npz) and countfield runs

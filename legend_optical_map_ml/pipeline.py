@@ -121,13 +121,20 @@ def fit_normalization(runs, config: OpticalDataConfig) -> dict:
 
 
 def prepare_optical_data(
-    config: OpticalDataConfig, *, update_manifest=False, workers: int | None = None
+    config: OpticalDataConfig,
+    *,
+    update_manifest=False,
+    workers: int | None = None,
+    views: list[str | None] | None = None,
 ) -> PreparedOpticalData:
-    """Cache new or changed inputs, assign partitions, fit normalization and write the view.
+    """Cache new or changed inputs, assign partitions, fit normalization and write the views.
 
-    Writes view.npy/view.json (see legend_optical_map_ml.view), metadata.json, normalization.json,
-    config.json, source_stamp.json, manifest_snapshot.json and reports/ to
-    config.output_directory. Batches are built from the view when loaded.
+    All views (top-level and ``config.views``) share the cached files and one split; each gets
+    its own normalization. ``views`` selects which are written (None = top-level; default all).
+    Per view: view.npy/view.json (see legend_optical_map_ml.view), metadata.json,
+    normalization.json, config.json, source_stamp.json and manifest_snapshot.json; reports/
+    go to config.output_directory. Batches are built from a view when loaded. Returns the
+    top-level view.
     """
     runs, excluded = cached_runs(config.source, EventCache(config.event_cache), workers=workers)
     if config.target.kind == "single_channel" and not any(
@@ -145,6 +152,16 @@ def prepare_optical_data(
             f"{len(missing)} files without optical hit data are in labeled partitions "
             f"(only {', '.join(UNLABELED_ROLES)} may hold them), e.g. {missing[:3]}"
         )
+    resolved = config.view_configs()
+    for name in resolved if views is None else views:
+        _write_view_directory(runs, assignments, manifest, resolved[name])
+    generate_reports(runs, assignments, excluded, config, manifest)
+    save_manifest(config.split.manifest, manifest)
+    return PreparedOpticalData(config.output_directory)
+
+
+def _write_view_directory(runs, assignments, manifest, config: OpticalDataConfig) -> None:
+    """Normalization, view and records of one view (``config`` without views)."""
     training = [
         r
         for r in runs
@@ -187,13 +204,10 @@ def prepare_optical_data(
         ("source_stamp", source_stamp(config.source)),
         ("metadata", metadata),
         ("normalization", normalization),
-        ("config", config.model_dump(mode="json")),
+        ("config", config.stored()),
     ]:
         (out / f"{name}.json").write_text(json.dumps(payload, indent=2) + "\n")
-    generate_reports(runs, assignments, excluded, config, manifest)
-    save_manifest(config.split.manifest, manifest)
     (out / "manifest_snapshot.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    return PreparedOpticalData(out)
 
 
 def ensure_prepared_optical_data(config: OpticalDataConfig) -> Path:
@@ -205,18 +219,24 @@ def ensure_prepared_optical_data(config: OpticalDataConfig) -> Path:
     and raw-file stamp (name, size, mtime per file) reuses the data without touching the
     cache; any mismatch prepares again, reading only new or changed files.
     """
-    out = config.output_directory
-    stamp_path = out / "source_stamp.json"
-    saved_stamp = json.loads(stamp_path.read_text()) if stamp_path.is_file() else None
-    if (
-        saved_stamp == source_stamp(config.source)
-        and _matches_saved(config)
-        and config.split.manifest.is_file()
-        and _view_complete(out)
-    ):
-        return out
-    prepare_optical_data(config, update_manifest=True)
-    return out
+    stamp = source_stamp(config.source)
+    stale = [
+        name
+        for name, view in config.view_configs().items()
+        if not (_stamp_matches(view.output_directory, stamp) and _matches_saved(view)
+                and _view_complete(view.output_directory))
+    ]
+    if not stale and config.split.manifest.is_file():
+        return config.output_directory
+    # A source change makes every view stale; a changed view alone rewrites only that view,
+    # with the split kept by the saved manifest.
+    prepare_optical_data(config, update_manifest=True, views=stale or None)
+    return config.output_directory
+
+
+def _stamp_matches(out: Path, stamp) -> bool:
+    path = out / "source_stamp.json"
+    return path.is_file() and json.loads(path.read_text()) == stamp
 
 
 def _matches_saved(config: OpticalDataConfig) -> bool:

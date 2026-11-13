@@ -761,7 +761,7 @@ def test_cnp_run_regenerates_stale_data_from_data_config(tmp_path):
     write_data({"cnp_train": 1.0})
     assert ensure_matching_data(run.data_config, run.data_directory)["regenerated"]
     assert load(tmp_path / "prepared", "cnp_train").batch_size == 6
-    with pytest.raises(ValueError, match="but data_directory"):
+    with pytest.raises(ValueError, match="none of the views"):
         ensure_matching_data(run.data_config, tmp_path / "elsewhere")
 
 

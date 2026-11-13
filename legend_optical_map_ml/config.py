@@ -1,9 +1,9 @@
 """Validated configuration for fixed optical simulation datasets."""
 
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 ANOMALOUS_FILE = "lf/run067_x-0.088_y+0.484_z-1.462.stp.lh5"
 # Roles of voxels in the role-based layout; see RoleSource. New roles are appended.
@@ -177,6 +177,27 @@ class NormalizationConfig(StrictModel):
     fit_fidelities: list[Literal["lf", "hf"]] | None = Field(default=None, min_length=1)
 
 
+class ViewConfig(StrictModel):
+    """A named input representation of the same files, roles and split.
+
+    Unset fields take the top-level value. Written to ``<output_directory>/views/<name>``.
+    """
+
+    theta: ThetaConfig | None = None
+    phi: PhiConfig | None = None
+    normalization: NormalizationConfig | None = None
+
+
+ViewName = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]*$")]
+VIEW_FIELDS = ("theta", "phi", "normalization")
+
+
+def _grouping(theta: ThetaConfig) -> tuple:
+    """Theta settings that decide which files form one voxel group (split.voxel_groups)."""
+    azimuth_free = theta.coordinates == "cylindrical" and not theta.cylindrical.include_azimuth
+    return theta.center_source, azimuth_free
+
+
 class OpticalDataConfig(StrictModel):
     source: SourceConfig
     output_directory: Path = Path("outputs/optical_data")
@@ -188,6 +209,19 @@ class OpticalDataConfig(StrictModel):
     target: TargetConfig = Field(default_factory=TargetConfig)
     split: SplitConfig = Field(default_factory=SplitConfig)
     normalization: NormalizationConfig = Field(default_factory=NormalizationConfig)
+    # Further input representations of the same data; the top-level settings above are the
+    # view at output_directory itself (docs/data-config.md).
+    views: dict[ViewName, ViewConfig] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def check_views(self):
+        for name, view in self.views.items():
+            if view.theta is not None and _grouping(view.theta) != _grouping(self.theta):
+                raise ValueError(
+                    f"view {name}: theta must group voxels as the top-level theta "
+                    "(same center_source and azimuth setting), as all views share one split"
+                )
+        return self
 
     @model_validator(mode="after")
     def check_role_split(self):
@@ -206,6 +240,31 @@ class OpticalDataConfig(StrictModel):
     def event_cache(self) -> Path:
         """Directory of the shared event cache."""
         return self.cache_directory or self.output_directory.parent / "event_cache"
+
+    def view_directory(self, name: str | None) -> Path:
+        """Prepared view ``name``; None is the top-level view at output_directory."""
+        return self.output_directory if name is None else self.output_directory / "views" / name
+
+    def view_configs(self) -> dict[str | None, "OpticalDataConfig"]:
+        """Settings of every view, top-level (None) first, each without ``views``.
+
+        A named view is the top-level config with its own theta, phi and normalization, its
+        own directory and the top-level event cache; source, target and split are shared.
+        """
+        configs = {None: self.model_copy(update={"views": {}}, deep=True)}
+        for name, view in self.views.items():
+            updates = {k: getattr(view, k) for k in VIEW_FIELDS if getattr(view, k) is not None}
+            updates.update(
+                views={},
+                output_directory=self.view_directory(name),
+                cache_directory=self.event_cache,
+            )
+            configs[name] = self.model_copy(update=updates, deep=True)
+        return configs
+
+    def stored(self) -> dict:
+        """Settings as saved with a prepared view (config.json, view.json): without views."""
+        return self.model_dump(mode="json", exclude={"views"})
 
 
 def resolve_cache_directory(config: OpticalDataConfig, resolve) -> None:

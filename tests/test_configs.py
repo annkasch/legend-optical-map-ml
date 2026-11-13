@@ -20,6 +20,7 @@ def load(path: Path):
     from schemas.surrogates import (
         load_binomial_config,
         load_mfgp_config,
+        load_residual_config,
         load_stream_config,
         load_surrogate_config,
         load_within_point_config,
@@ -41,6 +42,8 @@ def load(path: Path):
         return load_binomial_config(path)
     if name.startswith("within_point"):
         return load_within_point_config(path)
+    if name.startswith("residual"):
+        return load_residual_config(path)
     if name.startswith("mfgp"):
         return load_mfgp_config(path)
     if "event_store" in yaml.safe_load(path.read_text()):
@@ -64,7 +67,7 @@ def test_config_loads_and_writes_into_its_dataset(path):
         return
     if config is None or path.name == "benchmark.yaml":
         return
-    if path.name.startswith("within_point"):  # an added evaluation, written into the run
+    if path.name.startswith(("within_point", "residual")):  # added evaluations of a run
         run = config.run.relative_to(dataset)
         assert re.fullmatch(r"(event_learning|regression)/[^/]+/v\d+/seed\d+", str(run)), run
         return
@@ -73,4 +76,5 @@ def test_config_loads_and_writes_into_its_dataset(path):
     if hasattr(config, "data_config") and config.data_config is not None:
         from legend_optical_map_ml.config import load_optical_config
 
-        assert load_optical_config(config.data_config).output_directory == config.data_directory
+        views = load_optical_config(config.data_config).view_configs().values()
+        assert config.data_directory in [v.output_directory for v in views]

@@ -62,7 +62,7 @@ def write_view(directory: Path, entries, partitions, config, normalization):
         "folders": list(folders),
         "partitions": list(partitions),
         "fidelities": list(FIDELITIES),
-        "config": config.model_dump(mode="json"),
+        "config": config.stored(),
         "normalization": normalization,
     }
     directory.mkdir(parents=True, exist_ok=True)

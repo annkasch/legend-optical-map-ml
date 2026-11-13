@@ -16,13 +16,15 @@ Usually not needed by hand: a run config with `data_config` calls
 
 ## Keeping prepared data in sync
 
-The data YAML's `output_directory` must equal the run's `data_directory`. Each run compares
-the data YAML with `config.json` (written only by preparation) and the raw files with
-`source_stamp.json` (path, size, mtime per file). If both match, no raw file is read.
-Otherwise file contents are checked and the view is rebuilt if anything differs, reading only
-files missing from the cache. Compatible existing role assignments are kept; explicit split
-policies take precedence; invalid inputs and conflicting voxel groups raise. Whether data were
-regenerated is recorded in the run's `experiment.json`.
+The run's `data_directory` must be one of the data YAML's views: `output_directory` or
+`output_directory/views/<name>` (`docs/data-config.md`). Each run compares the data YAML with
+each view's `config.json` (written only by preparation) and the raw files with
+`source_stamp.json` (path, size, mtime per file). If both match for every view, no raw file is
+read. Otherwise file contents are checked and the stale views are rebuilt (a raw-file change
+makes all of them stale), reading only files missing from the cache; all views share one
+split. Compatible existing role assignments are kept; explicit split policies take
+precedence; invalid inputs and conflicting voxel groups raise. Whether data were regenerated
+is recorded in the run's `experiment.json`.
 
 ## What preparation computes
 
