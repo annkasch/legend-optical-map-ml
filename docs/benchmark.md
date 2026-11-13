@@ -35,13 +35,15 @@ from each run's `compute.json`).
 
 A network predicts a voxel's rate by averaging its per-photon p over a photon sample. Its own
 photons would tie the prediction to the sample whose hits are scored (a favourable emission
-sample raises both), which a GP, seeing only the position, cannot use. So
-`scripts/score_event_model.py` predicts each scored voxel from the photons of another voxel
-of the same set (seeded draw, never the voxel itself; same photon count, never trained on,
-the same donors for every model with the same seed), moved into the scored voxel by the
-provider (`transfer_events`: absolute positions shifted by the centre difference, offsets as
-they are). Scores of earlier runs with `--donors cnp_train/lf` (1500 photons; training data of
-LF-train models) stay in their own files and are not comparable with the default.
+sample raises both), which a GP, seeing only the position, cannot use. So event models are
+scored with the RESUM_FLEX `score` stage and `donors: scored` (`configs/<dataset>/score.<model>.yaml`,
+written to `<run>/score_<partition>_<fidelity>/`): each scored voxel is predicted from the photons
+of another voxel of the same set (seeded draw, never the voxel itself; same photon count, never
+trained on, the same donors for every model with the same seed), moved into the scored voxel
+by the provider (`transfer_events`: absolute positions shifted by the centre difference,
+offsets as they are). RESUM_FLEX's default is no borrowing (own photons); donors need the
+provider's rule. Earlier scores with donors from `cnp_train/lf` (1500 photons; training data
+of LF-train models, `inference/best/*_events-cnp_train_lf_*`) are not comparable.
 
 Limits: the prediction averages over n donor photons, a Monte Carlo error sqrt(Var(p)/n)
 that is independent of the counts and not in the predictive uncertainty; for `mlp_bll/v2` it
@@ -63,11 +65,11 @@ The tool only reads finished runs, so it is cheap (fine on a login node). Each e
 |---|---|
 | `binomial_gp`, `mfgp` | `evaluation_<e>.npz` of the benchmark set (MFGP: target level) |
 | `countfield` | `evaluation_<partition>_<fidelity>.npz` |
-| `event_model` | `inference/<checkpoint>/…_predictive.npz` and `_scores.json`; score the checkpoint first with `scripts/score_event_model.py` (`checkpoint`, `donors` select the file; default `scored`) |
+| `event_model` | `score.json` and `<partition>_<fidelity>_<checkpoint>_predictive.npz` of the `score` stage (`score`: its directory, default `<run>/score_<partition>_<fidelity>`; `checkpoint`; `event_inputs`: `donors` (default, the protocol) or `own`); score first: `core.surrogates score configs/<dataset>/score.<model>.yaml` |
 
 `compute` lists every run of the model's pipeline (`path:`): a run directory (`compute.json`)
-or a json file with a `compute` entry. Without it, the run's own records are used; countfield
-runs record none. All models must score the same voxels
+or a json file with a `compute` entry. Without it, the run's own records are used (event
+models: run plus score stage); countfield runs record none. All models must score the same voxels
 in the same order; `reference` names the model for the paired NLL difference. Test
 partitions need `unblind_test: true`.
 

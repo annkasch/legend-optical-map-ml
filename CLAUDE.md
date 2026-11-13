@@ -46,6 +46,7 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 .venv/bin/python -m core.surrogates predict RUN/checkpoints/best DATA_DIR PARTITION
 .venv/bin/python -m core.surrogates within_point configs/<dataset>/within_point.<model>.yaml  # finished run
 .venv/bin/python -m core.surrogates residual configs/<dataset>/residual.<model>.yaml  # finished run
+.venv/bin/python -m core.surrogates score configs/<dataset>/score.<model>.yaml  # benchmark score
 .venv/bin/python -m legend_optical_map_ml.benchmark configs/<dataset>/benchmark.yaml  # reads runs only
 ```
 Login nodes: one single-threaded process of up to ~15 min; real data, GP fits and training

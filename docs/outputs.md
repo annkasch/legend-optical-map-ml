@@ -42,7 +42,9 @@ outputs/
   leaves the run's own files unchanged. Config: `configs/<dataset>/<stage>.<model>.yaml`, e.g.
   `within_point.mlp_bll.yaml`.
 - The residual learnability test (RESUM_FLEX `residual`) needs a new directory: it writes to
-  `<run>/residual_test/`; config `residual.<model>.yaml`.
+  `<run>/residual_test/`; config `residual.<model>.yaml`. Likewise the benchmark score of an
+  event model (RESUM_FLEX `score`): `<run>/score_<partition>_<fidelity>/`, config
+  `score.<model>.yaml`.
 - Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
   `output_directory`) would start an empty cache inside the dataset folder.
 

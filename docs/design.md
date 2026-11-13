@@ -17,7 +17,7 @@ voxel campaigns: remage *.stp.lh5 (vtx, stp/optical), one file per voxel
 homogeneous campaigns: photon_store.py -> photon_loader.PhotonStream -> core.surrogates stream
 finished runs -> benchmark.py -> report.md, benchmark.{csv,json,png}
 prepared view -> scripts/export_{counts,photons}.py -> countfield
-BLL checkpoint + prepared view -> scripts/score_event_model.py -> inference/<ckpt>/*_predictive.npz
+BLL run + prepared view -> RESUM_FLEX score (provider.transfer_events) -> <run>/score_*/
 ```
 
 ## Where to change what

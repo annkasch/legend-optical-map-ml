@@ -635,50 +635,22 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
     result = run_experiment(SurrogateRunConfig.model_validate(run_config))
     assert (result / "checkpoints/best/model.json").is_file()
 
-    # scripts/score_event_model.py: HF validation scored with donor photons, then reused.
-    import runpy
-    import sys
-    from pathlib import Path
+    # RESUM_FLEX score stage on HF validation: donors from cnp_train/lf moved by the provider.
+    from core.surrogates.score_stage import run_score
+    from schemas.surrogates import ScoreRunConfig
 
-    script = Path(__file__).parents[1] / "scripts/score_event_model.py"
-    argv = [
-        str(script),
-        str(result / "checkpoints/best"),
-        str(data.output_directory),
-        "--donors",
-        "cnp_train/lf",
-        "--threads",
-        "1",
-        "--plot-directory",
-        str(tmp_path / "plots"),
-        "--label",
-        "mlp",
-    ]
-    stem = result / "inference/best/gp_validation_hf_events-cnp_train_lf"
-    for _ in range(2):  # the second call reuses the inference file
-        old, sys.argv = sys.argv, argv
-        try:
-            runpy.run_path(str(script), run_name="__main__")
-        finally:
-            sys.argv = old
-        scores = json.loads(stem.with_name(stem.name + "_scores.json").read_text())
-        assert np.isfinite(scores["plugin_count_nll"]) and scores["donors"] == "cnp_train/lf"
-        assert scores["compute"]["inference"]["stages"][-1]["name"] == "prediction"
-    assert (tmp_path / "plots/mlp_gp_validation_hf_coverage.png").is_file()
-    with pytest.raises(SystemExit, match="donor seed"):
-        old, sys.argv = sys.argv, [*argv, "--seed", "1"]
-        try:
-            runpy.run_path(str(script), run_name="__main__")
-        finally:
-            sys.argv = old
-    # Default donors: the scored set itself; one voxel has no other voxel to borrow from.
-    default = [a for a in argv if a not in ("--donors", "cnp_train/lf")]
+    scored = run_score(ScoreRunConfig(
+        run=result, sets=["gp_validation/hf"], donors="cnp_train/lf",
+        output_directory=result / "score_gp_validation_hf",
+    ))
+    (row,) = json.loads((scored / "score.json").read_text())["rows"]
+    assert np.isfinite(row["plugin_count_nll"])
+    assert row["event_inputs"]["donor_partition"] == "cnp_train"
+    assert (scored / "gp_validation_hf_best_coverage.png").is_file()
+    # Donors from the scored set itself: one voxel has no other voxel to borrow from.
     with pytest.raises(ValueError, match="another design point"):
-        old, sys.argv = sys.argv, default
-        try:
-            runpy.run_path(str(script), run_name="__main__")
-        finally:
-            sys.argv = old
+        run_score(ScoreRunConfig(run=result, sets=["gp_validation/hf"], donors="scored",
+                                 output_directory=tmp_path / "scored_self"))
 
 
 def test_cnp_run_on_role_data_rejects_missing_hf(tmp_path):

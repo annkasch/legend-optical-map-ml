@@ -167,26 +167,19 @@ def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path):
         assert p.shape == (4,) and np.all((p > 0) & (p < 1))
         assert arrays["design_point_ids"].tolist() == provider.theta("gp_unlabeled", "lf")[1]
         assert np.array_equal(arrays["coordinates"], provider.coordinates("gp_unlabeled", "lf"))
-    # Scoring: donors from the scored set itself, never the voxel's own, moved into the voxel.
-    import runpy
-    import sys
-    from pathlib import Path
+    # Score stage: donors from the scored set itself, never the voxel's own, moved into the voxel.
+    from core.surrogates.score_stage import run_score
+    from schemas.surrogates import ScoreRunConfig
 
-    script = Path(__file__).parents[1] / "scripts/score_event_model.py"
-    argv = [str(script), str(output / "checkpoints" / "best"), str(data), "--partition",
-            "cnp_validation", "--fidelity", "lf", "--threads", "1",
-            "--plot-directory", str(tmp_path / "plots")]
-    old, sys.argv = sys.argv, argv
-    try:
-        runpy.run_path(str(script), run_name="__main__")
-    finally:
-        sys.argv = old
-    stem = output / "inference/best/cnp_validation_lf_events-cnp_validation_lf"
-    record = json.loads(stem.with_suffix(".json").read_text())["event_inputs"]
+    scored = run_score(ScoreRunConfig(
+        run=output, sets=["cnp_validation/lf"], donors="scored", seed=1,
+        output_directory=output / "score_cnp_validation_lf",
+    ))
+    (row,) = json.loads((scored / "score.json").read_text())["rows"]
+    record = row["event_inputs"]
     assert record["own_excluded"] and record["transfer"] == "provider transfer_events"
     assert all(d != i for i, d in enumerate(record["donor_index"]))
-    scores = json.loads(stem.with_name(stem.name + "_scores.json").read_text())
-    assert scores["donors"] == "cnp_validation/lf" and np.isfinite(scores["predictive_nll"])
+    assert np.isfinite(row["predictive_nll"]) and row["design_points"] == 3
 
 
 def test_transfer_moves_absolute_donor_positions_into_the_target_voxel(tmp_path):

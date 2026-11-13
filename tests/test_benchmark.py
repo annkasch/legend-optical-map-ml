@@ -10,7 +10,6 @@ from scipy.stats import binom
 
 from legend_optical_map_ml.benchmark import (
     BenchmarkConfig,
-    donor_stem,
     load_benchmark_config,
     run_benchmark,
 )
@@ -83,19 +82,22 @@ def _runs(root):
     (runs["countfield"] / "metrics.json").write_text(
         json.dumps([dict(group="gp_validation/hf", crps=3.1e-4, predictive_nll=2.41)])
     )
-    folder = runs["event_model"] / "inference/best"
+    folder = runs["event_model"] / "score_gp_validation_hf"  # RESUM_FLEX score stage
     folder.mkdir(parents=True)
-    stem = folder / "gp_validation_hf_events-gp_validation_hf"
-    np.savez(f"{stem}_predictive.npz", **_arrays(0.5 * (TRUE_P + TRUE_P.mean())))
-    scores = dict(
+    np.savez(
+        folder / "gp_validation_hf_best_predictive.npz",
+        **_arrays(0.5 * (TRUE_P + TRUE_P.mean())),
+    )
+    row = dict(
+        checkpoint="best",
+        partition="gp_validation",
+        fidelity="hf",
+        event_inputs=dict(donor_partition="gp_validation", donor_fidelity="hf", seed=0),
         crps=3.5e-4,
         predictive_nll=2.45,
-        compute=dict(
-            run=dict(total=dict(wall_seconds=10.0, cpu_seconds=360.0, core_hours=0.5)),
-            inference=None,
-        ),
     )
-    stem.with_name(stem.name + "_scores.json").write_text(json.dumps(scores))
+    (folder / "score.json").write_text(json.dumps(dict(rows=[row])))
+    _compute(folder, 360.0, 0.5)
     _compute(runs["event_model"], 3600.0, 2.0)
     return runs
 
@@ -131,7 +133,7 @@ def test_report_scores_every_kind_the_same_way(tmp_path):
     assert mfgp["bias"] == pytest.approx(1.1 * TRUE_P.mean() / (HITS / N).mean() - 1)
     assert mfgp["delta_nll"] > 0
     assert rows["NP"]["scores"]["crps"] == 3.1e-4
-    # Compute: compute.json of the run plus the scoring file for the event model.
+    # Compute: compute.json of the run plus that of the score stage for the event model.
     assert rows["GP"]["compute"]["cpu_hours"] == pytest.approx(2.0)
     assert rows["MLP + BLL"]["compute"]["core_hours"] == pytest.approx(2.5)
     assert rows["MFGP"]["compute"] is None
@@ -158,9 +160,14 @@ def test_reference_and_mismatched_voxels(tmp_path):
 
 def test_missing_scoring_file_and_blinded_test(tmp_path):
     runs = _runs(tmp_path / "runs")
-    scores = runs["event_model"] / "inference/best/gp_validation_hf_events-gp_validation_hf"
-    scores.with_name(scores.name + "_scores.json").unlink()
-    with pytest.raises(FileNotFoundError, match="score_event_model"):
+    report = runs["event_model"] / "score_gp_validation_hf" / "score.json"
+    saved = json.loads(report.read_text())
+    report.unlink()
+    with pytest.raises(FileNotFoundError, match="core.surrogates score"):
+        run_benchmark(_config(tmp_path, runs))
+    saved["rows"][0]["event_inputs"] = "own"  # the protocol scores event models on donors
+    report.write_text(json.dumps(saved))
+    with pytest.raises(ValueError, match="own photons"):
         run_benchmark(_config(tmp_path, runs))
     raw = dict(title="t", output_directory="o", models=[{"label": "a", "kind": "mfgp", "run": "r"}])
     with pytest.raises(ValidationError, match="unblind_test"):
@@ -170,9 +177,3 @@ def test_missing_scoring_file_and_blinded_test(tmp_path):
         BenchmarkConfig(**{**raw, "models": raw["models"] * 2})
     with pytest.raises(ValidationError, match="slurm_job"):  # runs record compute.json
         BenchmarkConfig(**{**raw, "models": [{**raw["models"][0], "compute": [{"slurm_job": 1}]}]})
-
-
-def test_donor_stem():
-    assert donor_stem("gp_validation_hf", None) == "gp_validation_hf"
-    assert donor_stem("a_hf", "b/lf") == "a_hf_events-b_lf"
-    assert donor_stem("gp_validation_hf", "scored") == "gp_validation_hf_events-gp_validation_hf"

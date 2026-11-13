@@ -21,6 +21,7 @@ def load(path: Path):
         load_binomial_config,
         load_mfgp_config,
         load_residual_config,
+        load_score_config,
         load_stream_config,
         load_surrogate_config,
         load_within_point_config,
@@ -44,6 +45,8 @@ def load(path: Path):
         return load_within_point_config(path)
     if name.startswith("residual"):
         return load_residual_config(path)
+    if name.startswith("score"):
+        return load_score_config(path)
     if name.startswith("mfgp"):
         return load_mfgp_config(path)
     if "event_store" in yaml.safe_load(path.read_text()):
@@ -67,7 +70,7 @@ def test_config_loads_and_writes_into_its_dataset(path):
         return
     if config is None or path.name == "benchmark.yaml":
         return
-    if path.name.startswith(("within_point", "residual")):  # added evaluations of a run
+    if path.name.startswith(("within_point", "residual", "score")):  # added evaluations of a run
         run = config.run.relative_to(dataset)
         assert re.fullmatch(r"(event_learning|regression)/[^/]+/v\d+/seed\d+", str(run)), run
         return

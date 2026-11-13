@@ -11,8 +11,9 @@ kind            file read from ``run``
 binomial_gp     ``evaluation_<e>.npz`` (RESUM_FLEX binomial GP; ``e`` from metrics.json)
 mfgp            ``evaluation_<e>.npz`` (RESUM_FLEX MFGP, target level)
 countfield      ``evaluation_<partition>_<fidelity>.npz`` (countfield run)
-event_model     ``inference/<checkpoint>/<partition>_<fidelity>[_events-<donors>]_predictive.npz``
-                and ``_scores.json`` (scripts/score_event_model.py)
+event_model     ``score.json`` and ``<partition>_<fidelity>_<checkpoint>_predictive.npz`` of the
+                RESUM_FLEX ``score`` stage (directory ``score``, default
+                ``<run>/score_<partition>_<fidelity>``)
 ==============  ==========================================================================
 
 From these arrays (hits k, trials n, predictive mean, 1/2/3 sigma intervals) every model gets
@@ -52,10 +53,12 @@ class BenchmarkModel(StrictModel):
     label: str
     kind: Literal["binomial_gp", "mfgp", "countfield", "event_model"]
     run: Path
-    # event_model only: checkpoint folder and the donor set of the scoring file ("scored": the
-    # benchmark set itself, the score script's default; None: the voxels' own photons).
+    # event_model only: output directory of the RESUM_FLEX score stage (default
+    # <run>/score_<partition>_<fidelity>), the scored checkpoint, and which photons it was scored
+    # on: "donors" (the protocol, docs/benchmark.md) or "own".
+    score: Path | None = None
     checkpoint: str = "best"
-    donors: str | None = "scored"
+    event_inputs: Literal["donors", "own"] = "donors"
     # Runs whose compute adds up to this model's cost (e.g. MLP training + inference + GP).
     # Empty: the run itself (its compute.json; for event_model also the scoring file).
     compute: list[ComputeSource] = Field(default_factory=list)
@@ -108,6 +111,8 @@ def load_benchmark_config(path) -> BenchmarkConfig:
     config.output_directory = resolve(config.output_directory)
     for model in config.models:
         model.run = resolve(model.run)
+        if model.score is not None:
+            model.score = resolve(model.score)
         for source in model.compute:
             if source.path is not None:
                 source.path = resolve(source.path)
@@ -153,15 +158,9 @@ def _native(row: dict, *, count_nll: bool) -> dict:
     return dict(crps=row.get("crps"), predictive_nll=nll)
 
 
-def donor_stem(base: str, donors: str | None) -> str:
-    """Inference file stem of ``base`` (partition_fidelity) with donor events ``donors``
-    ("partition/fidelity", or "scored" for the set ``base`` itself): ``<base>_events-<donors>``
-    as RESUM_FLEX writes it."""
-    if donors is None:
-        return base
-    if donors == "scored":
-        return f"{base}_events-{base}"
-    return f"{base}_events-{donors.replace('/', '_')}"
+def score_directory(model: BenchmarkModel, partition: str, fidelity: str) -> Path:
+    """Output directory of the score stage for an event model."""
+    return model.score or model.run / f"score_{partition}_{fidelity}"
 
 
 def load_prediction(model: BenchmarkModel, partition: str, fidelity: str) -> VoxelPrediction:
@@ -186,15 +185,27 @@ def load_prediction(model: BenchmarkModel, partition: str, fidelity: str) -> Vox
         path = run / f"evaluation_{partition}_{fidelity}.npz"
         native = _native(rows[0], count_nll=True)
     else:
-        folder = run / "inference" / model.checkpoint
-        stem = donor_stem(f"{partition}_{fidelity}", model.donors)
-        scores = folder / f"{stem}_scores.json"
-        if not scores.is_file():
+        folder = score_directory(model, partition, fidelity)
+        report = folder / "score.json"
+        if not report.is_file():
             raise FileNotFoundError(
-                f"{scores} not found; score the checkpoint first with scripts/score_event_model.py"
+                f"{report} not found; score the run first: core.surrogates score <score config>"
             )
-        path = folder / f"{stem}_predictive.npz"
-        native = _native(_rows(scores)[0], count_nll=True)
+        rows = [
+            r
+            for r in json.loads(report.read_text())["rows"]
+            if (r["partition"], r["fidelity"], r["checkpoint"])
+            == (partition, fidelity, model.checkpoint)
+        ]
+        if not rows:
+            raise ValueError(f"{report}: no score of {key} for checkpoint {model.checkpoint}")
+        used = "own" if rows[0]["event_inputs"] == "own" else "donors"
+        if used != model.event_inputs:
+            raise ValueError(
+                f"{report}: scored on {used} photons, the entry expects {model.event_inputs}"
+            )
+        path = folder / f"{partition}_{fidelity}_{model.checkpoint}_predictive.npz"
+        native = _native(rows[0], count_nll=True)
     a = _arrays(path)
     return VoxelPrediction(
         hits=np.asarray(a["hits"], dtype=np.int64),
@@ -251,7 +262,7 @@ def _file_compute(path: Path) -> list[dict]:
         entry = json.loads(path.read_text()).get("compute")
         if entry is None:
             raise ValueError(f"{path} has no compute entry")
-        # score_event_model.py: {"run": ..., "inference": ...}; inference files: one record.
+        # Inference files: one record; older score files: {"run": ..., "inference": ...}.
         records = [entry] if "total" in entry else [v for v in entry.values() if v]
     return [
         dict(
@@ -271,11 +282,9 @@ def model_compute(model: BenchmarkModel, config: BenchmarkConfig):
         if (model.run / "compute.json").is_file():
             sources.append(ComputeSource(path=model.run))
         if model.kind == "event_model":
-            folder = model.run / "inference" / model.checkpoint
-            stem = donor_stem(f"{config.partition}_{config.fidelity}", model.donors)
-            scores = folder / f"{stem}_scores.json"
-            if scores.is_file() and "compute" in json.loads(scores.read_text()):
-                sources.append(ComputeSource(path=scores))
+            folder = score_directory(model, config.partition, config.fidelity)
+            if (folder / "compute.json").is_file():
+                sources.append(ComputeSource(path=folder))
     if not sources:
         return None
     records = []

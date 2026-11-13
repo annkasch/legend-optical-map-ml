@@ -40,13 +40,13 @@ training:
 selection: bernoulli_log_loss
 lf_validation: true
 hf_validation: false
-test_fidelities: [] # No dedicated CNP test list is provided in this dataset.
+test_fidelities: [] # Test (gp_test) stays blinded; benchmark and score stage unblind it at the end.
 data_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 train_sets:
 - {partition: gp_unlabeled, fidelity: lf}   # LF2_train
 - {partition: gp_train, fidelity: hf}       # HF_train
-partitions: {validation: cnp_validation, test: cnp_test}
+partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
 output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/field_f8/v2/seed0
 selection_max_design_points: 500

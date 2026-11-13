@@ -40,4 +40,5 @@ python -m legend_optical_map_ml.photon_store finalize CONFIG.yaml
 `configs/photon_<volume>/field_*.yaml` are RESUM_FLEX stream configs (`core.surrogates stream`,
 RESUM_FLEX `docs/stream.md`), trained on GPU with `scripts/slurm/train_photon_field.sbatch`
 (`docs/slurm.md`). The field is selected on the store's validation photons and evaluated on
-the voxel campaign through the usual provider with `scripts/score_event_model.py`.
+the voxel campaign with the RESUM_FLEX `score` stage (`data_directory`: the voxel view,
+`data_provider`: `OpticalDataset`; `docs/benchmark.md`).

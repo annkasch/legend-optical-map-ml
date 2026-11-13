@@ -3,7 +3,7 @@
 # (Fourier, max_frequency 4 (frequency scan; half-period 1/(2·4) store std)) and photon direction
 # (spherical harmonics), same network as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/field_f4.yaml.
 # Selected on the store's validation photons; evaluated on the voxel campaign
-# (voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml, GP_val HF) with scripts/score_event_model.py.
+# (voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml, GP_val HF) with the RESUM_FLEX score stage.
 #   sbatch scripts/slurm/train_photon_field.sbatch configs/photon_x+300+500_y-100+100_z-100+100/field_f4.yaml
 model:
   kind: field

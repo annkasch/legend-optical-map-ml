@@ -16,8 +16,7 @@ specific to the optical-map application:
     `binomial.mlp_lf2`), log-space MFGP on the MLP mean (`mfgp.log`) or raw LF (`mfgp.raw_lf.log`);
   - [countfield](https://github.com/annkasch/countfield) runs (`configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield*.yaml`):
     neural process and Point Transformer variants.
-- `scripts/`: `export_counts.py` / `export_photons.py` (countfield inputs),
-  `score_event_model.py` (a Bayesian-last-layer checkpoint scored on HF validation voxels).
+- `scripts/`: `export_counts.py` / `export_photons.py` (countfield inputs).
 - `scripts/slurm/`: Perlmutter job scripts for individual stages and dependent pipelines.
 - `docs/`: one short file per topic, listed in the routing table of [CLAUDE.md](CLAUDE.md).
 

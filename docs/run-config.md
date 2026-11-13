@@ -29,15 +29,19 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).
 - LBNL lists have no CNP test set; those runs evaluate train and validation only.
+- Rate models (`train_sets`: LF2 + HF, or `mlp_bll.lf1`) set `partitions.test: gp_test`:
+  their test set is the blinded GP test, so the `score` stage refuses it without
+  `unblind_test` (support models keep `cnp_test`). `test_fidelities: []` keeps training from
+  evaluating it.
 - Every training config sets `residual_test: {}`: the residual learnability test runs in
   the read-out (off by default in RESUM_FLEX; needs the `lgbm` extra). Runs trained without
   it get it afterwards with `residual.<model>.yaml` (`core.surrogates residual`).
 - Another input representation (e.g. the absolute emission point): a named view in the data
   YAML, selected by `data_directory`, not a model-side transform. An event-only view
   (`theta.model_input: false`) suits `mlp` and `mlp_bll`, not the field model (needs θ).
-  `scripts/score_event_model.py` takes the same view directory; the provider moves donor
-  photons into the scored voxel (`transfer_events`: absolute positions shifted by the centre
-  difference, offsets unchanged). A support model whose
+  The `score` stage (`docs/benchmark.md`) scores it on the run's view; the provider moves
+  donor photons into the scored voxel (`transfer_events`: absolute positions shifted by the
+  centre difference, offsets unchanged). A support model whose
   `predict` output feeds a GP needs a view with θ for now (`docs/data-config.md`).
 
 ## GP runs (`mfgp`, `binomial`)
