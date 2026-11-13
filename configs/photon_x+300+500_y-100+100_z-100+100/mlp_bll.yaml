@@ -4,7 +4,7 @@
 # emission point and momentum (no voxel centre: homogeneous photons have none). Training as
 # the photon fields (field_f*.yaml); selected on the store's
 # validation photons, evaluated on the voxel campaign (CNP_val LF, GP_val HF).
-#   sbatch scripts/slurm/train_photon_field.sbatch configs/photon_x+300+500_y-100+100_z-100+100/field_mlp_bll.yaml
+#   sbatch scripts/slurm/train_photon_field.sbatch configs/photon_x+300+500_y-100+100_z-100+100/mlp_bll.yaml
 model:
   kind: mlp                    # photon MLP: same network on normalized x, y, z, px, py, pz
   architecture:
@@ -39,5 +39,6 @@ data_config: ../voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml
 evaluation:
 - {split: validation, partition: cnp_validation, fidelity: lf}
 - {split: validation, partition: gp_validation, fidelity: hf}
-history_voxels: 500
-output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/field_mlp_bll/v1/seed0
+history_design_points: 500
+output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/mlp_bll/v1/seed0
+residual_test: {}  # residual learnability test at read-out (RESUM_FLEX docs/evaluation.md)
