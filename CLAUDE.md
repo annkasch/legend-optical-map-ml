@@ -14,7 +14,7 @@ only what the task needs, using the table below. It lists every doc in `docs/`.
 | First use: setup, the three CLI steps | `README.md` | |
 | Change library code | `docs/design.md` | the module it names |
 | A dataset: paths, roles, bad files | `docs/datasets.md` | `configs/<dataset>/data.yaml` |
-| Write or change a data YAML | `docs/data-config.md` | `config.py`, `split.py` |
+| Write or change a data YAML, add a view | `docs/data-config.md` | `config.py`, `split.py`, `view.py` |
 | Preparation, sync, unlabeled inputs | `docs/preparation.md` | `pipeline.py`, `view.py`, `provider.py` |
 | Event cache | `docs/event-cache.md` | `event_cache.py` |
 | Where a config, data view or run goes | `docs/outputs.md` | `configs/<dataset>/` |
@@ -28,6 +28,10 @@ only what the task needs, using the table below. It lists every doc in `docs/`.
 ## Concepts
 - voxel = design point θ (centre), photon = event φ (vertex offset, momentum), outcome =
   photon seen by any channel. Quantity of interest: hit rate per voxel (hits / photons).
+- view = recipe on the event cache (files, roles, features, normalization; no feature
+  arrays). One data YAML per dataset, with further named views in `views:` (one split for
+  all); a run picks its view by `data_directory`. Event-only views (`theta.model_input:
+  false`) keep one row per voxel and serve the centres as metadata (`docs/data-config.md`).
 - LF / HF = low / high fidelity (photons per voxel); LF2 = `gp_unlabeled`. Roles:
   `docs/data-config.md`; which model trains and is scored on what: `docs/benchmark.md`.
 - Datasets are named by their volume folder in `configs/` and `outputs/` (`voxel_sets_…`,

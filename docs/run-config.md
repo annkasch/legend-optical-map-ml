@@ -10,7 +10,7 @@ RESUM_FLEX `docs/configs.md` (models `docs/models.md`, Bayesian last layer
 |---|---|
 | `data_provider` | `legend_optical_map_ml.provider:OpticalDataset` |
 | `data_config` | Data YAML checked and prepared before the run (`docs/preparation.md`) |
-| `data_directory` | Prepared view; must equal the data YAML's `output_directory` |
+| `data_directory` | Prepared view: the data YAML's `output_directory` or one of its `views/<name>` (`docs/data-config.md`, Views) |
 | `partitions` | Run splits (train, validation, test) → data-config roles |
 | `train_sets` | Several role/fidelity sets for training (rate models: LF2 + HF, `docs/benchmark.md`) |
 | `output_directory` | New, empty path per run; bump `_vN` instead of overwriting |
@@ -29,6 +29,11 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).
 - LBNL lists have no CNP test set; those runs evaluate train and validation only.
+- Another input representation (e.g. the absolute emission point): a named view in the data
+  YAML, selected by `data_directory`, not a model-side transform. An event-only view
+  (`theta.model_input: false`) suits `mlp` and `mlp_bll`, not the field model (needs θ).
+  `scripts/score_event_model.py` takes the same view directory. A support model whose
+  `predict` output feeds a GP needs a view with θ for now (`docs/data-config.md`).
 
 ## GP runs (`mfgp`, `binomial`)
 

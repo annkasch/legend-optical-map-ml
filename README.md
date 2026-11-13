@@ -4,9 +4,9 @@ Machine-learning surrogates of the LEGEND liquid-argon (LAr) optical map, built 
 [RESUM_FLEX](https://github.com/annkasch/RESUM_FLEX). This repository holds everything
 specific to the optical-map application:
 
-- `legend_optical_map_ml/`: LH5 reader, shared event cache, per-config prepared views,
-  role-based splits, features and reports, and `provider.OpticalDataset`, the dataset
-  provider RESUM_FLEX reads the prepared data through.
+- `legend_optical_map_ml/`: LH5 reader, shared event cache, prepared views (several per data
+  YAML: `views:`), role-based splits, features and reports, and `provider.OpticalDataset`,
+  the dataset provider RESUM_FLEX reads the prepared data through.
 - `configs/`: data, event-model (CNP, MLP, mixup ablation) and GP configs for Ian Wang's
   centered box (`centered_425_375_375`), plus [LBNL CSV-manifest data](configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml)
   with the models compared on it (see the [benchmark protocol](docs/benchmark.md)):

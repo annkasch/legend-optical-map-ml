@@ -19,6 +19,8 @@ the **rate model**: the model that outputs this rate, a GP or an equivalent alte
    (NN + GP) trains on LF train and is selected on LF validation. It predicts the LF2 voxels
    from their inputs only, so LF2 needs no extra simulation; its data and compute count as
    the pipeline's cost and are reported with it.
+   For now it trains on a view with θ: GP stages cannot read the predictions of event-only
+   models yet (`docs/data-config.md`).
 3. **The benchmark sets are never used for training or checkpoint selection.**
    `gp_test/hf` stays blinded until a config sets `unblind_test: true`.
 
