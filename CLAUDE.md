@@ -7,10 +7,11 @@ RESUM_FLEX's: change toolkit code there, application code here. `../countfield` 
 holds the neural-process / Point Transformer models.
 
 Start of a task: read `.claude/status.md` if it exists (local, open items only). Then load
-only what the task needs, using the table below; `docs/index.md` lists every doc.
+only what the task needs, using the table below. It lists every doc in `docs/`.
 
 | Task | Read | Code |
 |---|---|---|
+| First use: setup, the three CLI steps | `README.md` | |
 | Change library code | `docs/design.md` | the module it names |
 | A dataset: paths, roles, bad files | `docs/datasets.md` | `configs/<dataset>/data.yaml` |
 | Write or change a data YAML | `docs/data-config.md` | `config.py`, `split.py` |
@@ -72,8 +73,8 @@ files explicitly, leave the user's uncommitted edits out) and push the current b
 
 ## Keeping context current
 - Facts about the code, data or datasets go into the matching doc (one topic per file, listed
-  in `docs/index.md`), not into memory or this file. New topic → new short file + index line +
-  a row in the table above.
+  in the table above), not into memory or this file. New topic → new short file + a row in
+  the table above.
 - When you add, rename or remove modules, commands, datasets or rules, update this file and
   the doc in the same commit.
 - `.claude/status.md`: open items only, one line each, dated; delete finished items at the end

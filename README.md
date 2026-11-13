@@ -19,7 +19,7 @@ specific to the optical-map application:
 - `scripts/`: `export_counts.py` / `export_photons.py` (countfield inputs),
   `score_event_model.py` (a Bayesian-last-layer checkpoint scored on HF validation voxels).
 - `scripts/slurm/`: Perlmutter job scripts for individual stages and dependent pipelines.
-- `docs/`: one short file per topic, listed in the [docs index](docs/index.md).
+- `docs/`: one short file per topic, listed in the routing table of [CLAUDE.md](CLAUDE.md).
 
 Models, training, validation metrics and the multi-fidelity GP are RESUM_FLEX's.
 
@@ -83,7 +83,7 @@ Test sets stay blinded until a config sets `unblind_test: true`.
 
 ## Documentation
 
-[docs/index.md](docs/index.md) lists one file per topic and when to read it: design, datasets,
+The routing table in [CLAUDE.md](CLAUDE.md) lists one file per topic and when to read it: design, datasets,
 data configs, preparation, event cache, run configs, photon store, benchmark, countfield
 exports and Slurm. Toolkit topics (models, training, GPs, metrics): the
 [RESUM_FLEX docs index](https://github.com/annkasch/RESUM_FLEX/blob/main/docs/index.md).
