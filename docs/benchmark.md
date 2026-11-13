@@ -31,6 +31,25 @@ compared with the observed HF counts using the same metrics: count NLL, MAE, RMS
 Pearson r, bias and coverage, together with the compute of the whole pipeline (core-hours,
 from each run's `compute.json`).
 
+## Event models: donor photons
+
+A network predicts a voxel's rate by averaging its per-photon p over a photon sample. Its own
+photons would tie the prediction to the sample whose hits are scored (a favourable emission
+sample raises both), which a GP, seeing only the position, cannot use. So
+`scripts/score_event_model.py` predicts each scored voxel from the photons of another voxel
+of the same set (seeded draw, never the voxel itself; same photon count, never trained on,
+the same donors for every model with the same seed), moved into the scored voxel by the
+provider (`transfer_events`: absolute positions shifted by the centre difference, offsets as
+they are). Scores of earlier runs with `--donors cnp_train/lf` (1500 photons; training data of
+LF-train models) stay in their own files and are not comparable with the default.
+
+Limits: the prediction averages over n donor photons, a Monte Carlo error sqrt(Var(p)/n)
+that is independent of the counts and not in the predictive uncertainty; for `mlp_bll/v2` it
+widens the predictive spread by ~0.03 % (5000 photons), and it grows with a model's
+within-voxel variation. It assumes all voxels of the set hold the same photon count and are
+fully filled: with fewer donor photons, or a donor cut by a Ge detector where the target is
+not (or the reverse), the donor sample no longer matches the target voxel.
+
 ## Running the benchmark
 
 ```bash
@@ -44,7 +63,7 @@ The tool only reads finished runs, so it is cheap (fine on a login node). Each e
 |---|---|
 | `binomial_gp`, `mfgp` | `evaluation_<e>.npz` of the benchmark set (MFGP: target level) |
 | `countfield` | `evaluation_<partition>_<fidelity>.npz` |
-| `event_model` | `inference/<checkpoint>/…_predictive.npz` and `_scores.json`; score the checkpoint first with `scripts/score_event_model.py` (`checkpoint`, `donors` select the file) |
+| `event_model` | `inference/<checkpoint>/…_predictive.npz` and `_scores.json`; score the checkpoint first with `scripts/score_event_model.py` (`checkpoint`, `donors` select the file; default `scored`) |
 
 `compute` lists every run of the model's pipeline (`path:`): a run directory (`compute.json`)
 or a json file with a `compute` entry. Without it, the run's own records are used; countfield

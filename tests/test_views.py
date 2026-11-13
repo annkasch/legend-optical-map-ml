@@ -167,3 +167,48 @@ def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path):
         assert p.shape == (4,) and np.all((p > 0) & (p < 1))
         assert arrays["design_point_ids"].tolist() == provider.theta("gp_unlabeled", "lf")[1]
         assert np.array_equal(arrays["coordinates"], provider.coordinates("gp_unlabeled", "lf"))
+    # Scoring: donors from the scored set itself, never the voxel's own, moved into the voxel.
+    import runpy
+    import sys
+    from pathlib import Path
+
+    script = Path(__file__).parents[1] / "scripts/score_event_model.py"
+    argv = [str(script), str(output / "checkpoints" / "best"), str(data), "--partition",
+            "cnp_validation", "--fidelity", "lf", "--threads", "1",
+            "--plot-directory", str(tmp_path / "plots")]
+    old, sys.argv = sys.argv, argv
+    try:
+        runpy.run_path(str(script), run_name="__main__")
+    finally:
+        sys.argv = old
+    stem = output / "inference/best/cnp_validation_lf_events-cnp_validation_lf"
+    record = json.loads(stem.with_suffix(".json").read_text())["event_inputs"]
+    assert record["own_excluded"] and record["transfer"] == "provider transfer_events"
+    assert all(d != i for i, d in enumerate(record["donor_index"]))
+    scores = json.loads(stem.with_name(stem.name + "_scores.json").read_text())
+    assert scores["donors"] == "cnp_validation/lf" and np.isfinite(scores["predictive_nll"])
+
+
+def test_transfer_moves_absolute_donor_positions_into_the_target_voxel(tmp_path):
+    c = with_views(dataset(tmp_path), {"absolute": ABSOLUTE})
+    top = ensure_prepared_optical_data(c)
+    offset, absolute = OpticalDataset(top), OpticalDataset(c.view_directory("absolute"))
+    source, target = ("train", "lf"), ("validation", "lf")
+    donor_abs = absolute.load(*source)[0].phi
+    n_target = absolute.load(*target)[0].batch_size
+    rows = np.arange(n_target) % donor_abs.shape[0]
+    moved = absolute.transfer_events(donor_abs[rows], source, rows, target)
+    # Physical positions: moved - target centre equals the donor's offset from its own centre.
+    def physical(provider, phi):
+        norm = provider.normalization()["phi"]
+        return phi * np.asarray(norm["scale"]) + np.asarray(norm["offset"])
+
+    counts = absolute.load(*source)[0].events_per_design_point[rows]
+    valid = np.arange(moved.shape[1]) < counts[:, None]  # [B, N]
+    relative = physical(absolute, moved)[..., :3] - absolute.coordinates(*target)[:, None, :]
+    donor_offsets = physical(offset, offset.load(*source)[0].phi[rows])[..., :3]
+    np.testing.assert_allclose(relative[valid], donor_offsets[valid], atol=1e-6)
+    np.testing.assert_array_equal(moved[..., 3:], donor_abs[rows][..., 3:])  # momenta unchanged
+    # Offset views need no move.
+    phi = offset.load(*source)[0].phi[rows]
+    assert offset.transfer_events(phi, source, rows, target) is phi

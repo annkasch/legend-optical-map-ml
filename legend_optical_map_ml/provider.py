@@ -6,6 +6,8 @@ Configs select it with ``data_provider: <package>.provider:OpticalDataset`` and 
 
 from pathlib import Path
 
+import numpy as np
+
 from legend_optical_map_ml.view import OpticalView
 
 
@@ -43,6 +45,28 @@ class OpticalDataset:
 
     def normalization(self):
         return self.view.meta["normalization"]
+
+    def transfer_events(self, phi, source, source_rows, target):
+        """Donor photon inputs moved to the target voxels (RESUM_FLEX ``predict --events-from``).
+
+        phi [B, N, D_phi] normalized: row b holds the photons of voxel ``source_rows[b]`` of
+        ``source`` = (partition, fidelity), to be placed in voxel b of ``target``. Offsets and
+        momenta are relative to the voxel and stay as they are; absolute cartesian vertex
+        positions are shifted by (target centre - donor centre), in normalized units.
+        """
+        vertex = self.view.config.phi.vertex
+        if vertex.representation != "absolute":
+            return phi
+        if vertex.coordinates != "cartesian":
+            raise ValueError(
+                "absolute cylindrical vertex positions cannot be moved to other voxels"
+            )
+        rows = np.asarray(source_rows)
+        shift = self.coordinates(*target) - self.coordinates(*source)[rows]  # [B, 3] m
+        scale = np.asarray(self.normalization()["phi"]["scale"], dtype=float)[:3]  # vertex first
+        moved = np.array(phi, dtype=float)  # [B, N, D_phi]
+        moved[..., :3] += (shift / scale)[:, None, :]  # padding moves too; it stays masked
+        return moved.astype(np.asarray(phi).dtype)
 
     @classmethod
     def prepare(cls, data_config, data_directory):

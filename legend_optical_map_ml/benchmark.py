@@ -52,9 +52,10 @@ class BenchmarkModel(StrictModel):
     label: str
     kind: Literal["binomial_gp", "mfgp", "countfield", "event_model"]
     run: Path
-    # event_model only: checkpoint folder and the donor set of the scoring file.
+    # event_model only: checkpoint folder and the donor set of the scoring file ("scored": the
+    # benchmark set itself, the score script's default; None: the voxels' own photons).
     checkpoint: str = "best"
-    donors: str | None = "cnp_train/lf"
+    donors: str | None = "scored"
     # Runs whose compute adds up to this model's cost (e.g. MLP training + inference + GP).
     # Empty: the run itself (its compute.json; for event_model also the scoring file).
     compute: list[ComputeSource] = Field(default_factory=list)
@@ -154,9 +155,12 @@ def _native(row: dict, *, count_nll: bool) -> dict:
 
 def donor_stem(base: str, donors: str | None) -> str:
     """Inference file stem of ``base`` (partition_fidelity) with donor events ``donors``
-    ("partition/fidelity"): ``<base>_events-<donors>`` as RESUM_FLEX writes it."""
+    ("partition/fidelity", or "scored" for the set ``base`` itself): ``<base>_events-<donors>``
+    as RESUM_FLEX writes it."""
     if donors is None:
         return base
+    if donors == "scored":
+        return f"{base}_events-{base}"
     return f"{base}_events-{donors.replace('/', '_')}"
 
 

@@ -1,10 +1,12 @@
 """Score a context-free event model with a Bayesian last layer standalone on voxel counts.
 
     python scripts/score_event_model.py RUN/checkpoints/best DATA_DIR \
-        [--partition gp_validation --fidelity hf --donors cnp_train/lf --seed 0]
+        [--partition gp_validation --fidelity hf --donors gp_validation/hf --seed 0]
 
 Each scored voxel is predicted from its own position with the photon inputs of a seeded
-random donor voxel (a fresh emission sample), so nothing of its own simulation enters; the
+random donor voxel (a fresh emission sample), so nothing of its own simulation enters. The
+donors default to the scored set itself (never the voxel itself, same photon count, never
+trained on); the provider moves them into the voxel (absolute positions shifted). The
 counts k / n of the voxel are then scored against the binomial predictive mixed over the
 last-layer draws (resum_flex core.gp_metrics.count_predictive_scores), the same measures as
 the binomial GP. ``plugin_count_nll`` uses only the mean p, as in the model comparison table.
@@ -36,7 +38,9 @@ def main():
     parser.add_argument("data_directory", type=Path)
     parser.add_argument("--partition", default="gp_validation")
     parser.add_argument("--fidelity", default="hf")
-    parser.add_argument("--donors", default="cnp_train/lf", help="PARTITION/FIDELITY")
+    parser.add_argument(
+        "--donors", default=None, help="PARTITION/FIDELITY (default: the scored set itself)"
+    )
     parser.add_argument("--seed", type=int, default=0, help="donor draw seed")
     parser.add_argument("--threads", type=int, default=16)
     parser.add_argument("--plot-directory", type=Path, default=None)
@@ -47,6 +51,8 @@ def main():
 
     torch.set_num_threads(1)
     compute = ComputeLog()
+    if args.donors is None:
+        args.donors = f"{args.partition}/{args.fidelity}"
     donors = tuple(args.donors.split("/"))
     model = load_surrogate(args.checkpoint)
     if getattr(model, "last_layer", None) is None:

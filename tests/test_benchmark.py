@@ -85,7 +85,7 @@ def _runs(root):
     )
     folder = runs["event_model"] / "inference/best"
     folder.mkdir(parents=True)
-    stem = folder / "gp_validation_hf_events-cnp_train_lf"
+    stem = folder / "gp_validation_hf_events-gp_validation_hf"
     np.savez(f"{stem}_predictive.npz", **_arrays(0.5 * (TRUE_P + TRUE_P.mean())))
     scores = dict(
         crps=3.5e-4,
@@ -158,7 +158,7 @@ def test_reference_and_mismatched_voxels(tmp_path):
 
 def test_missing_scoring_file_and_blinded_test(tmp_path):
     runs = _runs(tmp_path / "runs")
-    scores = runs["event_model"] / "inference/best/gp_validation_hf_events-cnp_train_lf"
+    scores = runs["event_model"] / "inference/best/gp_validation_hf_events-gp_validation_hf"
     scores.with_name(scores.name + "_scores.json").unlink()
     with pytest.raises(FileNotFoundError, match="score_event_model"):
         run_benchmark(_config(tmp_path, runs))
@@ -175,3 +175,4 @@ def test_missing_scoring_file_and_blinded_test(tmp_path):
 def test_donor_stem():
     assert donor_stem("gp_validation_hf", None) == "gp_validation_hf"
     assert donor_stem("a_hf", "b/lf") == "a_hf_events-b_lf"
+    assert donor_stem("gp_validation_hf", "scored") == "gp_validation_hf_events-gp_validation_hf"

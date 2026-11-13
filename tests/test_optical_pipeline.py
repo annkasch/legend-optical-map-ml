@@ -671,6 +671,14 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
             runpy.run_path(str(script), run_name="__main__")
         finally:
             sys.argv = old
+    # Default donors: the scored set itself; one voxel has no other voxel to borrow from.
+    default = [a for a in argv if a not in ("--donors", "cnp_train/lf")]
+    with pytest.raises(ValueError, match="another design point"):
+        old, sys.argv = sys.argv, default
+        try:
+            runpy.run_path(str(script), run_name="__main__")
+        finally:
+            sys.argv = old
 
 
 def test_cnp_run_on_role_data_rejects_missing_hf(tmp_path):
