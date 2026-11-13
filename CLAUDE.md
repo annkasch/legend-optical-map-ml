@@ -78,4 +78,5 @@ files explicitly, leave the user's uncommitted edits out) and push the current b
 - When you add, rename or remove modules, commands, datasets or rules, update this file and
   the doc in the same commit.
 - `.claude/status.md`: open items only, one line each, dated; delete finished items at the end
-  of each task.
+  of each task. Also update it after work without a commit: submitted or cancelled jobs,
+  analyses, decisions, a task stopped halfway (the Stop hook prompts only after commits).
