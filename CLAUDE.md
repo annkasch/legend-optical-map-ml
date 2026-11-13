@@ -30,8 +30,8 @@ only what the task needs, using the table below. It lists every doc in `docs/`.
   photon seen by any channel. Quantity of interest: hit rate per voxel (hits / photons).
 - LF / HF = low / high fidelity (photons per voxel); LF2 = `gp_unlabeled`. Roles:
   `docs/data-config.md`; which model trains and is scored on what: `docs/benchmark.md`.
-- Datasets by short name (`centered`, `lbnl_secondment`, `genesis`) → volume folder in
-  `configs/` and `outputs/`: `docs/datasets.md`.
+- Datasets are named by their volume folder in `configs/` and `outputs/` (`voxel_sets_…`,
+  `photon_…`), never by short names; origin and paths: `docs/datasets.md`.
 
 ## Commands
 ```bash

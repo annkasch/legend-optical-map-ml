@@ -1,5 +1,5 @@
 # Within-design-point metrics (RESUM_FLEX `within_point` stage, docs/evaluation.md) on the
-# finished genesis BLL MLP run, which was trained before the read-out had them. Reads the
+# finished BLL MLP run, which was trained before the read-out had them. Reads the
 # run's saved logits and labels of its best checkpoint and writes within_point.json, arrays
 # and plot into the run directory, next to its read-out (the run's own files stay unchanged).
 # The run scored LF validation only (cnp_validation, hf_validation: false).

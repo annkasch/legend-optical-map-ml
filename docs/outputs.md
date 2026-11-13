@@ -21,10 +21,10 @@ outputs/
 ```
 
 - `<volume>` is the volume as in the raw campaign's name, e.g.
-  `voxel_sets_x-800-600_y+50+250_z+400+600_5mm` (lbnl_secondment),
-  `voxel_sets_x+300+500_y-100+100_z-100+100_5mm` and `photon_x+300+500_y-100+100_z-100+100`
-  (genesis), `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm` (centered; Ian's folder is
-  named after the box centre, `centered_425_375_375`).
+  `voxel_sets_x-800-600_y+50+250_z+400+600_5mm`,
+  `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, `photon_x+300+500_y-100+100_z-100+100` and
+  `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm` (Ian's raw folder is named after the box
+  centre, `centered_425_375_375`). Datasets are referred to by these names only.
 - **A run goes in the folder of the data it was trained on**, not the data it is scored on:
   a neural field trained on the photon store goes under `photon_<volume>/`, even though it is
   scored on the voxel campaign's `gp_validation`.

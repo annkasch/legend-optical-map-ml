@@ -1,5 +1,5 @@
 # Within-design-point metrics (RESUM_FLEX `within_point` stage, docs/evaluation.md) on the
-# finished genesis neural field f2, trained on the photon store before the read-out had them.
+# finished neural field f2, trained on the photon store before the read-out had them.
 # Reads the run's saved logits and labels of its best checkpoint on both voxel evaluation sets
 # (LF = cnp_validation, HF = gp_validation of the voxel campaign) and writes within_point.json,
 # arrays and plots into the run directory, next to its read-out (the run's own files stay

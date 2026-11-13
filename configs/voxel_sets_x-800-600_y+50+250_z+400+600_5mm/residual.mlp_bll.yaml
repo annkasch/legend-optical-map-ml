@@ -1,5 +1,5 @@
 # Residual learnability test (RESUM_FLEX `residual` stage, docs/evaluation.md) on the finished
-# lbnl BLL MLP run v2 (2026-11-12): LightGBM learns a cross-fitted correction to the model logit
+# BLL MLP run v2 (2026-11-12): LightGBM learns a cross-fitted correction to the model logit
 # from (theta, phi, logit p); a held-out gain whose 95 % interval excludes 0 means the model
 # misses structure (phi_gain: within voxels, rate_gain: voxel rates). Reads the run's saved
 # logits and labels of its best checkpoint; the run's own files stay unchanged. The stage needs

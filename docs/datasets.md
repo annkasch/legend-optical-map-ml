@@ -1,11 +1,11 @@
 # Datasets
 
 All 5 mm voxels, LF = 1500 and HF = 5000 photons (one primary each) per voxel unless noted.
-Short name in brackets; configs in `configs/<folder>/`, outputs in `outputs/<folder>/`
+Named by volume folder; configs in `configs/<folder>/`, outputs in `outputs/<folder>/`
 (`docs/outputs.md`). Check sizes and states against the data before relying on them; last
 full check 2026-11-12 (file and primary counts, manifests, overlaps, symlinks: all as below).
 
-## Ian Wang's centered box [`centered`] — `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm`
+## `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm` (Ian Wang's centered box)
 
 `/global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375`, box x 0.365-0.485,
 y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
@@ -28,7 +28,7 @@ y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
   raw outputs (checked 2026-11-02, `analysis/2026-11-02_hf_maps`); use the raw outputs. Only
   per-channel maps would add information (a different target).
 
-## LBNL secondment [`lbnl_secondment`] — `voxel_sets_x-800-600_y+50+250_z+400+600_5mm`
+## `voxel_sets_x-800-600_y+50+250_z+400+600_5mm` (Sofia Calgaro, LBNL secondment)
 
 Sofia Calgaro's voxel sets
 `/global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm`,
@@ -45,7 +45,7 @@ GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`; no `cnp_tes
 - Results so far: `analysis/2026-11-03_lbnl_model_comparison/README.md`; benchmark config
   `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/benchmark.yaml`.
 
-## Own genesis-remage campaign [`genesis`] — `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, `photon_x+300+500_y-100+100_z-100+100`
+## `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, `photon_x+300+500_y-100+100_z-100+100` (own genesis-remage campaign)
 
 On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data can vanish):
 

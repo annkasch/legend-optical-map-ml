@@ -1,4 +1,4 @@
-# RESuM two-level MFGP on the genesis x+300+500 5 mm voxels: MLP mean on LF2_train -> observed
+# RESuM two-level MFGP on voxel_sets_x+300+500_y-100+100_z-100+100_5mm: MLP mean on LF2_train -> observed
 # HF_train fraction, in log space. Same settings as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mfgp.log.yaml.
 levels:
 - source: model_mean

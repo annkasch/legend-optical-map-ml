@@ -1,4 +1,4 @@
-# MLP + Bayesian last layer on the genesis x+300+500 5 mm voxels; same settings as
+# MLP + Bayesian last layer on voxel_sets_x+300+500_y-100+100_z-100+100_5mm; same settings as
 # voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp_bll.yaml: trains on LF2 + HF train (benchmark rule,
 # docs/benchmark.md), checkpoints selected on LF validation (cnp_validation).
 model:
