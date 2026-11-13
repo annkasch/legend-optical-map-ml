@@ -68,7 +68,9 @@ zero-padded with per-voxel `event_counts`).
   `EVENT_ONLY` (θ None, one row per voxel as before). θ still groups voxels for the split,
   defines offsets and stays available as design-point metadata (`provider.theta()`,
   `coordinates()`, normalization fitted as usual). Needs phi inputs. The field model needs θ:
-  event-only views are for mlp / mlp_bll.
+  event-only views are for mlp / mlp_bll. No GP stage (binomial, MFGP) on their `predict`
+  output yet: it saves the batch θ (None), which the GP stages compare with the provider's θ;
+  needs RESUM_FLEX `predict` to save `provider.theta()` instead.
 - `phi.vertex.representation`: `offset` from the centre, absolute, or omitted;
   `phi.momentum.representation`: `components`, direction plus magnitude, or omitted.
 - `target.kind: any_channel` (an event is positive with a hit in any channel) or
