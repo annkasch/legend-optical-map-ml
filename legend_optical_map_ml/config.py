@@ -121,6 +121,9 @@ class CylindricalConfig(StrictModel):
 
 
 class ThetaConfig(StrictModel):
+    # False: the voxel centre is no network input (batch theta None, EVENT_ONLY); it still
+    # groups voxels for the split, defines offsets and is served as design-point metadata.
+    model_input: bool = True
     coordinates: Literal["cartesian", "cylindrical"] = "cartesian"
     center_source: Literal["filename", "observed_midrange"] = "filename"
     cylindrical: CylindricalConfig = Field(default_factory=CylindricalConfig)
@@ -215,6 +218,13 @@ class OpticalDataConfig(StrictModel):
 
     @model_validator(mode="after")
     def check_views(self):
+        for name, view in self.view_configs().items():
+            phi = view.phi
+            if not view.theta.model_input and (
+                phi.vertex.representation == "omit" and phi.momentum.representation == "omit"
+            ):
+                label = "top-level view" if name is None else f"view {name}"
+                raise ValueError(f"{label}: theta.model_input false needs phi inputs")
         for name, view in self.views.items():
             if view.theta is not None and _grouping(view.theta) != _grouping(self.theta):
                 raise ValueError(

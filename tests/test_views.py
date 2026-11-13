@@ -89,3 +89,34 @@ def test_provider_selects_view_by_data_directory(tmp_path):
 def test_views_reject_names_grouping_and_shared_settings(tmp_path, views):
     with pytest.raises(ValueError):
         with_views(dataset(tmp_path, number=1), views)
+
+
+EMISSION = {"theta": {"model_input": False}, **ABSOLUTE}
+
+
+def test_event_only_view_keeps_voxel_rows_and_metadata(tmp_path):
+    c = with_views(dataset(tmp_path), {"emission": EMISSION})
+    top = ensure_prepared_optical_data(c)
+    named = c.view_directory("emission")
+    full, event = load_partition(top, "train", "lf")[0], load_partition(named, "train", "lf")[0]
+    assert event.mode.value == "event_only" and event.theta is None
+    assert event.phi.shape == full.phi.shape  # one row per voxel, as with theta
+    assert np.array_equal(event.labels, full.labels)
+    assert np.array_equal(event.events_per_design_point, full.events_per_design_point)
+    # Voxel centres stay available as design-point metadata, normalized as in the theta view.
+    base, provider = OpticalDataset(top), OpticalDataset(named)
+    theta, ids = provider.theta("train", "lf")
+    assert np.allclose(theta, full.theta) and ids == base.theta("train", "lf")[1]
+    assert np.array_equal(provider.coordinates("train", "lf"), base.coordinates("train", "lf"))
+    inputs = OpticalView(named).load_inputs("train", "lf")[0]
+    assert inputs.theta is None and inputs.phi.shape == event.phi.shape
+    metadata = json.loads((named / "metadata.json").read_text())["train"]["lf"]
+    assert metadata["mode"] == "event_only"
+    assert metadata["features"]["theta"]["model_input"] is False
+
+
+def test_event_only_view_needs_phi_inputs(tmp_path):
+    omit = {"vertex": {"representation": "omit"}, "momentum": {"representation": "omit"}}
+    with pytest.raises(ValueError, match="needs phi inputs"):
+        with_views(dataset(tmp_path, number=1), {"none": {"theta": {"model_input": False},
+                                                          "phi": omit}})

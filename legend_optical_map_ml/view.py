@@ -178,6 +178,13 @@ class OpticalView:
         return batch, paths
 
 
+def input_mode(config: OpticalDataConfig, has_phi: bool) -> InputMode:
+    """Which inputs a batch of this view carries: theta only if it is a model input."""
+    if config.theta.model_input:
+        return InputMode.FULL if has_phi else InputMode.DESIGN_ONLY
+    return InputMode.EVENT_ONLY
+
+
 def voxel_centers(cache: EventCache, rows, config: OpticalDataConfig) -> np.ndarray:
     """Voxel centers [B, 3] used for theta and vertex offsets."""
     field = "nominal_center" if config.theta.center_source == "filename" else "measured_center"
@@ -220,7 +227,10 @@ def build_batch(
     counts = cache.index["n_events"][rows].astype(np.int64)  # [B]
     width = int(counts.max())
     centers = voxel_centers(cache, rows, config) if centers is None else np.asarray(centers)
-    theta = AffineTransform(**normalization["theta"]).transform(theta_features(centers, config)[0])
+    theta = None
+    if config.theta.model_input:
+        transform = AffineTransform(**normalization["theta"])
+        theta = transform.transform(theta_features(centers, config)[0])  # [B, D_theta]
     detector = config.target.detector_id if config.target.kind == "single_channel" else None
     labels = np.zeros((len(rows), width), dtype=np.int8)  # [B, N]
     for b, row in enumerate(rows if labeled else []):
@@ -236,7 +246,7 @@ def build_batch(
                 phi[b, : counts[b]] = values[offset : offset + counts[b]]
                 offset += counts[b]
     return StandardBatch(
-        mode=InputMode.DESIGN_ONLY if phi is None else InputMode.FULL,
+        mode=input_mode(config, phi is not None),
         theta=theta,
         phi=phi,
         labels=labels,

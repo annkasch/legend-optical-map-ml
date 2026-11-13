@@ -27,7 +27,7 @@ from legend_optical_map_ml.split import (
     save_manifest,
     training_partition,
 )
-from legend_optical_map_ml.view import OpticalView, phi_chunks, write_view
+from legend_optical_map_ml.view import OpticalView, input_mode, phi_chunks, write_view
 
 
 class PreparedOpticalData:
@@ -192,7 +192,7 @@ def _write_view_directory(runs, assignments, manifest, config: OpticalDataConfig
                 "features": features,
                 "shape": [len(selected), int(counts.max())],
                 "event_counts": counts.tolist() if ragged else None,
-                "mode": (InputMode.FULL if normalization["phi"] else InputMode.DESIGN_ONLY).value,
+                "mode": input_mode(config, normalization["phi"] is not None).value,
             }
     out = config.output_directory
     out.mkdir(parents=True, exist_ok=True)

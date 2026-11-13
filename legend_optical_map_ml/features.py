@@ -89,7 +89,9 @@ def feature_info(config: OpticalDataConfig) -> dict:
     empty = np.zeros((0, 3))
     _, pn, pu = phi_features(empty, empty, empty, config)
     return {
-        "theta": {"names": tn, "units": tu, "dimension": len(tn)},
+        "theta": {
+            "names": tn, "units": tu, "dimension": len(tn), "model_input": config.theta.model_input
+        },
         "phi": {"names": pn, "units": pu, "dimension": len(pn)},
     }
 

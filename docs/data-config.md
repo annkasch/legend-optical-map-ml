@@ -64,6 +64,11 @@ zero-padded with per-voxel `event_counts`).
 
 - `theta.coordinates`: `cartesian` or `cylindrical` (angle encoding, azimuth on/off).
   `center_source: filename` (nominal centre; CSV coordinates override) or `observed_midrange`.
+- `theta.model_input: false`: the voxel centre is no network input; batches are
+  `EVENT_ONLY` (θ None, one row per voxel as before). θ still groups voxels for the split,
+  defines offsets and stays available as design-point metadata (`provider.theta()`,
+  `coordinates()`, normalization fitted as usual). Needs phi inputs. The field model needs θ:
+  event-only views are for mlp / mlp_bll.
 - `phi.vertex.representation`: `offset` from the centre, absolute, or omitted;
   `phi.momentum.representation`: `components`, direction plus magnitude, or omitted.
 - `target.kind: any_channel` (an event is positive with a hit in any channel) or
