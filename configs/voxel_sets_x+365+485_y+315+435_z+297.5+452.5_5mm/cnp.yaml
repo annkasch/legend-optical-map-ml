@@ -46,3 +46,4 @@ validation_seed: 12345
 # full validation and test sets are evaluated once at the end.
 selection_max_design_points: 5000
 evaluation_threads: 16
+residual_test: {}  # residual learnability test at read-out (RESUM_FLEX docs/evaluation.md)

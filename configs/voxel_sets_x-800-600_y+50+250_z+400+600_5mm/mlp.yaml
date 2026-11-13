@@ -37,3 +37,4 @@ data_config: data.yaml
 output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp/v2/seed0
 selection_max_design_points: 500
 evaluation_threads: 16
+residual_test: {}  # residual learnability test at read-out (RESUM_FLEX docs/evaluation.md)
