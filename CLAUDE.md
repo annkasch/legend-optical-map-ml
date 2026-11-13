@@ -27,20 +27,15 @@ only what the task needs, using the table below; `docs/index.md` lists every doc
 ## Concepts
 - voxel = design point θ (centre), photon = event φ (vertex offset, momentum), outcome =
   photon seen by any channel. Quantity of interest: hit rate per voxel (hits / photons).
-- LF (1500 photons/voxel) and HF (5000). Roles: `cnp_train`, `cnp_validation`, `cnp_test`
-  (LF event models), `gp_unlabeled` (LF2, inputs only), `gp_train` (HF), `gp_validation`,
-  `gp_test` (HF benchmark, blinded).
-- Rate models (binomial GP, MFGP, BLL MLP, neural field, countfield) all train on LF2 + HF
-  train and are scored on `gp_validation/hf`; support networks feeding a GP train on LF train.
-- Datasets, named by volume (folder in `configs/` and `outputs/`): `centered` (Ian Wang) =
-  `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm`, `lbnl_secondment` (Sofia Calgaro) =
-  `voxel_sets_x-800-600_y+50+250_z+400+600_5mm`, genesis (own, raw data on `$PSCRATCH`: purge
-  policy) = `voxel_sets_x+300+500_y-100+100_z-100+100_5mm` and `photon_x+300+500_y-100+100_z-100+100`.
+- LF / HF = low / high fidelity (photons per voxel); LF2 = `gp_unlabeled`. Roles:
+  `docs/data-config.md`; which model trains and is scored on what: `docs/benchmark.md`.
+- Datasets by short name (`centered`, `lbnl_secondment`, `genesis`) → volume folder in
+  `configs/` and `outputs/`: `docs/datasets.md`.
 
 ## Commands
 ```bash
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-.venv/bin/pytest -q                       # 109 tests, ~2 min on a login node
+.venv/bin/pytest -q                       # ~2 min on a login node
 .venv/bin/ruff check .                    # must stay clean
 .venv/bin/python -m core.surrogates train|mfgp|binomial|stream CONFIG.yaml
 .venv/bin/python -m core.surrogates predict RUN/checkpoints/best DATA_DIR PARTITION
