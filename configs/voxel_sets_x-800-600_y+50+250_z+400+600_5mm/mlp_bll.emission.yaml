@@ -1,7 +1,8 @@
 # As mlp_bll.yaml (v2), but on the `emission` view of data.yaml (2026-11-13): the network sees
-# only the emission point (absolute vertex x, y, z) and px, py, pz, no voxel centre. The direct
-# form of mlp_bll.pos.yaml (field model summing centre + offset inside the network); same
+# only the emission point (absolute vertex x, y, z) and px, py, pz, no voxel centre. Same
 # training data (LF2 + HF train), selection and seed, so only the input representation differs.
+# Replaces the field model summing centre + offset inside the network (mlp_bll_pos/v1, removed
+# 2026-11-13 after matching this run: HF validation NLL 2.392 vs 2.391).
 #   sbatch -q regular -t 03:00:00 --job-name=mlp-bll-emission-v1 \
 #     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp_bll.emission.yaml train
 model:
