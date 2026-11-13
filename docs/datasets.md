@@ -2,7 +2,8 @@
 
 All 5 mm voxels, LF = 1500 and HF = 5000 photons (one primary each) per voxel unless noted.
 Short name in brackets; configs in `configs/<folder>/`, outputs in `outputs/<folder>/`
-(`docs/outputs.md`). Check sizes and states against the data before relying on them.
+(`docs/outputs.md`). Check sizes and states against the data before relying on them; last
+full check 2026-11-12 (file and primary counts, manifests, overlaps, symlinks: all as below).
 
 ## Ian Wang's centered box [`centered`] — `voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm`
 
@@ -33,7 +34,8 @@ Sofia Calgaro's voxel sets
 `/global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm`,
 CSV manifests per role (`voxels_{LF_train,CNP_val,LF2_train,HF_train,GP_val}.csv`). Data
 config: `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml`. About 6400 LF2 / 640 HF train voxels;
-GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`.
+GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`; no `cnp_test`.
+320 of the 640 HF train positions are LF2 positions (nested part of the design).
 
 - 11 GP_val voxels share positions with CNP_val (lists sampled independently). Accepted for
   this dataset (`SHARED_VALIDATION_ROLES` includes `gp_test`); new campaigns must sample
@@ -47,7 +49,8 @@ GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`.
 
 On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data can vanish):
 
-- Voxel sets `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, same sampling and roles as LBNL.
+- Voxel sets `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, same sampling, sizes and roles as
+  LBNL; GP_val and CNP_val are disjoint here.
   Data config: `configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml`.
 - Homogeneous box `box_x+300+500_y-100+100_z-100+100` (32 chunks of 400k isotropic photons,
   9.68 ± 0.22 eV) → photon store `outputs/photon_x+300+500_y-100+100_z-100+100/data` (moved from `$PSCRATCH`
