@@ -40,6 +40,8 @@ outputs/
   writes into the run's folder, next to its read-out (`within_point.json`, arrays, plot), and
   leaves the run's own files unchanged. Config: `configs/<dataset>/<stage>.<model>.yaml`, e.g.
   `within_point.mlp_bll.yaml`.
+- The residual learnability test (RESUM_FLEX `residual`) needs a new directory: it writes to
+  `<run>/residual_test/`; config `residual.<model>.yaml`.
 - Data YAMLs set `cache_directory: ../outputs/event_cache`; the default (next to
   `output_directory`) would start an empty cache inside the dataset folder.
 
