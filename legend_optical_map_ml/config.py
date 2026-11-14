@@ -118,6 +118,9 @@ class SourceConfig(StrictModel):
 class CylindricalConfig(StrictModel):
     include_azimuth: bool = True
     angle_encoding: Literal["sin_cos", "radians"] = "sin_cos"
+    # n-fold rotational symmetry about z (e.g. 6 for the string layout): angle features of
+    # n * azimuth, so positions 360/n degrees apart look the same. Local frames keep the azimuth.
+    rotational_symmetry: int = Field(default=1, ge=1)
 
 
 class ThetaConfig(StrictModel):

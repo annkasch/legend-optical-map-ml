@@ -49,9 +49,9 @@ views:
       momentum:
         representation: components
   # Input comparison for MLP + BLL (2026-11-13): (a) θ + offset + momentum is the top-level view,
-  # (b) θ + raw vertex + momentum, (c) raw vertex + momentum is `emission`; each also cylindrical
-  # about the z axis: θ and raw vertex as (r, sin, cos, z), offset and momentum rotated into the
-  # local radial / tangential / z frame (offset views: centre azimuth; raw vertex: vertex azimuth).
+  # (b) θ + raw vertex + momentum, (c) raw vertex + momentum is `emission`. Cylindrical inputs
+  # (6-fold encoding, docs/data-config.md) wait for data spanning several 60° sectors: this box
+  # (azimuth 157-176°) lies in one.
   theta_absolute:   # (b)
     phi:
       vertex:
@@ -59,37 +59,3 @@ views:
         coordinates: cartesian
       momentum:
         representation: components
-  cylindrical:   # (a) cylindrical
-    theta:
-      coordinates: cylindrical
-      center_source: filename
-    phi:
-      vertex:
-        representation: offset
-        coordinates: cylindrical
-      momentum:
-        representation: components
-        coordinates: cylindrical
-  theta_absolute_cylindrical:   # (b) cylindrical
-    theta:
-      coordinates: cylindrical
-      center_source: filename
-    phi:
-      vertex:
-        representation: absolute
-        coordinates: cylindrical
-      momentum:
-        representation: components
-        coordinates: cylindrical
-  emission_cylindrical:   # (c) cylindrical; θ (no input) stays cartesian metadata as in emission
-    theta:
-      model_input: false
-      coordinates: cartesian
-      center_source: filename
-    phi:
-      vertex:
-        representation: absolute
-        coordinates: cylindrical
-      momentum:
-        representation: components
-        coordinates: cylindrical

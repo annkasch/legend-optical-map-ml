@@ -218,8 +218,10 @@ CYLINDRICAL_ABSOLUTE = {"phi": {
 }}
 
 
-def test_transfer_moves_cylindrical_absolute_donors_like_cartesian_ones(tmp_path):
-    c = with_views(dataset(tmp_path), {"absolute": ABSOLUTE, "cyl": CYLINDRICAL_ABSOLUTE})
+@pytest.mark.parametrize("symmetry", [1, 6])
+def test_transfer_moves_cylindrical_absolute_donors_like_cartesian_ones(tmp_path, symmetry):
+    cyl = {**CYLINDRICAL_ABSOLUTE, "theta": {"cylindrical": {"rotational_symmetry": symmetry}}}
+    c = with_views(dataset(tmp_path), {"absolute": ABSOLUTE, "cyl": cyl})
     ensure_prepared_optical_data(c)
     cart, cyl = (OpticalDataset(c.view_directory(n)) for n in ("absolute", "cyl"))
     source, target = ("train", "lf"), ("validation", "lf")
@@ -231,12 +233,18 @@ def test_transfer_moves_cylindrical_absolute_donors_like_cartesian_ones(tmp_path
         norm = provider.normalization()["phi"]
         raw = phi * np.asarray(norm["scale"]) + np.asarray(norm["offset"])
         b, n, d = raw.shape
-        pos, mom = decode_absolute_phi(raw.reshape(b * n, d), provider.view.config)
+        near = np.repeat(provider.coordinates(*target), n, axis=0)  # moved into the target voxels
+        pos, mom = decode_absolute_phi(raw.reshape(b * n, d), provider.view.config, near=near)
         return pos.reshape(b, n, 3), mom.reshape(b, n, 3)
 
     moved = [p.transfer_events(p.load(*source)[0].phi[rows], source, rows, target)
              for p in (cart, cyl)]
     valid = np.arange(moved[0].shape[1]) < counts[:, None]
+    if symmetry > 1:  # sector unknown for voxels on the axis (fixture voxel 0): not compared
+        off_axis = [np.hypot(*cyl.coordinates(*s)[i, :2].T) > 0.01 for s, i in
+                    ((source, rows), (target, slice(None)))]
+        valid &= (off_axis[0] & off_axis[1])[:, None]
+        assert valid.any()
     (pc, mc), (py, my) = decoded(cart, moved[0]), decoded(cyl, moved[1])
     np.testing.assert_allclose(py[valid], pc[valid], atol=1e-5)
     np.testing.assert_allclose(my[valid], mc[valid], rtol=1e-4, atol=1e-6)

@@ -69,7 +69,10 @@ class OpticalDataset:
             moved[..., :3] += (shift / scale[:3])[:, None, :]  # vertex first
             return moved.astype(np.asarray(phi).dtype)
         b, n, d = moved.shape
-        positions, momenta = decode_absolute_phi((moved * scale + offset).reshape(b * n, d), config)
+        donor_centres = np.repeat(self.coordinates(*source)[rows], n, axis=0)  # [B * N, 3]
+        positions, momenta = decode_absolute_phi(
+            (moved * scale + offset).reshape(b * n, d), config, near=donor_centres
+        )
         positions = positions + np.repeat(shift, n, axis=0)
         encoded = phi_features(positions, momenta, positions, config)[0]  # centres unused
         return ((encoded - offset) / scale).reshape(b, n, d).astype(np.asarray(phi).dtype)

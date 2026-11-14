@@ -12,10 +12,13 @@ def center(run: OpticalRun, config: OpticalDataConfig) -> np.ndarray:
     return run.nominal_center if config.theta.center_source == "filename" else run.measured_center
 
 
-def cylindrical(xyz, *, include_azimuth=True, encoding="sin_cos"):
+def cylindrical(xyz, *, include_azimuth=True, encoding="sin_cos", symmetry=1):
+    """Points [..., 3] -> (r, angle features, z); the angle is symmetry * azimuth."""
     x, y, z = np.moveaxis(np.asarray(xyz), -1, 0)
     r = np.hypot(x, y)
     angle = np.where(r == 0, 0, np.arctan2(y, x))
+    if symmetry > 1:
+        angle = np.angle(np.exp(1j * symmetry * angle))  # wrapped to (-pi, pi]
     if not include_azimuth:
         return np.stack([r, z], axis=-1), ["r", "z"], ["m", "m"]
     if encoding == "sin_cos":
@@ -51,19 +54,37 @@ def momentum_azimuth(positions, centers, config: OpticalDataConfig) -> np.ndarra
     return azimuth(positions if absolute else centers)
 
 
-def decode_absolute_phi(phi, config: OpticalDataConfig):
+def decode_absolute_phi(phi, config: OpticalDataConfig, near=None):
     """Unnormalized event features [E, D_phi] of an absolute-vertex view -> (positions, momenta).
 
-    Inverse of ``phi_features`` (momenta zero when omitted); used to move donor photons.
+    Inverse of ``phi_features`` (momenta zero when omitted); used to move donor photons. With
+    an n-fold ``rotational_symmetry`` the azimuth is known only up to 360/n degrees: of the n
+    rotated copies the one closest to ``near`` [E, 3] (e.g. the voxel centre) is taken. Exact
+    when the point lies within its sector's half-width of ``near`` (for n = 6: the voxel is
+    more than about two half-diagonals from the axis); closer to the axis the copies are close
+    to each other and the error stays below their spacing.
     """
     if config.phi.vertex.representation != "absolute":
         raise ValueError("decode_absolute_phi needs an absolute vertex")
     phi = np.asarray(phi, dtype=float)
     if config.phi.vertex.coordinates == "cylindrical":
-        if config.theta.cylindrical.angle_encoding == "sin_cos":
+        angles = config.theta.cylindrical
+        if angles.angle_encoding == "sin_cos":
             r, angle, z, rest = phi[:, 0], np.arctan2(phi[:, 1], phi[:, 2]), phi[:, 3], phi[:, 4:]
         else:
             r, angle, z, rest = phi[:, 0], phi[:, 1], phi[:, 2], phi[:, 3:]
+        n = angles.rotational_symmetry
+        if n > 1:
+            if near is None:
+                raise ValueError("rotational_symmetry > 1: decoding needs reference positions")
+            # angle = n * azimuth (wrapped): azimuth = angle / n + k * 2 pi / n, k = 0 .. n-1
+            candidates = angle[:, None] / n + np.arange(n) * (2 * np.pi / n)  # [E, n]
+            near = np.asarray(near, dtype=float)
+            distance = np.hypot(
+                r[:, None] * np.cos(candidates) - near[:, :1],
+                r[:, None] * np.sin(candidates) - near[:, 1:2],
+            )
+            angle = np.take_along_axis(candidates, distance.argmin(1)[:, None], 1)[:, 0]
         positions = np.column_stack([r * np.cos(angle), r * np.sin(angle), z])
     else:
         positions, rest = phi[:, :3], phi[:, 3:]
@@ -87,6 +108,7 @@ def theta_features(centers, config: OpticalDataConfig):
             centers,
             include_azimuth=angle_config.include_azimuth,
             encoding=angle_config.angle_encoding,
+            symmetry=angle_config.rotational_symmetry,
         )
     return centers.copy(), ["x", "y", "z"], ["m"] * 3
 
@@ -110,7 +132,10 @@ def phi_features(positions, momenta, centers, config: OpticalDataConfig):
                 v = to_local_frame(v, azimuth(c))
                 names = ["dr_local", "dt_local", "dz"]
         elif vertex.coordinates == "cylindrical":
-            v, names, units = cylindrical(v, encoding=config.theta.cylindrical.angle_encoding)
+            angles = config.theta.cylindrical
+            v, names, units = cylindrical(
+                v, encoding=angles.angle_encoding, symmetry=angles.rotational_symmetry
+            )
         parts.append(v)
         pn.extend(names)
         pu.extend(units)

@@ -77,6 +77,11 @@ zero-padded with per-voxel `event_counts`).
   (`dr_local`, `dt_local`, `dz`). `phi.momentum.coordinates: cylindrical` rotates the momentum
   into that frame (`p_r_local`, `p_t_local`, `pz`): at the vertex azimuth for an absolute
   vertex, else at the centre azimuth.
+- `theta.cylindrical.rotational_symmetry: n` (default 1) encodes the angle of θ and of an
+  absolute vertex as n × azimuth: with the string layout's 6-fold symmetry, n = 6 makes all
+  inputs (with local-frame offset and momentum) the same for an event and its copy rotated by
+  60°. Moving donor photons of such a view (`transfer_events`) recovers the sector from the
+  donor centre; it is exact unless the voxel lies within about two half-diagonals of the axis.
 - `target.kind: any_channel` (an event is positive with a hit in any channel) or
   `single_channel` with `detector_id`.
 - `normalization.fit_fidelities` optionally restricts which fidelities enter the statistics.

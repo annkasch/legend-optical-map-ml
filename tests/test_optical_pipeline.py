@@ -256,6 +256,48 @@ def test_cylindrical_momentum_rotates_into_local_frame_and_decodes(tmp_path):
                 np.testing.assert_allclose(mom, r.momenta, atol=1e-9)
 
 
+def rotated(xyz, degrees):
+    a = np.radians(degrees)
+    rotation = np.array([[np.cos(a), -np.sin(a), 0], [np.sin(a), np.cos(a), 0], [0, 0, 1]])
+    return np.asarray(xyz) @ rotation.T
+
+
+@pytest.mark.parametrize("vertex", ["offset", "absolute"])
+def test_six_fold_symmetry_features_repeat_every_60_degrees(tmp_path, vertex):
+    c = config(tmp_path)
+    r = read_run(fixture_file(c.source.directory, center=(-0.7, 0.15, 0.5)), c.source.directory)
+    c.theta.coordinates = "cylindrical"
+    c.theta.cylindrical.rotational_symmetry = 6
+    c.phi.vertex.representation = vertex
+    c.phi.vertex.coordinates = "cylindrical"
+    c.phi.momentum.coordinates = "cylindrical"
+    theta, phi, info = make_features(r, c)
+    assert info["theta"]["names"] == ["r", "sin_azimuth", "cos_azimuth", "z"]
+    for degrees in (60, 120, -60, 180):
+        turned = replace(
+            r,
+            positions=rotated(r.positions, degrees),
+            momenta=rotated(r.momenta, degrees),
+            nominal_center=rotated(r.nominal_center, degrees),
+        )
+        theta_turned, phi_turned, _ = make_features(turned, c)
+        np.testing.assert_allclose(theta_turned, theta, atol=1e-12)
+        np.testing.assert_allclose(phi_turned, phi, atol=1e-9)
+    # Other rotations change the features.
+    turned = replace(r, nominal_center=rotated(r.nominal_center, 30))
+    assert not np.allclose(make_features(turned, c)[0], theta)
+    if vertex == "absolute":  # the azimuth is decoded as the copy nearest the reference
+        c.theta.cylindrical.angle_encoding = "sin_cos"
+        with pytest.raises(ValueError, match="reference positions"):
+            decode_absolute_phi(phi, c)
+        near = np.broadcast_to(r.nominal_center, r.positions.shape)
+        pos, mom = decode_absolute_phi(phi, c, near=near)
+        np.testing.assert_allclose(pos, r.positions, atol=1e-12)
+        np.testing.assert_allclose(mom, r.momenta, atol=1e-9)
+        pos, _ = decode_absolute_phi(phi, c, near=rotated(near, 60))
+        np.testing.assert_allclose(pos, rotated(r.positions, 60), atol=1e-12)
+
+
 @pytest.mark.parametrize("method", ["standard", "minmax", "none"])
 def test_normalization_constant_and_serialization(method):
     train = np.array([[1.0, 5.0], [3.0, 5.0]])
