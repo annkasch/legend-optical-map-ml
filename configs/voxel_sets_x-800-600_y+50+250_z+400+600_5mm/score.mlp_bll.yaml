@@ -1,13 +1,13 @@
 # Benchmark score (RESUM_FLEX `score` stage, docs/benchmark.md) of the finished run of
-# mlp_bll.yaml (v2) on gp_validation/hf: each voxel predicted from the photons of another
+# mlp_bll.yaml (v3) on gp_validation/hf: each voxel predicted from the photons of another
 # gp_validation/hf voxel (never its own; moved into the voxel by the provider), scored like the
 # binomial GP. Results go to the run's score_gp_validation_hf/; the run's files stay unchanged.
 #   sbatch scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/score.mlp_bll.yaml score
-run: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v2/seed0
+run: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v3/seed0
 checkpoints: [best]
 sets: [gp_validation/hf]
 donors: scored
 seed: 0
 threads: 16
 plot_ylim: [0.0, 0.0065]
-output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v2/seed0/score_gp_validation_hf
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v3/seed0/score_gp_validation_hf

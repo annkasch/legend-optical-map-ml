@@ -73,6 +73,6 @@ A stream model sees the view's φ columns as they are (RESUM_FLEX maps each into
 units), so the view's φ must be the stream records: absolute x, y, z, px, py, pz (view
 `theta_absolute`), or the view with the loader's `transform` (above). A stream model never
 uses θ; `dim_theta` must match the view: `null` on an event-only view (`theta.model_input:
-false`, RESUM_FLEX after 2aa0677), or the view's θ width on a view with θ (the stream
+false`, RESUM_FLEX ≥ b185b97), or the view's θ width on a view with θ (the stream
 configs here: `dim_theta: 3`, view `theta_absolute`), where θ is passed and ignored. `tests/test_stream_evaluation.py` trains a
 stream model with a transform and checks its predictions on such a view.

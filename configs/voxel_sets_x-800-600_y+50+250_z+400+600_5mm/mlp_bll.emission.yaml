@@ -1,3 +1,4 @@
+# v2 (2026-11-14): v1 retrained for the input comparison (a)/(b)/(c) on the same code.
 # As mlp_bll.yaml (v2), but on the `emission` view of data.yaml (2026-11-13): the network sees
 # only the emission point (absolute vertex x, y, z) and px, py, pz, no voxel centre. Same
 # training data (LF2 + HF train), selection and seed, so only the input representation differs.
@@ -47,7 +48,7 @@ train_sets:
 - {partition: gp_train, fidelity: hf}       # HF_train
 partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
-output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_emission/v1/seed0
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_emission/v2/seed0
 selection_max_design_points: 500
 evaluation_threads: 16
 residual_test: {threads: 16}  # read-out residual test; threads as residual.mlp_bll.yaml

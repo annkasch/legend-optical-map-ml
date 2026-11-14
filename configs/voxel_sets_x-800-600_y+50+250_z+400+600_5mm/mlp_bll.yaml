@@ -1,3 +1,5 @@
+# v3 (2026-11-14): v2 retrained for the input comparison (a)/(b)/(c) on the same code as
+# mlp_bll.theta_absolute.yaml and mlp_bll.emission.yaml (RESUM_FLEX b185b97).
 # Model and training as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp.yaml (v2) plus a Bayesian last
 # layer (2026-11-03): reference for the neural-field scan.
 # Benchmark rule (docs/benchmark.md, 2026-11-04): a model that predicts voxel rates itself trains
@@ -45,7 +47,7 @@ train_sets:
 - {partition: gp_train, fidelity: hf}       # HF_train
 partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
-output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v2/seed0
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v3/seed0
 selection_max_design_points: 500
 evaluation_threads: 16
-residual_test: {}  # residual learnability test at read-out (RESUM_FLEX docs/evaluation.md)
+residual_test: {threads: 16}  # read-out residual test; threads as residual.mlp_bll.yaml
