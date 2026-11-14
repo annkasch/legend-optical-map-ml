@@ -72,6 +72,8 @@ the voxel campaign with the RESUM_FLEX `score` stage (`data_directory`: the voxe
 A stream model sees the view's φ columns as they are (RESUM_FLEX maps each into its stream
 units), so the view's φ must be the stream records: absolute x, y, z, px, py, pz (view
 `theta_absolute`), or the view with the loader's `transform` (above). The view keeps θ as a
-model input (`dim_theta`): RESUM_FLEX requires θ in the batches of a stream model, which does
-not use it, so event-only views don't work here. `tests/test_stream_evaluation.py` trains a
+model input (`dim_theta`): training and checkpoint selection use only stream records, but
+every evaluation on the view (`history_design_points` during the run, the `evaluation` sets
+at read-out, `predict`, `score`) checks that its batches hold θ, which the stream model then
+ignores; event-only views therefore don't work here. `tests/test_stream_evaluation.py` trains a
 stream model with a transform and checks its predictions on such a view.
