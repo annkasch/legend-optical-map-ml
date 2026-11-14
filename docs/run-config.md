@@ -37,8 +37,10 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   the read-out (off by default in RESUM_FLEX; needs the `lgbm` extra). Runs trained without
   it get it afterwards with `residual.<model>.yaml` (`core.surrogates residual`).
 - Another input representation (e.g. the absolute emission point): a named view in the data
-  YAML, selected by `data_directory`, not a model-side transform. An event-only view
-  (`theta.model_input: false`) suits `mlp` and `mlp_bll`, not the field model (needs θ).
+  YAML, selected by `data_directory`, not a model-side transform: RESUM_FLEX never adds θ
+  to φ (since 2aa0677), so a model on the emission point (e.g. the field, `encoding.columns:
+  [0, 1, 2]`) trains on a view with an absolute vertex. An event-only view
+  (`theta.model_input: false`) suits `mlp`, `mlp_bll` and the field.
   The `score` stage (`docs/benchmark.md`) scores it on the run's view; the provider moves
   donor photons into the scored voxel (`transfer_events`: absolute positions shifted by the
   centre difference, cylindrical features re-encoded at the new azimuth, offsets unchanged). As a support model its `predict` output feeds a GP

@@ -26,15 +26,14 @@ training:
   validation_events: null     # all 800k validation photons
 event_store: ../../outputs/photon_x+300+500_y-100+100_z-100+100/data
 event_source: legend_optical_map_ml.photon_loader:PhotonStream
-dim_theta: 3                 # voxel centre
-dim_phi: 6                   # emission offset (3) + momentum (3)
-mlp_position: {phi_columns: [0, 1, 2]}   # record position = voxel centre + offset
+dim_theta: 3                 # voxel centre of the evaluation view (not a stream input)
+dim_phi: 6                   # emission point (3) + momentum (3) = the stream records
 event_source_options:
   in_memory: true            # 10.8M train photons = 300 MB
 # Voxel evaluation: same metrics and plots as voxel-trained fields (LF = CNP_val, HF = GP_val
 # half of the voxel campaign; GP_val's other half is the blinded gp_test).
 data_provider: legend_optical_map_ml.provider:OpticalDataset
-data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute  # phi = absolute x, y, z, px, py, pz
 data_config: ../voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml
 evaluation:
 - {split: validation, partition: cnp_validation, fidelity: lf}

@@ -32,3 +32,16 @@ split:
 normalization:
   method: standard
   fit_on: training
+# Further views of the same files and split (docs/data-config.md, Views); written to
+# data/views/<name>/, picked by a run's data_directory.
+views:
+  theta_absolute:   # absolute emission point + momentum: evaluation view of the stream models
+    # (configs/photon_x+300+500_y-100+100_z-100+100/*.yaml); their phi columns equal the stream
+    # records x, y, z, px, py, pz. θ stays in the batches (RESUM_FLEX needs it present for a
+    # stream model, which does not use it).
+    phi:
+      vertex:
+        representation: absolute
+        coordinates: cartesian
+      momentum:
+        representation: components

@@ -123,7 +123,14 @@ def test_event_only_view_needs_phi_inputs(tmp_path):
                                                           "phi": omit}})
 
 
-def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path):
+FIELD = {"kind": "field", "architecture": {"hidden_dims": [8]},
+         "encoding": {"kind": "fourier", "columns": [0, 1, 2], "n_frequencies": 2,
+                      "max_frequency": 1.0},
+         "direction": {"phi_columns": [3, 4, 5], "degree": 1}}
+
+
+@pytest.mark.parametrize("kind", ["mlp", "field"])
+def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path, kind):
     import torch
     from core.surrogates.experiment import run_experiment
     from core.surrogates.inference import predict_partition
@@ -146,7 +153,8 @@ def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path):
     ensure_prepared_optical_data(c)
     data = c.view_directory("emission")
     config = SurrogateRunConfig.model_validate({
-        "model": {"kind": "mlp", "architecture": {"hidden_dims": [8]},
+        "model": {**({"kind": "mlp", "architecture": {"hidden_dims": [8]}} if kind == "mlp"
+                     else FIELD),  # field: the absolute emission point encoded, θ unused
                   "last_layer": {"prior_precision": "evidence", "draws": 100, "seed": 0}},
         "training": {"backend": "neural", "loss": "bernoulli", "n_steps": 2, "eval_every": 1,
                      "batch_size": 1, "n_events": 4, "seed": 0, "device": "cpu"},

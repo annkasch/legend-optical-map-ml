@@ -68,3 +68,10 @@ RESUM_FLEX `docs/stream.md`), trained on GPU with `scripts/slurm/train_photon_fi
 (`docs/slurm.md`). The field is selected on the store's validation photons and evaluated on
 the voxel campaign with the RESUM_FLEX `score` stage (`data_directory`: the voxel view,
 `data_provider`: `OpticalDataset`; `docs/benchmark.md`).
+
+A stream model sees the view's φ columns as they are (RESUM_FLEX maps each into its stream
+units), so the view's φ must be the stream records: absolute x, y, z, px, py, pz (view
+`theta_absolute`), or the view with the loader's `transform` (above). The view keeps θ as a
+model input (`dim_theta`): RESUM_FLEX requires θ in the batches of a stream model, which does
+not use it, so event-only views don't work here. `tests/test_stream_evaluation.py` trains a
+stream model with a transform and checks its predictions on such a view.
