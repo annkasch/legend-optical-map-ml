@@ -1,0 +1,11 @@
+# Benchmark score (RESUM_FLEX `score` stage, docs/benchmark.md) of the finished stream run of
+# mlp_bll.yaml on gp_validation/hf of voxel_sets_x+300+500_y-100+100_z-100+100_5mm (its
+# emission view): as score.mlp_bll.emission.yaml there, donors from the scored set.
+#   sbatch scripts/slurm/train_surrogate.sbatch configs/photon_x+300+500_y-100+100_z-100+100/score.mlp_bll.yaml score
+run: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/mlp_bll/v1/seed0
+checkpoints: [best]
+sets: [gp_validation/hf]
+donors: scored
+seed: 0
+threads: 16
+output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/mlp_bll/v1/seed0/score_gp_validation_hf
