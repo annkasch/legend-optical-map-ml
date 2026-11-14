@@ -136,6 +136,9 @@ class VertexConfig(StrictModel):
 
 class MomentumConfig(StrictModel):
     representation: Literal["components", "direction_and_magnitude", "omit"] = "components"
+    # cylindrical: components in the local radial / tangential / z frame at the vertex azimuth
+    # (absolute vertex) or the voxel-centre azimuth (offset or omitted vertex).
+    coordinates: Literal["cartesian", "cylindrical"] = "cartesian"
 
 
 class PhiConfig(StrictModel):

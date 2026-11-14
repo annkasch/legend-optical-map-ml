@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from legend_optical_map_ml.config import OpticalDataConfig
+from legend_optical_map_ml.features import decode_absolute_phi
 from legend_optical_map_ml.pipeline import ensure_prepared_optical_data, load_partition
 from legend_optical_map_ml.provider import OpticalDataset
 from legend_optical_map_ml.view import OpticalView
@@ -209,3 +210,33 @@ def test_transfer_moves_absolute_donor_positions_into_the_target_voxel(tmp_path)
     # Offset views need no move.
     phi = offset.load(*source)[0].phi[rows]
     assert offset.transfer_events(phi, source, rows, target) is phi
+
+
+CYLINDRICAL_ABSOLUTE = {"phi": {
+    "vertex": {"representation": "absolute", "coordinates": "cylindrical"},
+    "momentum": {"coordinates": "cylindrical"},
+}}
+
+
+def test_transfer_moves_cylindrical_absolute_donors_like_cartesian_ones(tmp_path):
+    c = with_views(dataset(tmp_path), {"absolute": ABSOLUTE, "cyl": CYLINDRICAL_ABSOLUTE})
+    ensure_prepared_optical_data(c)
+    cart, cyl = (OpticalDataset(c.view_directory(n)) for n in ("absolute", "cyl"))
+    source, target = ("train", "lf"), ("validation", "lf")
+    n_target = cyl.load(*target)[0].batch_size
+    rows = np.arange(n_target) % cyl.load(*source)[0].phi.shape[0]
+    counts = cyl.load(*source)[0].events_per_design_point[rows]
+
+    def decoded(provider, phi):  # physical cartesian (positions, momenta) [B, N, 3] each
+        norm = provider.normalization()["phi"]
+        raw = phi * np.asarray(norm["scale"]) + np.asarray(norm["offset"])
+        b, n, d = raw.shape
+        pos, mom = decode_absolute_phi(raw.reshape(b * n, d), provider.view.config)
+        return pos.reshape(b, n, 3), mom.reshape(b, n, 3)
+
+    moved = [p.transfer_events(p.load(*source)[0].phi[rows], source, rows, target)
+             for p in (cart, cyl)]
+    valid = np.arange(moved[0].shape[1]) < counts[:, None]
+    (pc, mc), (py, my) = decoded(cart, moved[0]), decoded(cyl, moved[1])
+    np.testing.assert_allclose(py[valid], pc[valid], atol=1e-5)
+    np.testing.assert_allclose(my[valid], mc[valid], rtol=1e-4, atol=1e-6)

@@ -8,7 +8,13 @@ import numpy as np
 import pytest
 
 from legend_optical_map_ml.config import ANOMALOUS_FILE, OpticalDataConfig
-from legend_optical_map_ml.features import AffineTransform, cylindrical, make_features, make_labels
+from legend_optical_map_ml.features import (
+    AffineTransform,
+    cylindrical,
+    decode_absolute_phi,
+    make_features,
+    make_labels,
+)
 from legend_optical_map_ml.pipeline import load_partition, prepare_optical_data
 from legend_optical_map_ml.reader import read_optical_runs, read_run
 from legend_optical_map_ml.split import assign_splits, integer_targets, save_manifest
@@ -225,6 +231,29 @@ def test_features_offsets_angles_and_momentum(tmp_path):
     np.testing.assert_allclose(np.linalg.norm(phi[:, -4:-1], axis=1), 1)
     with pytest.raises(ValueError, match="zero momentum"):
         make_features(replace(r, momenta=np.zeros_like(r.momenta)), c)
+
+
+def test_cylindrical_momentum_rotates_into_local_frame_and_decodes(tmp_path):
+    c = config(tmp_path)
+    r = read_run(fixture_file(c.source.directory, center=(0, 1, 0.2)), c.source.directory)
+    c.phi.momentum.coordinates = "cylindrical"
+    _, phi, info = make_features(r, c)
+    # Offset view: frame at the centre azimuth (90 deg): p_r = py, p_t = -px.
+    np.testing.assert_allclose(phi[:, 3], r.momenta[:, 1], atol=1e-12)
+    np.testing.assert_allclose(phi[:, 4], -r.momenta[:, 0], atol=1e-12)
+    assert info["phi"]["names"][3:] == ["p_r_local", "p_t_local", "pz"]
+    # Absolute view: frame at each vertex azimuth; decoding recovers positions and momenta.
+    c.phi.vertex.representation = "absolute"
+    for vertex in ("cartesian", "cylindrical"):
+        for momentum in ("components", "direction_and_magnitude"):
+            for encoding in ("sin_cos", "radians"):
+                c.phi.vertex.coordinates = vertex
+                c.phi.momentum.representation = momentum
+                c.theta.cylindrical.angle_encoding = encoding
+                _, phi, _ = make_features(r, c)
+                pos, mom = decode_absolute_phi(phi, c)
+                np.testing.assert_allclose(pos, r.positions, atol=1e-12)
+                np.testing.assert_allclose(mom, r.momenta, atol=1e-9)
 
 
 @pytest.mark.parametrize("method", ["standard", "minmax", "none"])

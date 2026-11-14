@@ -27,6 +27,57 @@ def cylindrical(xyz, *, include_azimuth=True, encoding="sin_cos"):
     return np.stack([r, angle, z], axis=-1), ["r", "azimuth", "z"], ["m", "rad", "m"]
 
 
+def azimuth(xyz) -> np.ndarray:
+    """Azimuth about the z axis of points [E, 3]; 0 on the axis."""
+    xyz = np.asarray(xyz, dtype=float)
+    return np.where(np.hypot(xyz[:, 0], xyz[:, 1]) == 0, 0, np.arctan2(xyz[:, 1], xyz[:, 0]))
+
+
+def to_local_frame(vectors, angle) -> np.ndarray:
+    """Vectors [E, 3] rotated into the radial / tangential / z frame at azimuth ``angle`` [E]."""
+    v = np.asarray(vectors, dtype=float)
+    co, si = np.cos(angle), np.sin(angle)
+    return np.column_stack([v[:, 0] * co + v[:, 1] * si, -v[:, 0] * si + v[:, 1] * co, v[:, 2]])
+
+
+def from_local_frame(vectors, angle) -> np.ndarray:
+    """Inverse of ``to_local_frame``."""
+    return to_local_frame(vectors, -np.asarray(angle))
+
+
+def momentum_azimuth(positions, centers, config: OpticalDataConfig) -> np.ndarray:
+    """Azimuth of the cylindrical momentum frame: the vertex's (absolute) or the centre's."""
+    absolute = config.phi.vertex.representation == "absolute"
+    return azimuth(positions if absolute else centers)
+
+
+def decode_absolute_phi(phi, config: OpticalDataConfig):
+    """Unnormalized event features [E, D_phi] of an absolute-vertex view -> (positions, momenta).
+
+    Inverse of ``phi_features`` (momenta zero when omitted); used to move donor photons.
+    """
+    if config.phi.vertex.representation != "absolute":
+        raise ValueError("decode_absolute_phi needs an absolute vertex")
+    phi = np.asarray(phi, dtype=float)
+    if config.phi.vertex.coordinates == "cylindrical":
+        if config.theta.cylindrical.angle_encoding == "sin_cos":
+            r, angle, z, rest = phi[:, 0], np.arctan2(phi[:, 1], phi[:, 2]), phi[:, 3], phi[:, 4:]
+        else:
+            r, angle, z, rest = phi[:, 0], phi[:, 1], phi[:, 2], phi[:, 3:]
+        positions = np.column_stack([r * np.cos(angle), r * np.sin(angle), z])
+    else:
+        positions, rest = phi[:, :3], phi[:, 3:]
+    momentum = config.phi.momentum
+    if momentum.representation == "omit":
+        return positions, np.zeros_like(positions)
+    m = rest[:, :3]
+    if momentum.representation == "direction_and_magnitude":
+        m = m * rest[:, 3:4]
+    if momentum.coordinates == "cylindrical":
+        m = from_local_frame(m, azimuth(positions))
+    return positions, m
+
+
 def theta_features(centers, config: OpticalDataConfig):
     """Design features of voxel centers [B, 3] -> ([B, D_theta], names, units)."""
     centers = np.asarray(centers, dtype=float)
@@ -56,11 +107,7 @@ def phi_features(positions, momenta, centers, config: OpticalDataConfig):
             v = v - c
             names = ["dx", "dy", "dz"]
             if vertex.coordinates == "cylindrical":
-                angle = np.where(np.hypot(c[:, 0], c[:, 1]) == 0, 0, np.arctan2(c[:, 1], c[:, 0]))
-                co, si = np.cos(angle), np.sin(angle)
-                v = np.column_stack(
-                    [v[:, 0] * co + v[:, 1] * si, -v[:, 0] * si + v[:, 1] * co, v[:, 2]]
-                )
+                v = to_local_frame(v, azimuth(c))
                 names = ["dr_local", "dt_local", "dz"]
         elif vertex.coordinates == "cylindrical":
             v, names, units = cylindrical(v, encoding=config.theta.cylindrical.angle_encoding)
@@ -70,13 +117,18 @@ def phi_features(positions, momenta, centers, config: OpticalDataConfig):
     momentum = config.phi.momentum.representation
     if momentum != "omit":
         m = np.asarray(momenta, dtype=float)
-        names, units = ["px", "py", "pz"], ["MeV"] * 3
+        axes = ["x", "y", "z"]
+        if config.phi.momentum.coordinates == "cylindrical":
+            m = to_local_frame(m, momentum_azimuth(positions, centers, config))
+            axes = ["r_local", "t_local", "z"]
+        names, units = [f"p{a}" if len(a) == 1 else f"p_{a}" for a in axes], ["MeV"] * 3
         if momentum == "direction_and_magnitude":
             magnitude = np.linalg.norm(m, axis=1)
             if np.any(magnitude == 0):
                 raise ValueError("zero momentum cannot define direction")
             m = np.column_stack([m / magnitude[:, None], magnitude])
-            names, units = ["ux", "uy", "uz", "momentum_magnitude"], ["1", "1", "1", "MeV"]
+            names = [f"u{a}" if len(a) == 1 else f"u_{a}" for a in axes] + ["momentum_magnitude"]
+            units = ["1", "1", "1", "MeV"]
         parts.append(m)
         pn.extend(names)
         pu.extend(units)

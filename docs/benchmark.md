@@ -39,7 +39,7 @@ written to `<run>/score_<partition>_<fidelity>/`): each scored voxel is predicte
 of another voxel of the same set (seeded draw, never the voxel itself; same photon count, never
 trained on, the same donors for every model with the same seed), moved into the scored voxel
 by the provider (`transfer_events`: absolute positions shifted by the centre difference,
-offsets as they are). RESUM_FLEX's default is no borrowing (own photons); donors need the
+cylindrical features re-encoded at the new azimuth, offsets as they are). RESUM_FLEX's default is no borrowing (own photons); donors need the
 provider's rule. Earlier scores with donors from `cnp_train/lf` (1500 photons; training data
 of LF-train models, `inference/best/*_events-cnp_train_lf_*`) are not comparable.
 

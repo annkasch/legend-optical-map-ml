@@ -72,6 +72,11 @@ zero-padded with per-voxel `event_counts`).
   (voxel centres), so GP stages (binomial covariate, MFGP level) use it as for any model.
 - `phi.vertex.representation`: `offset` from the centre, absolute, or omitted;
   `phi.momentum.representation`: `components`, direction plus magnitude, or omitted.
+- Cylindrical (about the z axis): an absolute vertex becomes (r, azimuth encoding, z) as θ;
+  an offset is rotated into the local radial / tangential / z frame at the centre azimuth
+  (`dr_local`, `dt_local`, `dz`). `phi.momentum.coordinates: cylindrical` rotates the momentum
+  into that frame (`p_r_local`, `p_t_local`, `pz`): at the vertex azimuth for an absolute
+  vertex, else at the centre azimuth.
 - `target.kind: any_channel` (an event is positive with a hit in any channel) or
   `single_channel` with `detector_id`.
 - `normalization.fit_fidelities` optionally restricts which fidelities enter the statistics.
