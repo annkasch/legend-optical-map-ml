@@ -6,7 +6,8 @@ import os
 import numpy as np
 import pytest
 
-from legend_optical_map_ml.config import PhotonStoreConfig
+from legend_optical_map_ml.config import PhotonStoreConfig, StreamTransformConfig
+from legend_optical_map_ml.features import stream_features, stream_features_torch
 from legend_optical_map_ml.photon_loader import PhotonStream, labels
 from legend_optical_map_ml.photon_store import (
     build,
@@ -237,3 +238,112 @@ def test_load_and_early_stop(campaign):
     iterator.close()  # stops the reader thread without hanging
     info = json.loads((config.store / "manifest.json").read_text())
     assert info["record"]["columns"] == ["x", "y", "z", "px", "py", "pz"]
+
+
+# -- input transform ----------------------------------------------------------------------------
+
+CYLINDRICAL = {"phi": {"vertex": {"representation": "absolute", "coordinates": "cylindrical"},
+                       "momentum": {"coordinates": "cylindrical"}}}
+TRANSFORMS = [
+    CYLINDRICAL,
+    {**CYLINDRICAL, "cylindrical": {"rotational_symmetry": 6}},
+    {**CYLINDRICAL, "cylindrical": {"rotational_symmetry": 6, "angle_weighting": "radius"}},
+    {**CYLINDRICAL, "cylindrical": {"angle_encoding": "radians", "rotational_symmetry": 6}},
+    {"phi": {"vertex": {"representation": "absolute"}, "momentum": {
+        "representation": "direction_and_magnitude", "coordinates": "cylindrical"}}},
+    {"phi": {"vertex": {"representation": "omit"}, "momentum": {"representation": "components"}}},
+]
+
+
+def photons(n=500, seed=0):
+    """Raw records [n, 7] incl. points on the axis and at the +-180 degree wrap."""
+    rng = np.random.default_rng(seed)
+    records = np.empty((n, 7), dtype=np.float32)
+    records[:, :3] = rng.uniform(-1, 1, (n, 3))
+    records[:, 3:6] = rng.normal(size=(n, 3)) * 1e-5
+    records[:3, :2] = [[0, 0], [-0.7, 1e-7], [-0.7, -1e-7]]
+    records.view(np.uint32)[:, 6] = rng.integers(0, 4, n)
+    return records
+
+
+@pytest.mark.parametrize("settings", TRANSFORMS)
+def test_torch_transform_matches_numpy_reference(settings):
+    transform = StreamTransformConfig.model_validate(settings)
+    records = photons()
+    expected, names, _ = stream_features(records, transform)
+    got = stream_features_torch(torch.from_numpy(records), transform).numpy()
+    assert got.shape == expected.shape == (len(records), len(names))
+    rows = slice(3, None) if transform.cylindrical.angle_encoding == "radians" else slice(None)
+    np.testing.assert_allclose(got[rows], expected[rows], rtol=1e-6, atol=1e-6)  # float32
+
+
+def test_six_fold_transform_repeats_every_60_degrees():
+    transform = StreamTransformConfig.model_validate(TRANSFORMS[2])
+    records = photons()
+    a = np.radians(60)
+    rotation = np.array([[np.cos(a), -np.sin(a), 0], [np.sin(a), np.cos(a), 0], [0, 0, 1]])
+    turned = records.copy()
+    turned[:, :3] = records[:, :3] @ rotation.T
+    turned[:, 3:6] = records[:, 3:6] @ rotation.T
+    same = [
+        stream_features_torch(torch.from_numpy(r), transform).numpy() for r in (records, turned)
+    ]
+    # Row 0 lies on the axis: azimuth undefined (taken as 0), so its momentum frame cannot turn.
+    np.testing.assert_allclose(same[1][1:], same[0][1:], rtol=1e-5, atol=1e-6)
+
+
+def test_transform_settings_are_checked():
+    for bad in ({"phi": {"vertex": {"representation": "offset"}}},
+                {"phi": {"vertex": {"representation": "omit"},
+                         "momentum": {"coordinates": "cylindrical"}}},
+                {"cylindrical": {"angle_encoding": "radians", "angle_weighting": "radius"}}):
+        with pytest.raises(ValueError):
+            StreamTransformConfig.model_validate(bad)
+
+
+@pytest.mark.parametrize("in_memory", [False, True])
+def test_loader_transforms_batches_load_and_normalization(campaign, in_memory):
+    config, _ = campaign
+    settings = {**CYLINDRICAL, "cylindrical": {"rotational_symmetry": 6}}
+    stream = PhotonStream(config.store, "train", block_photons=7, buffer_photons=20,
+                          in_memory=in_memory, transform=settings)
+    plain = PhotonStream(config.store, "train", block_photons=7, buffer_photons=20,
+                         in_memory=in_memory)
+    names, units = stream.columns
+    assert names == ["r", "sin_azimuth", "cos_azimuth", "z", "p_r_local", "p_t_local", "pz"]
+    batches, _ = collect(plain, 16, 1)
+    transformed = list(stream.batches(16, 1))
+    assert [len(b) for b in transformed] == [len(b) for b in batches]
+    for raw, got in zip(batches, transformed, strict=True):  # same photons, same order
+        assert got.shape[1] == len(names) + 1
+        np.testing.assert_array_equal(labels(got.numpy()), labels(raw.numpy()))
+        np.testing.assert_allclose(got[:, :-1].numpy(), stream._transformed(raw.numpy())[:, :-1],
+                                   rtol=1e-6, atol=1e-6)
+    # load(): the numpy reference of every photon of the split, labels unchanged.
+    raw = plain.load()
+    loaded = stream.load()
+    np.testing.assert_array_equal(labels(loaded), labels(raw))
+    np.testing.assert_array_equal(loaded[:, :-1], stream_features(raw, stream.transform)[0])
+    # Normalization: moments of the transformed train photons (all of them: sample > store).
+    norm = stream.normalization()
+    values = stream_features(stored(config.store, "train"), stream.transform)[0].astype(float)
+    np.testing.assert_allclose(norm["offset"], values.mean(0), rtol=1e-6, atol=1e-9)
+    np.testing.assert_allclose(norm["scale"], values.std(0), rtol=1e-6)
+    assert norm["columns"] == names and norm["n_photons"] == len(values)
+    assert plain.normalization()["columns"] == ["x", "y", "z", "px", "py", "pz"]
+
+
+def test_transform_normalization_samples_the_first_photons_of_every_train_shard(campaign):
+    config, _ = campaign
+    stream = PhotonStream(config.store, "validation", transform=CYLINDRICAL,
+                          normalization_photons=10)
+    train = shards(load_manifest(config.store), "train")
+    per_shard = -(-10 // len(train))
+    norm = stream.normalization()
+    assert norm["n_photons"] == sum(min(per_shard, s["n_photons"]) for s in train)
+    sample = np.concatenate([
+        np.fromfile(config.store / s["records"], dtype=np.float32).reshape(-1, 7)[:per_shard]
+        for s in train
+    ])
+    values = stream_features(sample, stream.transform)[0].astype(float)
+    np.testing.assert_allclose(norm["offset"], values.mean(0), rtol=1e-6, atol=1e-9)

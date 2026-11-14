@@ -36,6 +36,31 @@ python -m legend_optical_map_ml.photon_store finalize CONFIG.yaml
   no I/O). Several ranks get disjoint blocks and the same number of batches. A pass is
   deterministic, so training can resume at a batch index.
 
+## Input transform
+
+`event_source_options.transform` (schema `config.py:StreamTransformConfig`) transforms the
+records for training: the same `cylindrical` and `phi` blocks as a data YAML (`theta.cylindrical`,
+`phi`; `docs/data-config.md`), with an absolute or omitted vertex, e.g.
+
+```yaml
+event_source_options:
+  transform:
+    cylindrical: {rotational_symmetry: 6}
+    phi:
+      vertex: {representation: absolute, coordinates: cylindrical}
+      momentum: {representation: components, coordinates: cylindrical}
+```
+
+- `batches()` transforms each buffer on the device after the copy (torch, `features.py:
+  stream_features_torch`); `load()` uses the numpy reference (`stream_features`), which the
+  data views also use. The store stays raw; records become [M, W + 1], label bits last.
+- `normalization()` then comes from the transformed columns of a fixed sample, the first
+  photons of every train shard (shards are permuted when written), at most
+  `normalization_photons` (default 10⁷); it lists the column names and the transform.
+- The view at the run's `data_directory` must build the same phi columns (same `cylindrical`
+  and `phi`): RESUM_FLEX maps the view's phi columns one by one into the stream units without
+  checking their meaning. `tests/test_configs.py` checks every stream config in `configs/`.
+
 ## Training and evaluation
 
 `configs/photon_<volume>/field_*.yaml` are RESUM_FLEX stream configs (`core.surrogates stream`,

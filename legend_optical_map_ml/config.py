@@ -121,6 +121,15 @@ class CylindricalConfig(StrictModel):
     # n-fold rotational symmetry about z (e.g. 6 for the string layout): angle features of
     # n * azimuth, so positions 360/n degrees apart look the same. Local frames keep the azimuth.
     rotational_symmetry: int = Field(default=1, ge=1)
+    # radius: angle features r * sin, r * cos (continuous on the axis, where the azimuth is
+    # undefined); needs the sin_cos encoding.
+    angle_weighting: Literal["none", "radius"] = "none"
+
+    @model_validator(mode="after")
+    def _weighting_needs_sin_cos(self):
+        if self.angle_weighting == "radius" and self.angle_encoding != "sin_cos":
+            raise ValueError("angle_weighting: radius needs angle_encoding: sin_cos")
+        return self
 
 
 class ThetaConfig(StrictModel):
@@ -147,6 +156,33 @@ class MomentumConfig(StrictModel):
 class PhiConfig(StrictModel):
     vertex: VertexConfig = Field(default_factory=VertexConfig)
     momentum: MomentumConfig = Field(default_factory=MomentumConfig)
+
+
+class StreamTransformConfig(StrictModel):
+    """Input transform of stream records (photon_loader ``transform`` option).
+
+    The same ``cylindrical`` and ``phi`` blocks as a data YAML's ``theta.cylindrical`` and
+    ``phi``; must equal those of the view the stream model is evaluated on (tests/test_configs).
+    Stream photons have absolute positions: the vertex is ``absolute`` or ``omit``.
+    """
+
+    cylindrical: CylindricalConfig = Field(default_factory=CylindricalConfig)
+    phi: PhiConfig = Field(default_factory=PhiConfig)
+
+    @model_validator(mode="after")
+    def _absolute_vertex(self):
+        vertex, momentum = self.phi.vertex.representation, self.phi.momentum.representation
+        if vertex == "offset":
+            raise ValueError("stream photons have no voxel centre: vertex absolute or omit")
+        if vertex == "omit" and momentum == "omit":
+            raise ValueError("stream transform needs vertex or momentum inputs")
+        if vertex == "omit" and self.phi.momentum.coordinates == "cylindrical":
+            raise ValueError("cylindrical momentum needs the vertex azimuth: vertex absolute")
+        return self
+
+    def matches(self, view: "OpticalDataConfig") -> bool:
+        """True if ``view`` builds the same phi columns (its theta.cylindrical and phi)."""
+        return self.cylindrical == view.theta.cylindrical and self.phi == view.phi
 
 
 class TargetConfig(StrictModel):

@@ -4,6 +4,14 @@ Batches are float32 tensors [M, 7]: x, y, z (m), px, py, pz (MeV) and the label 
 (``labels(batch)``). Normalization is left to the consumer (``normalization()``), so the
 data on disk and in transfer stay raw.
 
+Input transform (``transform``, schema ``config.py:StreamTransformConfig``): the same
+``cylindrical`` and ``phi`` blocks as a data YAML, e.g. cylindrical vertex and local-frame
+momentum. ``batches()`` applies it on the device after the copy (``stream_features_torch``),
+``load()`` with the numpy reference (``stream_features``); records become [M, W + 1] with the
+label bits still last. ``normalization()`` then comes from the transformed columns of a fixed
+sample: the first photons of every train shard (shards are permuted when written), at most
+``normalization_photons`` in total.
+
 One pass p (seed ``hash(seed, p)``):
 
 1. every shard is cut into blocks of ``block_photons`` with a random boundary offset per
@@ -38,17 +46,33 @@ from pathlib import Path
 
 import numpy as np
 
-from legend_optical_map_ml.photon_store import RECORD, load_manifest, normalization, shards
+from legend_optical_map_ml.config import StreamTransformConfig
+from legend_optical_map_ml.features import (
+    AffineTransform,
+    RunningMoments,
+    stream_feature_names,
+    stream_features,
+    stream_features_torch,
+)
+from legend_optical_map_ml.photon_store import (
+    COLUMNS,
+    RECORD,
+    UNITS,
+    load_manifest,
+    normalization,
+    shards,
+)
 
-WIDTH = 7  # float32 values per record
+WIDTH = 7  # float32 values per stored record (raw, before any transform)
+NORMALIZATION_PHOTONS = 10**7  # sample of a transform's normalization
 STREAM_BLOCK = 2**17  # 131072 photons = 3.7 MB per sequential read
 MEMORY_BLOCK = 2**12
 BUFFER_PHOTONS = 2**20  # ≈ 29 MB per buffer
 
 
 def labels(batch):
-    """Labels [M] (int32, 1 = detected) of a batch [M, 7] (torch or numpy)."""
-    column = batch[:, 6]
+    """Labels [M] (int32, 1 = detected) of a batch [M, W + 1] (torch or numpy; last column)."""
+    column = batch[:, -1]
     if isinstance(batch, np.ndarray):
         return np.ascontiguousarray(column).view(np.int32)
     return column.contiguous().view(_torch().int32)
@@ -85,6 +109,8 @@ class PhotonStream:
         in_memory: bool = False,
         prefetch: int = 3,
         threads: int = 4,
+        transform: dict | None = None,
+        normalization_photons: int = NORMALIZATION_PHOTONS,
     ):
         if not 0 <= rank < world_size:
             raise ValueError("rank must lie in [0, world_size)")
@@ -101,6 +127,34 @@ class PhotonStream:
         self.prefetch, self.threads = max(1, prefetch), max(1, threads)
         self._memory: dict[int, np.ndarray] = {}
         self._owned = self._owned_shards() if in_memory else range(len(self.shards))
+        self.transform = StreamTransformConfig.model_validate(transform) if transform else None
+        self.normalization_photons = normalization_photons
+        self._normalization: dict[str, dict] = {}
+
+    @property
+    def columns(self) -> tuple[list[str], list[str]]:
+        """(names, units) of the input columns of a batch (transformed if configured)."""
+        if self.transform is None:
+            return list(COLUMNS), list(UNITS)
+        names, units = stream_feature_names(self.transform)
+        return list(names), list(units)
+
+    def _transformed(self, records: np.ndarray) -> np.ndarray:
+        """Raw records [N, 7] -> [N, W + 1] (numpy reference), label bits copied unchanged."""
+        if self.transform is None:
+            return records
+        features = stream_features(records, self.transform)[0]
+        out = np.empty((len(records), features.shape[1] + 1), dtype=np.float32)
+        out[:, :-1] = features
+        out.view(np.uint32)[:, -1] = records.view(np.uint32)[:, WIDTH - 1]
+        return out
+
+    def _transformed_torch(self, data):
+        """``_transformed`` on the device: torch features, label column copied bit-exact."""
+        if self.transform is None:
+            return data
+        torch = _torch()
+        return torch.cat([stream_features_torch(data, self.transform), data[:, WIDTH - 1 :]], 1)
 
     # -- sizes and metadata ---------------------------------------------------------------------
 
@@ -124,8 +178,35 @@ class PhotonStream:
         return self.n_detected
 
     def normalization(self, method: str = "standard") -> dict:
-        """Normalization from the store's train shards (identical for every split)."""
-        return normalization(self.manifest, method)
+        """Normalization from the store's train shards (identical for every split).
+
+        Raw columns: exact, from the merged shard moments. With a transform: from the
+        transformed columns of a fixed sample (first photons of every train shard).
+        """
+        if self.transform is None:
+            return normalization(self.manifest, method)
+        if method not in self._normalization:
+            train = shards(self.manifest, "train")
+            if not train:
+                raise ValueError("No train photons in the store")
+            per_shard = -(-self.normalization_photons // len(train))
+            moments = RunningMoments()
+            for shard in train:
+                n = min(per_shard, shard["n_photons"])
+                records = np.empty((n, WIDTH), dtype=np.float32)
+                self._read_records(self.store / shard["records"], 0, n, records)
+                moments.add(self._transformed(records)[:, :-1])
+            names, units = self.columns
+            self._normalization[method] = dict(
+                columns=names,
+                units=units,
+                split="train",
+                n_photons=int(moments.n),
+                sample="first photons of every train shard",
+                transform=self.transform.model_dump(mode="json"),
+                **AffineTransform.from_moments(moments, method).to_dict(),
+            )
+        return self._normalization[method]
 
     def _owned_shards(self) -> list[int]:
         """In-memory mode: shards of this rank, balanced by photons (fixed for all passes)."""
@@ -211,9 +292,14 @@ class PhotonStream:
 
     def _read_into(self, shard: int, start: int, stop: int, out: np.ndarray) -> None:
         """Read records [start, stop) of a shard into ``out`` [stop - start, 7] float32."""
+        self._read_records(self._path(shard), start, stop, out)
+
+    @staticmethod
+    def _read_records(path: Path, start: int, stop: int, out: np.ndarray) -> None:
+        """Read records [start, stop) of the shard file ``path`` into ``out`` float32."""
         size = RECORD.itemsize
         view = memoryview(out.reshape(-1).view(np.uint8))
-        fd = os.open(self._path(shard), os.O_RDONLY)
+        fd = os.open(path, os.O_RDONLY)
         try:
             offset, done = start * size, 0
             total = (stop - start) * size
@@ -222,7 +308,7 @@ class PhotonStream:
             while done < total:
                 count = os.preadv(fd, [view[done:total]], offset + done)
                 if count <= 0:
-                    raise OSError(f"Short read in {self._path(shard)}")
+                    raise OSError(f"Short read in {path}")
                 done += count
         finally:
             os.close(fd)
@@ -245,14 +331,14 @@ class PhotonStream:
         return position
 
     def load(self) -> np.ndarray:
-        """All photons of the split as float32 [N, 7] in shard order (e.g. validation)."""
+        """All photons of the split as float32 [N, W + 1] in shard order (e.g. validation)."""
         out = np.empty((self.n_photons, WIDTH), dtype=np.float32)
         position = 0
         for i, shard in enumerate(self.shards):
             n = shard["n_photons"]
             self._read_into(i, 0, n, out[position : position + n])
             position += n
-        return out
+        return self._transformed(out)
 
     # -- batches --------------------------------------------------------------------------------
 
@@ -265,7 +351,7 @@ class PhotonStream:
         drop_last: bool = False,
         device="cpu",
     ):
-        """Yield batches [batch_size, 7] float32 on ``device`` for one pass of this rank."""
+        """Yield batches [batch_size, W + 1] float32 on ``device`` for one pass of this rank."""
         torch = _torch()
         device = torch.device(device)
         cuda = device.type == "cuda"
@@ -331,6 +417,7 @@ class PhotonStream:
                 data = data[torch.randperm(n, generator=generator, device=device)]
                 if index == first and skip:
                     data = data[skip:]
+                data = self._transformed_torch(data)
                 pending = data if pending is None else torch.cat([pending, data])
                 while len(pending) >= batch_size and emitted < limit:
                     yield pending[:batch_size]

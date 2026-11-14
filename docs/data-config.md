@@ -82,6 +82,9 @@ zero-padded with per-voxel `event_counts`).
   inputs (with local-frame offset and momentum) the same for an event and its copy rotated by
   60°. Moving donor photons of such a view (`transfer_events`) recovers the sector from the
   donor centre; it is exact unless the voxel lies within about two half-diagonals of the axis.
+- `theta.cylindrical.angle_weighting: radius` (with `sin_cos`) uses r·sin and r·cos instead of
+  sin and cos: continuous on the axis, where the azimuth is undefined (taken as 0; the local
+  frame of an event exactly on the axis is then arbitrary).
 - `target.kind: any_channel` (an event is positive with a hit in any channel) or
   `single_channel` with `detector_id`.
 - `normalization.fit_fidelities` optionally restricts which fidelities enter the statistics.

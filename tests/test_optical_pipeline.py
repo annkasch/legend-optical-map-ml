@@ -256,6 +256,32 @@ def test_cylindrical_momentum_rotates_into_local_frame_and_decodes(tmp_path):
                 np.testing.assert_allclose(mom, r.momenta, atol=1e-9)
 
 
+def test_radius_weighted_angles_are_continuous_on_the_axis_and_decode(tmp_path):
+    c = config(tmp_path)
+    r = read_run(fixture_file(c.source.directory, center=(-0.7, 0.15, 0.5)), c.source.directory)
+    c.theta.coordinates = "cylindrical"
+    c.theta.cylindrical.rotational_symmetry = 6
+    c.theta.cylindrical.angle_weighting = "radius"
+    c.phi.vertex.representation = "absolute"
+    c.phi.vertex.coordinates = "cylindrical"
+    c.phi.momentum.coordinates = "cylindrical"
+    theta, phi, info = make_features(r, c)
+    assert info["theta"]["names"] == ["r", "r_sin_azimuth", "r_cos_azimuth", "z"]
+    radius = np.hypot(*r.positions[:, :2].T)
+    np.testing.assert_allclose(np.hypot(phi[:, 1], phi[:, 2]), radius, rtol=1e-12)
+    near = np.broadcast_to(r.nominal_center, r.positions.shape)
+    pos, mom = decode_absolute_phi(phi, c, near=near)
+    np.testing.assert_allclose(pos, r.positions, atol=1e-12)
+    np.testing.assert_allclose(mom, r.momenta, atol=1e-9)
+    # Near the axis the weighted angle terms go to 0 from every direction.
+    tiny = cylindrical(np.array([[1e-9, 0, 0], [-1e-9, 0, 0]]), symmetry=6, weighting="radius")[0]
+    np.testing.assert_allclose(tiny[:, 1:3], 0, atol=1e-8)
+    with pytest.raises(ValueError, match="sin_cos"):
+        type(c.theta.cylindrical).model_validate(
+            {"angle_encoding": "radians", "angle_weighting": "radius"}
+        )
+
+
 def rotated(xyz, degrees):
     a = np.radians(degrees)
     rotation = np.array([[np.cos(a), -np.sin(a), 0], [np.sin(a), np.cos(a), 0], [0, 0, 1]])
