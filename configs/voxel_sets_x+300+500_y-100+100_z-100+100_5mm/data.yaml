@@ -35,10 +35,23 @@ normalization:
 # Further views of the same files and split (docs/data-config.md, Views); written to
 # data/views/<name>/, picked by a run's data_directory.
 views:
-  theta_absolute:   # absolute emission point + momentum: evaluation view of the stream models
-    # (configs/photon_x+300+500_y-100+100_z-100+100/*.yaml); their phi columns equal the stream
-    # records x, y, z, px, py, pz. θ stays in the batches (RESUM_FLEX needs it present for a
-    # stream model, which does not use it).
+  # Input comparison for MLP + BLL (2026-11-14), as in voxel_sets_x-800-600_y+50+250_z+400+600_5mm:
+  # (a) θ + offset + momentum is the top-level view, (b) θ + raw vertex + momentum is
+  # theta_absolute, (c) raw vertex + momentum is emission.
+  theta_absolute:   # (b); also the evaluation view of the stream models
+    # (configs/photon_x+300+500_y-100+100_z-100+100/*.yaml, dim_theta: 3): their phi columns
+    # equal the stream records x, y, z, px, py, pz.
+    phi:
+      vertex:
+        representation: absolute
+        coordinates: cartesian
+      momentum:
+        representation: components
+  emission:   # (c) emission point (absolute vertex) + momentum only; voxel centre no network input
+    theta:
+      model_input: false
+      coordinates: cartesian
+      center_source: filename
     phi:
       vertex:
         representation: absolute
