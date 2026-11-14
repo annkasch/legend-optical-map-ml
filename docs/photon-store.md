@@ -19,6 +19,7 @@ python -m legend_optical_map_ml.photon_store finalize CONFIG.yaml
   per shard. No photon is dropped.
 - **Shards** of about `shard_photons` photons (default 10⁸, ≈ 2.8 GB). The photons inside a
   shard are permuted once when it is written, so any contiguous block is a random sample.
+  Each shard summary records the code that wrote it (`outputs.md`, Code provenance).
   Shard folders are striped over 8 Lustre targets when `lfs` exists.
 - **Splits** per source file, from a seeded hash of its key (`<source name>/<relative path>`),
   so adding files never moves existing ones. A changed source file is an error.

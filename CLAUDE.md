@@ -17,7 +17,7 @@ only what the task needs, using the table below. It lists every doc in `docs/`.
 | Write or change a data YAML, add a view | `docs/data-config.md` | `config.py`, `split.py`, `view.py` |
 | Preparation, sync, unlabeled inputs | `docs/preparation.md` | `pipeline.py`, `view.py`, `provider.py` |
 | Event cache | `docs/event-cache.md` | `event_cache.py` |
-| Where a config, data view or run goes | `docs/outputs.md` | `configs/<dataset>/` |
+| Where a config, data view or run goes; code provenance | `docs/outputs.md` | `configs/<dataset>/`, `provenance.py` |
 | Training or GP run config | `docs/run-config.md`, then RESUM_FLEX `docs/configs.md` | `configs/` |
 | Homogeneous campaign, neural field | `docs/photon-store.md` | `photon_store.py`, `photon_loader.py` |
 | Compare models, which data a model trains on | `docs/benchmark.md` | `benchmark.py`, `configs/<dataset>/benchmark.yaml` |

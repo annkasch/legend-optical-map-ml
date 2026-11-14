@@ -34,7 +34,8 @@ is recorded in the run's `experiment.json`.
 - θ = voxel centre; φ = vertex offset from the centre and momentum components (per config).
 - Normalization from streaming moments over the training files (`cnp_train`), applied to every
   role and fidelity.
-- The view (`view.npy`, `view.json`) lists each file's partition, fidelity, path and sha256.
+- The view (`view.npy`, `view.json`) lists each file's partition, fidelity, path and sha256. `code.json`
+  records the code that prepared it (`outputs.md`, Code provenance).
   `load_partition(directory, partition, fidelity)` builds the normalized `StandardBatch`
   (φ float32) with a provenance sha256 over the files and `view.json`, and checks that the
   cache still holds the same file contents.

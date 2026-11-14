@@ -267,6 +267,9 @@ def test_prepare_roundtrip_training_only_and_reports(tmp_path):
     assert all(len(np.unique(trial, axis=0)) == 8 for trial in probe.phi)
     assert (c.output_directory / "reports/test/lf_channels.csv").exists()
     assert (c.output_directory / "reports/development/train/lf_coverage.png").exists()
+    code = json.loads((c.output_directory / "code.json").read_text())
+    assert code["source"].endswith("legend_optical_map_ml") and "commit" in code["resum_flex"]
+    assert "code" not in json.loads((c.output_directory / "view.json").read_text())
     before = c.split.manifest.read_text()
     c.phi.vertex.representation = "absolute"
     prepare_optical_data(c)

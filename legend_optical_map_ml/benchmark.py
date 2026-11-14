@@ -38,6 +38,7 @@ from pydantic import Field, model_validator
 from scipy.stats import binom
 
 from legend_optical_map_ml.config import StrictModel
+from legend_optical_map_ml.provenance import code_block
 
 LEVELS = (1, 2, 3)
 NOMINAL = {1: 0.6827, 2: 0.9545, 3: 0.9973}
@@ -344,6 +345,7 @@ def run_benchmark(config: BenchmarkConfig) -> Path:
         reference=config.reference_label,
         rate_unit=config.rate_unit,
         config=config.model_dump(mode="json"),
+        code=code_block(),
         models=results,
     )
     (directory / "benchmark.json").write_text(json.dumps(summary, indent=2, allow_nan=False))

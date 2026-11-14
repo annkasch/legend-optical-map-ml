@@ -51,3 +51,22 @@ outputs/
 Runs made before the RESUM_FLEX design point rename (a0469c0, 2026-11-10) no longer load in
 RESUM_FLEX; they sit in `outputs/<dataset>/archive_pre_rename/` with their folder structure
 and keep their `vN`, so new runs take the next version.
+
+## Code provenance
+
+Every output records the code that wrote it, as a `code` block (`provenance.py`, built on
+RESUM_FLEX `core.provenance`, its `docs/runs.md`): this repository's `commit`, `branch` and
+`dirty` flag (or `git_error`), Python and installed package versions (this package, RESUM_FLEX,
+numpy, scipy, h5py, pydantic, pyyaml, matplotlib), the command line, and under `resum_flex` the
+toolkit checkout's git state. Versions are those of the environment that ran (this `.venv`).
+
+- Prepared view: `code.json` next to `config.json`, rewritten with the view. Not in `view.json`,
+  so a new commit alone does not change the view's provenance hash.
+- Photon store: in each shard summary (`shards/<split>/sNNNNNN.json`, and so in the manifest's
+  `shards`), since a store grows over many commits.
+- Benchmark: `code` in `benchmark.json`.
+- RESUM_FLEX runs record this repository through the provider they load (`code.modules` in
+  `compute.json` and the checkpoint `model.json`) and copy their input YAML (`<stage>.yaml`).
+
+The resolved settings are kept as before: each view's `config.json`, the photon store
+manifest's `settings`, and `config` in `benchmark.json`.

@@ -18,6 +18,7 @@ from legend_optical_map_ml.features import (
     feature_info,
     theta_features,
 )
+from legend_optical_map_ml.provenance import code_block
 from legend_optical_map_ml.reader import source_stamp
 from legend_optical_map_ml.reports import generate_reports
 from legend_optical_map_ml.split import (
@@ -132,7 +133,8 @@ def prepare_optical_data(
     All views (top-level and ``config.views``) share the cached files and one split; each gets
     its own normalization. ``views`` selects which are written (None = top-level; default all).
     Per view: view.npy/view.json (see legend_optical_map_ml.view), metadata.json,
-    normalization.json, config.json, source_stamp.json and manifest_snapshot.json; reports/
+    normalization.json, config.json, code.json, source_stamp.json and
+    manifest_snapshot.json; reports/
     go to config.output_directory. Batches are built from a view when loaded. Returns the
     top-level view.
     """
@@ -205,6 +207,8 @@ def _write_view_directory(runs, assignments, manifest, config: OpticalDataConfig
         ("metadata", metadata),
         ("normalization", normalization),
         ("config", config.stored()),
+        # Outside view.json: a new commit alone must not change the view's provenance hash.
+        ("code", code_block()),
     ]:
         (out / f"{name}.json").write_text(json.dumps(payload, indent=2) + "\n")
     (out / "manifest_snapshot.json").write_text(json.dumps(manifest, indent=2) + "\n")

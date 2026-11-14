@@ -124,6 +124,7 @@ def test_report_scores_every_kind_the_same_way(tmp_path):
     report = run_benchmark(_config(tmp_path, runs))
     summary = json.loads((report.parent / "benchmark.json").read_text())
     rows = {r["label"]: r for r in summary["models"]}
+    assert summary["code"]["command"] and "commit" in summary["code"]
     gp = rows["GP"]["scores"]
     expected = -binom.logpmf(HITS, N, TRUE_P).mean()
     assert gp["count_nll"] == pytest.approx(expected)

@@ -7,7 +7,8 @@ remage writes::
     <store>/manifest.json                   settings, source files, shards, moments
     <store>/shards/<split>/s000042.bin      RECORD rows, photons in random order
     <store>/shards/<split>/s000042.hits.npy HIT_DTYPE (row in shard, detector, hits)
-    <store>/shards/<split>/s000042.json     shard summary; written last, marks the shard complete
+    <store>/shards/<split>/s000042.json     shard summary (with the code that wrote it); written
+                                            last, marks the shard complete
     <store>/tasks/s000042.json              planned, not yet finished shards
 
 A RECORD is x, y, z (m), px, py, pz (MeV) as float32 and ``label`` (1 if any detector saw the
@@ -55,6 +56,7 @@ from legend_optical_map_ml.config import (
 )
 from legend_optical_map_ml.event_cache import HIT_DTYPE
 from legend_optical_map_ml.features import AffineTransform, RunningMoments
+from legend_optical_map_ml.provenance import code_block
 from legend_optical_map_ml.reader import read_arrays
 
 VERSION = 1
@@ -328,6 +330,7 @@ def convert_task(store: str | Path, task: dict, seed: int) -> dict:
         n_hits=len(hits),
         moments=moments(records).to_dict(),
         files=files,
+        code=code_block(),  # per shard: a store grows over many commits
     )
     for name, write in (
         ("records", lambda f: records.tofile(f)),

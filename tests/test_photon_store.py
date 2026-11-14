@@ -116,6 +116,7 @@ def test_store_keeps_every_photon_bit_exact(campaign):
         assert set(hits["row"].tolist()) == set(np.flatnonzero(labels(records)).tolist())
         assert len(hits) == 4 * len(shard["sources"])  # pairs (1,7) (5,7) (5,8) (9,8) per file
         assert shard["n_photons"] <= config.shard_photons + 40
+        assert shard["code"]["packages"]["h5py"] and "dirty" in shard["code"]["resum_flex"]
 
 
 def test_photons_are_permuted_inside_shards(campaign):
