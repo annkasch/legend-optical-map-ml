@@ -67,9 +67,9 @@ zero-padded with per-voxel `event_counts`).
 - `theta.model_input: false`: the voxel centre is no network input; batches are
   `EVENT_ONLY` (θ None, one row per voxel as before). θ still groups voxels for the split,
   defines offsets and stays available as design-point metadata (`provider.theta()`,
-  `coordinates()`, normalization fitted as usual). Needs phi inputs. For mlp / mlp_bll and
-  the field model encoding phi columns (`encoding.columns`); not for stream-trained models,
-  which RESUM_FLEX gives θ columns although they don't use them (`docs/photon-store.md`).
+  `coordinates()`, normalization fitted as usual). Needs phi inputs. For mlp / mlp_bll, the
+  field model encoding phi columns (`encoding.columns`) and stream-trained models with
+  `dim_theta: null` (`docs/photon-store.md`).
   Their `predict` output carries the provider's θ (voxel centres), so GP stages (binomial
   covariate, MFGP level) use it as for any model.
 - `phi.vertex.representation`: `offset` from the centre, absolute, or omitted;
