@@ -35,6 +35,8 @@ outputs/
 - **Versions are subfolders** `vN`: a rerun of the same model with new settings is the next
   version, e.g. `mlp_bll/v1` (LF train) and `mlp_bll/v2` (LF2 + HF train),
   `mfgp_mlp_hf_log/v2` (GP_val split 250/250). A new version never overwrites an old one.
+- **Seeds are subfolders** `seedN` of a version: the config writes `seed0`, `train --run-seed N`
+  (and `score --run-seed N`) the `seedN` run of the same config (RESUM_FLEX `docs/runs.md`).
 - GP names leave out the input MLP's version; the run's records and config name the MLP run
   (`event_learning/mlp/vN`) whose inference it reads, in the same dataset folder.
 - An added evaluation of a finished run (RESUM_FLEX `within_point`) is not a new run: it

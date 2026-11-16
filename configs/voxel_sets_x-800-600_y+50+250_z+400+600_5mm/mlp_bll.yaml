@@ -1,3 +1,7 @@
+# v4 (2026-11-16): v3 with a cosine learning-rate decay to 1 % and 20 instead of 10 passes,
+# so late checkpoints stop swinging; seeds 0-2 (seed0 here, --run-seed 1/2). Selection unchanged.
+#   sbatch -q regular -t 03:00:00 --job-name=mlp-bll-v4-s<N> \
+#     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp_bll.yaml train --run-seed <N>
 # v3 (2026-11-14): v2 retrained for the input comparison (a)/(b)/(c) on the same code as
 # mlp_bll.theta_absolute.yaml and mlp_bll.emission.yaml (RESUM_FLEX b185b97).
 # Model and training as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp.yaml (v2) plus a Bayesian last
@@ -17,9 +21,10 @@ model:
 training:
   backend: neural
   loss: bernoulli
-  n_passes: 10
+  n_passes: 20
   eval_every: 100
   learning_rate: 0.001
+  lr_schedule: {kind: cosine, final_fraction: 0.01}
   batch_size: 16
   n_events: 750
   targets: disjoint
@@ -47,7 +52,7 @@ train_sets:
 - {partition: gp_train, fidelity: hf}       # HF_train
 partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
-output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v3/seed0
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll/v4/seed0
 selection_max_design_points: 500
 evaluation_threads: 16
 residual_test: {threads: 16}  # read-out residual test; threads as residual.mlp_bll.yaml

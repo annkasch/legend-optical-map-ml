@@ -24,7 +24,13 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   (`test_fidelities: [lf]`, needs `unblind_test`). Set `hf_validation: false`: HF roles are GP
   levels and benchmark sets.
 - Checkpoints are selected on LF validation; `selection: bernoulli_log_loss` for natural
-  sampling (`average_precision` only for the mixup ablation).
+  sampling (`average_precision` only for the mixup ablation). It weighs the voxel rate and the
+  within-voxel separation alike: per voxel, the summed log loss = count NLL − within-voxel gain
+  + a term of the data only.
+- MLP + BLL (`mlp_bll*.yaml`, since 2026-11-16): `lr_schedule: {kind: cosine, final_fraction:
+  0.01}` and `n_passes: 20`; with a constant rate the late checkpoints swung (count NLL sd
+  0.05, ratio of means 0.5-1.3). Seeds: one config (`seed0`), `--run-seed 1`, `2` for the others
+  (`docs/slurm.md`). Needs RESUM_FLEX ≥ c8d2c22.
 - Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).

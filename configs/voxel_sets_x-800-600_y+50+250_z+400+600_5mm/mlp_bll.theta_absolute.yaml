@@ -1,3 +1,7 @@
+# v2 (2026-11-16): v1 with a cosine learning-rate decay to 1 % and 20 instead of 10 passes,
+# so late checkpoints stop swinging; seeds 0-2 (seed0 here, --run-seed 1/2). Selection unchanged.
+#   sbatch -q regular -t 03:00:00 --job-name=mlp-bll-theta-absolute-v2-s<N> \
+#     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp_bll.theta_absolute.yaml train --run-seed <N>
 # As mlp_bll.yaml (v2), but on the `theta_absolute` view of data.yaml: input comparison (b)
 # (2026-11-13). Inputs: θ (x, y, z), raw vertex (x, y, z), px, py, pz. Same training data (LF2 +
 # HF train), selection and seed, so only the input representation differs.
@@ -15,9 +19,10 @@ model:
 training:
   backend: neural
   loss: bernoulli
-  n_passes: 10
+  n_passes: 20
   eval_every: 100
   learning_rate: 0.001
+  lr_schedule: {kind: cosine, final_fraction: 0.01}
   batch_size: 16
   n_events: 750
   targets: disjoint
@@ -45,7 +50,7 @@ train_sets:
 - {partition: gp_train, fidelity: hf}       # HF_train
 partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
-output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_theta_absolute/v1/seed0
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_theta_absolute/v2/seed0
 selection_max_design_points: 500
 evaluation_threads: 16
 residual_test: {threads: 16}  # read-out residual test; threads as residual.mlp_bll.yaml

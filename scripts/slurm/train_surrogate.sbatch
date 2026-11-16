@@ -1,6 +1,7 @@
 #!/bin/bash
 # Run training or standalone MFGP on a Perlmutter CPU node, from the repository root:
-#   sbatch scripts/slurm/train_surrogate.sbatch configs/CONFIG.yaml [train|mfgp|binomial|within_point|residual|score]
+#   sbatch scripts/slurm/train_surrogate.sbatch configs/CONFIG.yaml [train|mfgp|binomial|within_point|residual|score] [ARGS...]
+# ARGS go to the stage, e.g. `train --run-seed 1` (the seed1 run of a seed0 config; also score).
 # Install resum-flex and this package into the same environment as described in README.md.
 # The default interpreter is this checkout's .venv/bin/python; set RESUM_PYTHON to an
 # executable path to override.
@@ -20,6 +21,7 @@
 set -euo pipefail
 config=${1:?usage: sbatch scripts/slurm/train_surrogate.sbatch CONFIG.yaml [train|mfgp|binomial|within_point|residual|score]}
 command=${2:-train}
+shift $(( $# < 2 ? $# : 2 ))  # the rest are stage arguments
 case "$command" in
     train|mfgp|binomial|within_point|residual|score) ;;
     *) echo "Unknown command '$command'; choose train, mfgp, binomial, within_point, residual or score." >&2; exit 2 ;;
@@ -33,5 +35,5 @@ if [[ ! -x "$python_exe" ]]; then
     echo "Python interpreter '$python_exe' not found or not executable; see the README setup instructions." >&2
     exit 2
 fi
-echo "job $SLURM_JOB_ID on $(hostname), commit $(git rev-parse --short HEAD), $command $config, $threads BLAS threads"
-srun --cpu-bind=none "$python_exe" -u -m core.surrogates "$command" "$config"
+echo "job $SLURM_JOB_ID on $(hostname), commit $(git rev-parse --short HEAD), $command $config $*, $threads BLAS threads"
+srun --cpu-bind=none "$python_exe" -u -m core.surrogates "$command" "$config" "$@"

@@ -1,3 +1,7 @@
+# v3 (2026-11-16): v2 with a cosine learning-rate decay to 1 % and 20 instead of 10 passes,
+# so late checkpoints stop swinging; seeds 0-2 (seed0 here, --run-seed 1/2). Selection unchanged.
+#   sbatch -q regular -t 03:00:00 --job-name=mlp-bll-emission-v3-s<N> \
+#     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp_bll.emission.yaml train --run-seed <N>
 # v2 (2026-11-14): v1 retrained for the input comparison (a)/(b)/(c) on the same code.
 # As mlp_bll.yaml (v2), but on the `emission` view of data.yaml (2026-11-13): the network sees
 # only the emission point (absolute vertex x, y, z) and px, py, pz, no voxel centre. Same
@@ -18,9 +22,10 @@ model:
 training:
   backend: neural
   loss: bernoulli
-  n_passes: 10
+  n_passes: 20
   eval_every: 100
   learning_rate: 0.001
+  lr_schedule: {kind: cosine, final_fraction: 0.01}
   batch_size: 16
   n_events: 750
   targets: disjoint
@@ -48,7 +53,7 @@ train_sets:
 - {partition: gp_train, fidelity: hf}       # HF_train
 partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
-output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_emission/v2/seed0
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_emission/v3/seed0
 selection_max_design_points: 500
 evaluation_threads: 16
 residual_test: {threads: 16}  # read-out residual test; threads as residual.mlp_bll.yaml
