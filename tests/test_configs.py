@@ -159,17 +159,40 @@ def test_cnp_bll_differs_from_its_mlp_bll_only_in_the_model():
     assert max(cnp.validation_context_sweep) <= cnp.training.context_range()[1]
 
 
-def test_cnp_bll_mixup_differs_from_cnp_bll_only_in_the_mixup_term():
-    """cnp_bll.mixup.theta_absolute.yaml: real + mixup loss, real context, same selection."""
+def test_cnp_bll_mixup_differs_from_cnp_bll_only_in_the_mixup_sampling():
+    """cnp_bll.mixup.theta_absolute.yaml: pure mixup, real context, ranking selection."""
     from schemas.surrogates import load_surrogate_config
 
     folder = CONFIGS / "voxel_sets_x+300+500_y-100+100_z-100+100_5mm"
     mix = load_surrogate_config(folder / "cnp_bll.mixup.theta_absolute.yaml")
     cnp = load_surrogate_config(folder / "cnp_bll.theta_absolute.yaml")
     a, b = mix.model_dump(mode="json"), cnp.model_dump(mode="json")
-    assert {k for k in a if a[k] != b[k]} == {"training", "output_directory"}
+    assert {k for k in a if a[k] != b[k]} == {"training", "selection", "output_directory"}
     ta, tb = a["training"], b["training"]
-    assert {k for k in ta if ta[k] != tb[k]} == {"objective", "sampling"}
-    assert ta["objective"]["strategy"] == "real_plus_mixup"
+    assert {k for k in ta if ta[k] != tb[k]} == {"sampling"}
+    assert ta["objective"]["strategy"] == "single"
+    assert ta["sampling"]["strategy"] == "class_aware_mixup"
     assert ta["sampling"]["mixup"]["mix_context"] is False
-    assert mix.selection == cnp.selection == "bernoulli_log_loss"
+    assert mix.selection == "average_precision"
+
+
+def test_cnp_bll_mixup_recalibrated_refits_only_the_output_layer_of_the_mixup_run():
+    """cnp_bll.mixup.recalibrated.theta_absolute.yaml: v1 best, output layer on real photons."""
+    from schemas.surrogates import load_surrogate_config
+
+    folder = CONFIGS / "voxel_sets_x+300+500_y-100+100_z-100+100_5mm"
+    mix = load_surrogate_config(folder / "cnp_bll.mixup.theta_absolute.yaml")
+    rec = load_surrogate_config(folder / "cnp_bll.mixup.recalibrated.theta_absolute.yaml")
+    assert rec.model == mix.model
+    assert rec.initial_checkpoint == mix.output_directory / "checkpoints" / "best"
+    assert rec.output_directory.parent.name == "v2" and mix.output_directory.parent.name == "v1"
+    [stage] = rec.stages
+    assert (stage.start_from, stage.trainable) == ("initial", "output_layer")
+    assert stage.training == rec.training
+    assert stage.training.sampling.strategy == "natural"
+    assert stage.training.objective.strategy == "single"
+    assert stage.selection == rec.selection == "bernoulli_log_loss"
+    a, b = rec.model_dump(mode="json"), mix.model_dump(mode="json")
+    assert {k for k in a if a[k] != b[k]} == {
+        "training", "selection", "stages", "initial_checkpoint", "output_directory"
+    }

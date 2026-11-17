@@ -1,0 +1,67 @@
+# CNP + BLL + pure mixup, recalibrated (2026-11-17): the mixup-only v1 best checkpoint
+# (cnp_bll.mixup.theta_absolute.yaml) with its output layer refitted on real photons (natural
+# sampling, plain BCE, everything else frozen), so its outputs become hit probabilities and all
+# metrics compare with the plain CNP. The checkpoint "recalibration" (= best) is v2's result.
+# Learning rate 1e-2: the mixup logits sit ~ln(0.5/0.005) ≈ 5 too high; Adam moves the bias
+# by about one learning rate per step, so 3e-4 (the fine_tuning default) would need ~15k steps.
+# Run after v1 has finished:
+#   sbatch -q regular -t 02:00:00 --dependency=afterok:<v1 job> --job-name=box-cnp-bll-mixup-theta-absolute-v2 \
+#     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/cnp_bll.mixup.recalibrated.theta_absolute.yaml train
+model:
+  kind: cnp
+  encoder:          # as the earlier cnp.yaml (voxel_sets_x+365+485_…)
+    type: mlp
+    latent_dim: 64
+    hidden_dims: [128, 128]
+    dropout: 0.0
+  last_layer:
+    prior_precision: evidence
+    draws: 1000
+    seed: 0
+training: &recalibration   # top level and the stage share the settings
+  backend: neural
+  loss: bernoulli
+  n_steps: 3000
+  eval_every: 100
+  learning_rate: 0.01
+  lr_schedule: {kind: cosine, final_fraction: 0.01}
+  batch_size: 16
+  n_events: 750
+  targets: disjoint
+  context:
+    size: random
+    n_min: 16
+    max_fraction: 0.5
+  seed: 1
+  device: cpu
+  focal_gamma: 0
+  objective:
+    strategy: single
+  sampling:
+    strategy: natural
+  weighting:
+    strategy: none
+selection: bernoulli_log_loss
+initial_checkpoint: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/cnp_bll_mixup_theta_absolute/v1/seed0/checkpoints/best
+stages:
+- name: recalibration
+  start_from: initial
+  trainable: output_layer
+  training: *recalibration
+  selection: bernoulli_log_loss
+lf_validation: true
+hf_validation: false
+test_fidelities: [] # Test (gp_test) stays blinded; benchmark and score stage unblind it at the end.
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+train_sets:
+- {partition: gp_unlabeled, fidelity: lf}   # LF2_train
+- {partition: gp_train, fidelity: hf}       # HF_train
+partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
+data_config: data.yaml
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/cnp_bll_mixup_theta_absolute/v2/seed0
+selection_max_design_points: 500
+evaluation_threads: 16
+residual_test: {threads: 16}  # read-out residual test; threads as the other datasets
+validation_context_events: 200
+validation_context_sweep: [16, 64, 128, 256, 375]

@@ -1,6 +1,9 @@
-# CNP + BLL + mixup with input (b) (2026-11-16): cnp_bll.theta_absolute.yaml with class-aware
-# mixup as an added loss term (real_plus_mixup, weight 0.001, real context), so outputs stay
-# probabilities and the selection stays bernoulli_log_loss. LF validation only (no score config).
+# CNP + BLL + pure class-aware mixup with input (b) (2026-11-17): cnp_bll.theta_absolute.yaml
+# trained on mixed targets only (objective single, as the earlier cnp.mixup.yaml), real context.
+# Outputs are mixup scores, not hit probabilities: only ranking metrics (average precision,
+# Spearman, within-voxel AUC) are meaningful, so the selection is average_precision.
+# cnp_bll.mixup.recalibrated.theta_absolute.yaml (v2) refits the output layer on real photons.
+# (v1 with real + mixup loss at weight 0.001 was deleted on 2026-11-17: no gain over plain CNP.)
 #   sbatch -q regular -t 04:00:00 --job-name=box-cnp-bll-mixup-theta-absolute-v1 \
 #     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/cnp_bll.mixup.theta_absolute.yaml train
 model:
@@ -32,9 +35,7 @@ training:
   device: cpu
   focal_gamma: 0
   objective:
-    strategy: real_plus_mixup   # mean(real BCE) + 0.001 * mean(mixed BCE): outputs stay probabilities
-    mixup_loss_weight: 0.001
-    real_target_ratio: 1.0
+    strategy: single            # mixed targets only: outputs are mixup scores
   sampling:
     strategy: class_aware_mixup
     mixup:
@@ -42,7 +43,7 @@ training:
       mix_context: false        # real context: the rate the CNP reads from it stays unmixed
   weighting:
     strategy: none
-selection: bernoulli_log_loss
+selection: average_precision   # outputs are not probabilities
 lf_validation: true
 hf_validation: false
 test_fidelities: [] # Test (gp_test) stays blinded; benchmark and score stage unblind it at the end.
