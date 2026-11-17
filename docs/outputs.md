@@ -31,7 +31,9 @@ outputs/
   scored on the voxel campaign's `gp_validation`.
 - Model names omit the dataset; GP models start with their type (`binomial_mlp_lf2_hf`,
   `mfgp_mlp_hf_log`). A different model (another noise model, input or architecture:
-  `mfgp_mlp_hf_log_hetnoise`, `cnp_mixup`, `field_f4`) gets its own folder.
+  `mfgp_mlp_hf_log_hetnoise`, `cnp_mixup`, `field_f4`) gets its own folder; so does a
+  hyperparameter-sweep variant (`mlp_bll_theta_absolute_w512`, from
+  `mlp_bll.theta_absolute.w512.yaml`).
 - **Versions are subfolders** `vN`: a rerun of the same model with new settings is the next
   version, e.g. `mlp_bll/v1` (LF train) and `mlp_bll/v2` (LF2 + HF train),
   `mfgp_mlp_hf_log/v2` (GP_val split 250/250). A new version never overwrites an old one.

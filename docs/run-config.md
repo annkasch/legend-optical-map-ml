@@ -31,6 +31,13 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   0.01}` and `n_passes: 20`; with a constant rate the late checkpoints swung (count NLL sd
   0.05, ratio of means 0.5-1.3). Seeds: one config (`seed0`), `--run-seed 1`, `2` for the others
   (`docs/slurm.md`). Needs RESUM_FLEX ≥ c8d2c22.
+- Hyperparameter sweep of MLP + BLL with input (b) θ + raw vertex + momentum (2026-11-16):
+  `mlp_bll.theta_absolute.<variant>.yaml` changes one field of `mlp_bll.theta_absolute.yaml`
+  (v2): `w128`/`w512`, `d2`/`d5` (hidden_dims), `lr3e-4`/`lr3e-3`, `b8`/`b32`, `ev250`/`ev1500`,
+  `do10` (dropout 0.1); `n_passes` stays 20, so every variant sees the same photons. `n_events`
+  can't exceed the fewest photons of a training voxel (1500 LF). Each has
+  `score.mlp_bll.theta_absolute.<variant>.yaml`; `tests/test_sweep_configs.py` checks the
+  one-field rule.
 - Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).

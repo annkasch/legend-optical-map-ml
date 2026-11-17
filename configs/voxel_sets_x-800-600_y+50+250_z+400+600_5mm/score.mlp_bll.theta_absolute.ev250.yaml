@@ -1,0 +1,11 @@
+# Benchmark score on gp_validation/hf of mlp_bll.theta_absolute.ev250.yaml (sweep 3a),
+# as score.mlp_bll.theta_absolute.yaml.
+#   sbatch scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/score.mlp_bll.theta_absolute.ev250.yaml score
+run: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_theta_absolute_ev250/v1/seed0
+checkpoints: [best]
+sets: [gp_validation/hf]
+donors: scored
+seed: 0
+threads: 16
+plot_ylim: [0.0, 0.0065]
+output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_theta_absolute_ev250/v1/seed0/score_gp_validation_hf
