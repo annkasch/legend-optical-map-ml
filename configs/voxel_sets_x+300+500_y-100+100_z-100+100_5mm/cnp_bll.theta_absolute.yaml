@@ -1,0 +1,59 @@
+# CNP + BLL with input (b) θ + raw vertex + momentum (2026-11-16): mlp_bll.theta_absolute.yaml (v2:
+# theta_absolute view, LF2 + HF train, cosine LR decay to 1 %, 20 passes, selection
+# bernoulli_log_loss) with a CNP encoder instead of the MLP. Compared on LF validation only:
+# HF benchmark voxels have no labelled context photons, so there is no score config.
+#   sbatch -q regular -t 04:00:00 --job-name=box-cnp-bll-theta-absolute-v1 \
+#     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/cnp_bll.theta_absolute.yaml train
+model:
+  kind: cnp
+  encoder:          # as the earlier cnp.yaml (voxel_sets_x+365+485_…)
+    type: mlp
+    latent_dim: 64
+    hidden_dims: [128, 128]
+    dropout: 0.0
+  last_layer:
+    prior_precision: evidence
+    draws: 1000
+    seed: 0
+training:
+  backend: neural
+  loss: bernoulli
+  n_passes: 20
+  eval_every: 100
+  learning_rate: 0.001
+  lr_schedule: {kind: cosine, final_fraction: 0.01}
+  batch_size: 16
+  n_events: 750
+  targets: disjoint
+  context:
+    size: random
+    n_min: 16
+    max_fraction: 0.5
+  seed: 0
+  device: cpu
+  focal_gamma: 0
+  objective:
+    strategy: single
+  sampling:
+    strategy: natural
+  weighting:
+    strategy: none
+selection: bernoulli_log_loss
+lf_validation: true
+hf_validation: false
+test_fidelities: [] # Test (gp_test) stays blinded; benchmark and score stage unblind it at the end.
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+train_sets:
+- {partition: gp_unlabeled, fidelity: lf}   # LF2_train
+- {partition: gp_train, fidelity: hf}       # HF_train
+partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
+data_config: data.yaml
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/cnp_bll_theta_absolute/v1/seed0
+selection_max_design_points: 500
+evaluation_threads: 16
+residual_test: {threads: 16}  # read-out residual test; threads as the other datasets
+# CNP: context = the voxel's own first labelled photons (seeded split), scored on the rest.
+validation_context_events: 200
+# Read-out only: same targets per voxel, nested contexts.
+validation_context_sweep: [16, 64, 128, 256, 375]

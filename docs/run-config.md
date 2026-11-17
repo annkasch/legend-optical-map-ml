@@ -38,6 +38,14 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   can't exceed the fewest photons of a training voxel (1500 LF). Each has
   `score.mlp_bll.theta_absolute.<variant>.yaml`; `tests/test_sweep_configs.py` checks the
   one-field rule.
+- CNP + BLL with input (b) (`cnp_bll.theta_absolute.yaml`, box only, 2026-11-16): the MLP + BLL (b)
+  v2 config with a CNP encoder (latent 64, [128, 128], as the earlier `cnp.yaml`) and the CNP
+  context keys. Compared on LF validation only, where the context is the voxel's own first
+  labelled photons; HF benchmark voxels have none, so it has no score config.
+  `cnp_bll.mixup.theta_absolute.yaml` adds class-aware mixup as a second loss term
+  (`objective: real_plus_mixup`, weight 0.001, `mix_context: false`): the real BCE keeps the
+  outputs probabilities, so the selection stays `bernoulli_log_loss` (pure mixup, as the earlier
+  `cnp.mixup.yaml`, outputs scores and selects on `average_precision`).
 - Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).

@@ -142,3 +142,34 @@ def test_stream_transform_mismatch_is_detected(tmp_path):
     assert stream_transform_mismatch(run(tmp_path / "out", transform)) is None
     assert stream_transform_mismatch(run(tmp_path / "out" / "views" / "cartesian", transform))
     assert stream_transform_mismatch(run(tmp_path / "out", {**transform, "cylindrical": {}}))
+
+
+def test_cnp_bll_differs_from_its_mlp_bll_only_in_the_model():
+    """cnp_bll.theta_absolute.yaml: same data, training and selection as mlp_bll (b)."""
+    from schemas.surrogates import load_surrogate_config
+
+    folder = CONFIGS / "voxel_sets_x+300+500_y-100+100_z-100+100_5mm"
+    cnp = load_surrogate_config(folder / "cnp_bll.theta_absolute.yaml")
+    mlp = load_surrogate_config(folder / "mlp_bll.theta_absolute.yaml")
+    a, b = cnp.model_dump(mode="json"), mlp.model_dump(mode="json")
+    assert {k for k in a if a[k] != b[k]} == {
+        "model", "output_directory", "validation_context_events", "validation_context_sweep"
+    }
+    assert cnp.model.kind == "cnp" and cnp.model.last_layer == mlp.model.last_layer
+    assert max(cnp.validation_context_sweep) <= cnp.training.context_range()[1]
+
+
+def test_cnp_bll_mixup_differs_from_cnp_bll_only_in_the_mixup_term():
+    """cnp_bll.mixup.theta_absolute.yaml: real + mixup loss, real context, same selection."""
+    from schemas.surrogates import load_surrogate_config
+
+    folder = CONFIGS / "voxel_sets_x+300+500_y-100+100_z-100+100_5mm"
+    mix = load_surrogate_config(folder / "cnp_bll.mixup.theta_absolute.yaml")
+    cnp = load_surrogate_config(folder / "cnp_bll.theta_absolute.yaml")
+    a, b = mix.model_dump(mode="json"), cnp.model_dump(mode="json")
+    assert {k for k in a if a[k] != b[k]} == {"training", "output_directory"}
+    ta, tb = a["training"], b["training"]
+    assert {k for k in ta if ta[k] != tb[k]} == {"objective", "sampling"}
+    assert ta["objective"]["strategy"] == "real_plus_mixup"
+    assert ta["sampling"]["mixup"]["mix_context"] is False
+    assert mix.selection == cnp.selection == "bernoulli_log_loss"
