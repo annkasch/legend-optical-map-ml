@@ -37,7 +37,9 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   `do10` (dropout 0.1); `n_passes` stays 20, so every variant sees the same photons. `n_events`
   can't exceed the fewest photons of a training voxel (1500 LF). Each has
   `score.mlp_bll.theta_absolute.<variant>.yaml`; `tests/test_sweep_configs.py` checks the
-  one-field rule.
+  one-field rule. Combinations (box only, 2026-11-17) join their parts with `_`:
+  `lr3e-3_b8`, `lr3e-3_ev250`, `lr3e-3_d5`, `lr3e-3_w512` change the learning rate and one more
+  field; they and `lr3e-3` run with seeds 0-2 (`--run-seed`).
 - CNP + BLL with input (b) (`cnp_bll.theta_absolute.yaml`, box only, 2026-11-16): the MLP + BLL (b)
   v2 config with a CNP encoder (latent 64, [128, 128], as the earlier `cnp.yaml`) and the CNP
   context keys. Compared on LF validation only, where the context is the voxel's own first
