@@ -196,3 +196,25 @@ def test_cnp_bll_mixup_recalibrated_refits_only_the_output_layer_of_the_mixup_ru
     assert {k for k in a if a[k] != b[k]} == {
         "training", "selection", "stages", "initial_checkpoint", "output_directory"
     }
+
+
+@pytest.mark.parametrize(
+    "dataset",
+    ["voxel_sets_x-800-600_y+50+250_z+400+600_5mm", "voxel_sets_x+300+500_y-100+100_z-100+100_5mm"],
+)
+def test_raw_lf_mfgp_pair_differs_only_in_noise_and_uses_the_mlp_bll_training_data(dataset):
+    """mfgp.raw_lf.log(.hetnoise).yaml: no event model, learned vs binomial noise, MLP data."""
+    from schemas.surrogates import load_mfgp_config, load_surrogate_config
+
+    folder = CONFIGS / dataset
+    learned = load_mfgp_config(folder / "mfgp.raw_lf.log.yaml")
+    binomial = load_mfgp_config(folder / "mfgp.raw_lf.log.hetnoise.yaml")
+    assert (learned.observation_noise, binomial.observation_noise) == ("learned", "binomial")
+    a, b = learned.model_dump(mode="json"), binomial.model_dump(mode="json")
+    plot_only = {"coverage_ylim"}
+    assert {k for k in a if a[k] != b[k]} - plot_only == {"observation_noise", "output_directory"}
+    assert all(level.source == "observed_fraction" for level in learned.levels)
+    mlp = load_surrogate_config(folder / "mlp_bll.theta_absolute.yaml")
+    gp_data = [(level.partition, level.fidelity) for level in learned.levels]
+    assert gp_data == [(s.partition, s.fidelity) for s in mlp.train_sets]
+    assert [(e.partition, e.fidelity) for e in learned.evaluation] == [("gp_validation", "hf")]

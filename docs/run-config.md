@@ -81,6 +81,11 @@ Example: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml`, r
   the MLP on `gp_unlabeled/lf`, then `observed_fraction` of `gp_train/hf`. Variants:
   `mfgp.log` (log space), `mfgp.raw_lf.log` (simulated LF fraction as level 0), `*.hetnoise`
   (per-voxel binomial noise), `binomial` (count GP; `.mlp`, `.mlp_lf2`: MLP covariate).
+- MFGP without an event model on both voxel datasets (2026-11-17): `mfgp.raw_lf.log.yaml`
+  (`learned` noise) and `mfgp.raw_lf.log.hetnoise.yaml` (`observation_noise: binomial`), levels
+  = the MLP + BLL `train_sets` (simulated `gp_unlabeled/lf` → `gp_train/hf`), scored on
+  `gp_validation/hf`; `tests/test_configs.py` checks the pair and the data. x-800: v2 (v1 before
+  the design point rename).
 - `inference` points at the `predict` output; `evaluation` names held-out roles. Keep test
   roles out of `levels` and blinded until choices are final.
 - GP fitting time grows steeply with the number of voxels: run on a compute node
