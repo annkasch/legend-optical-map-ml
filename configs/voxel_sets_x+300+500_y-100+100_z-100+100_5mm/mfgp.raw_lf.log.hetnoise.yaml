@@ -3,10 +3,10 @@
 #   BLAS_THREADS=32 sbatch -q regular -t 02:00:00 scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mfgp.raw_lf.log.hetnoise.yaml mfgp
 levels:
 - source: observed_fraction
-  partition: gp_unlabeled   # LF2_train, 1500 events per voxel
+  partition: gp_unlabeled   # evt_2_train, 1500 events per voxel
   fidelity: lf
 - source: observed_fraction
-  partition: gp_train       # HF_train, 5000 events per voxel (target)
+  partition: gp_train       # reg_1_train, 5000 events per voxel (target)
   fidelity: hf
 evaluation:
 - {partition: gp_validation, fidelity: hf}

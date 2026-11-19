@@ -49,9 +49,24 @@ GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`; no `cnp_tes
 
 On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data can vanish):
 
-- Voxel sets `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, same sampling, sizes and roles as
-  LBNL; GP_val and CNP_val are disjoint here.
+- Voxel sets `voxel_sets_x+300+500_y-100+100_z-100+100_5mm`, same sampling and roles as
+  LBNL; the validation lists are disjoint here.
   Data config: `configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml`.
+  Manifests `voxels_<set>.csv`, renamed 2026-11-18 (`evt` = event model, `reg` = regression;
+  `voxel_id` prefixes `evtT_n` / `evtV_n` / `regT_n` / `regV_n` = train / validation of set n):
+
+  | Manifest | Old name | Voxels | Role |
+  |---|---|---|---|
+  | `evt_1_train` | `LF_train` | 6400 LF | `cnp_train` |
+  | `evt_1_val` | `CNP_val` | 1600 LF (500 before 2026-11-18) | `cnp_validation` |
+  | `evt_2_train` | `LF2_train` | 6400 LF | `gp_unlabeled` (also `event_file` npz per voxel) |
+  | `reg_1_train` | `HF_train` | 640 HF | `gp_train` (`partner_lf_id` → `evtT_2_*`) |
+  | `reg_1_val` | `GP_val` | 500 HF | `gp_validation` / `gp_test` 50/50 (seeded, unchanged by the rename) |
+
+  Runs before 2026-11-18 selected and scored `cnp_validation` on 500 voxels; later runs use
+  1600, so their `lf_validation` metrics are not directly comparable.
+  `voxel_sets_x+300+500_y-100+100_z-100+100_5mm_reg_2_val` (same parent folder) is not in the
+  data config yet.
 - Homogeneous box `box_x+300+500_y-100+100_z-100+100` (32 chunks of 400k isotropic photons,
   9.68 ± 0.22 eV) → photon store `outputs/photon_x+300+500_y-100+100_z-100+100/data` (moved from `$PSCRATCH`
   2026-11-07; `configs/photon_x+300+500_y-100+100_z-100+100/photons.yaml`, `docs/photon-store.md`).

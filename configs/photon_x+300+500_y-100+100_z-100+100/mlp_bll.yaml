@@ -3,7 +3,7 @@
 # and last layer of voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mlp_bll.yaml on the normalized raw
 # emission point and momentum (no voxel centre: homogeneous photons have none). Training as
 # the photon fields (field_f*.yaml); selected on the store's
-# validation photons, evaluated on the voxel campaign (CNP_val LF, GP_val HF).
+# validation photons, evaluated on the voxel campaign (evt_1_val LF, reg_1_val HF).
 # Stream counterpart of input comparison (c) (raw vertex + momentum, no θ) of
 # voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mlp_bll.emission.yaml (2026-11-14).
 #   sbatch -q regular -t 02:00:00 scripts/slurm/train_photon_field.sbatch configs/photon_x+300+500_y-100+100_z-100+100/mlp_bll.yaml
@@ -32,8 +32,8 @@ dim_theta: null              # evaluated on the event-only emission view (RESUM_
 dim_phi: 6                   # emission point (3) + momentum (3) = the stream records
 event_source_options:
   in_memory: true            # 10.8M train photons = 300 MB
-# Voxel evaluation: same metrics and plots as voxel-trained fields (LF = CNP_val, HF = GP_val
-# half of the voxel campaign; GP_val's other half is the blinded gp_test).
+# Voxel evaluation: same metrics and plots as voxel-trained fields (LF = evt_1_val, HF = reg_1_val
+# half of the voxel campaign; reg_1_val's other half is the blinded gp_test).
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/emission  # as input comparison (c), mlp_bll.emission.yaml
 data_config: ../voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml

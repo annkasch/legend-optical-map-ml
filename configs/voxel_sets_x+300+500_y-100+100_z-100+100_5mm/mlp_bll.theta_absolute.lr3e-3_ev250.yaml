@@ -41,8 +41,8 @@ test_fidelities: [] # Test (gp_test) stays blinded; benchmark and score stage un
 data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 train_sets:
-- {partition: gp_unlabeled, fidelity: lf}   # LF2_train
-- {partition: gp_train, fidelity: hf}       # HF_train
+- {partition: gp_unlabeled, fidelity: lf}   # evt_2_train
+- {partition: gp_train, fidelity: hf}       # reg_1_train
 partitions: {validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
 output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_theta_absolute_lr3e-3_ev250/v1/seed0

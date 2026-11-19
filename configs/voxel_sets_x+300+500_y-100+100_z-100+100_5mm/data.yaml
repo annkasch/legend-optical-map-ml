@@ -1,17 +1,19 @@
 # Own genesis-remage voxel campaign (same sampling as LBNL secondment, box x 300..500 mm,
 # y -100..100, z -100..100, 5 mm voxels): LF 1500 / HF 5000 photons per voxel.
 # Roles as in voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml. Raw data on $PSCRATCH (purge policy).
+# Manifests renamed 2026-11-18 (evt = event model, reg = regression; T/V = train/validation
+# in the voxel_id prefixes evtT_n, evtV_n, regT_n, regV_n); evt_1_val grew from 500 to 1600 voxels.
 source:
   manifests:
-  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_LF_train.csv
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_1_train.csv
     role: cnp_train
-  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_CNP_val.csv
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_1_val.csv
     role: cnp_validation
-  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_LF2_train.csv
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_2_train.csv
     role: gp_unlabeled
-  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_HF_train.csv
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_train.csv
     role: gp_train
-  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_GP_val.csv
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_val.csv
     fractions: {gp_validation: 0.5, gp_test: 0.5}
 output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
 cache_directory: ../../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
