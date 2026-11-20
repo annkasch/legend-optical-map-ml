@@ -6,7 +6,7 @@ levels:
   partition: rate_unlabeled   # evt_2_train, 1500 events per voxel
   fidelity: lf
 - source: observed_fraction
-  partition: rate_train       # reg_1_train, 5000 events per voxel (target)
+  partition: rate_train       # rate_1_train, 5000 events per voxel (target)
   fidelity: hf
 evaluation:
 - {partition: rate_validation, fidelity: hf}

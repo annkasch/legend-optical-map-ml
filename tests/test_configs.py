@@ -250,14 +250,14 @@ def test_resum_lf1_support_network_and_its_mfgp_pair():
     assert [(e.partition, e.fidelity) for e in learned.evaluation] == [("rate_validation", "hf")]
 
 
-def test_box_reg_1_val_is_all_rate_validation():
-    """Box data.yaml: reg_1_val (1000 HF voxels) is rate_validation only, no rate_test."""
+def test_box_rate_1_val_is_all_rate_validation():
+    """Box data.yaml: rate_1_val (1000 HF voxels) is rate_validation only, no rate_test."""
     from legend_optical_map_ml.config import load_optical_config
 
     data = load_optical_config(
         CONFIGS / "voxel_sets_x+300+500_y-100+100_z-100+100_5mm" / "data.yaml"
     )
-    [reg_1_val] = [m for m in data.source.manifests if m.path.name == "voxels_reg_1_val.csv"]
-    assert (reg_1_val.role, reg_1_val.fractions) == ("rate_validation", None)
+    [rate_1_val] = [m for m in data.source.manifests if m.path.name == "voxels_rate_1_val.csv"]
+    assert (rate_1_val.role, rate_1_val.fractions) == ("rate_validation", None)
     assert not any("rate_test" in (m.fractions or {}) or m.role == "rate_test"
                    for m in data.source.manifests)

@@ -1,5 +1,5 @@
 # Two-level MFGP on voxel_sets_x+300+500_y-100+100_z-100+100_5mm without an event model: simulated LF hit
-# fraction of evt_2_train (rate_unlabeled, also simulated with optical hits) -> observed reg_1_train
+# fraction of evt_2_train (rate_unlabeled, also simulated with optical hits) -> observed rate_1_train
 # fraction, log space; learned constant noise per level. Same training data as mlp_bll*.yaml
 # (train_sets). As voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mfgp.raw_lf.log.yaml (2026-11-17).
 #   BLAS_THREADS=32 sbatch -q regular -t 02:00:00 scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mfgp.raw_lf.log.yaml mfgp
@@ -8,7 +8,7 @@ levels:
   partition: rate_unlabeled   # evt_2_train, 1500 events per voxel
   fidelity: lf
 - source: observed_fraction
-  partition: rate_train       # reg_1_train, 5000 events per voxel (target)
+  partition: rate_train       # rate_1_train, 5000 events per voxel (target)
   fidelity: hf
 evaluation:
 - {partition: rate_validation, fidelity: hf}

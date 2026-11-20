@@ -1,4 +1,4 @@
-# Benchmark score on rate_validation/hf (reg_1_val, 1000 voxels) of
+# Benchmark score on rate_validation/hf (rate_1_val, 1000 voxels) of
 # mlp_bll.lf1.theta_absolute.lr3e-3.yaml, as score.mlp_bll.theta_absolute.lr3e-3.yaml: the support
 # network as a rate model, next to the MFGP on top of it.
 #   sbatch scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/score.mlp_bll.lf1.theta_absolute.lr3e-3.yaml score

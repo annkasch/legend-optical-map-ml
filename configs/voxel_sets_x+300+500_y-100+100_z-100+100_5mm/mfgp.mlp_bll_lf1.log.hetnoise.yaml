@@ -1,8 +1,8 @@
 # RESuM two-level MFGP on voxel_sets_x+300+500_y-100+100_z-100+100_5mm (options S1, 2026-11-19): mean of the MLP + BLL
 # support network mlp_bll.lf1.theta_absolute.lr3e-3.yaml on evt_2_train (rate_unlabeled) ->
-# observed reg_1_train fraction (rate_train), log space; binomial count noise per observed voxel at the GP's predicted rate
+# observed rate_1_train fraction (rate_train), log space; binomial count noise per observed voxel at the GP's predicted rate
 # (observation_noise: binomial).
-# Scored on all of reg_1_val (rate_validation, 1000 voxels). Needs the predict output of the run.
+# Scored on all of rate_1_val (rate_validation, 1000 voxels). Needs the predict output of the run.
 #   BLAS_THREADS=32 sbatch -q regular -t 02:00:00 scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mfgp.mlp_bll_lf1.log.hetnoise.yaml mfgp
 levels:
 - source: model_mean
@@ -10,7 +10,7 @@ levels:
   fidelity: lf
   inference: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_lf1_theta_absolute_lr3e-3/v1/seed0/inference/best/rate_unlabeled_lf.npz
 - source: observed_fraction
-  partition: rate_train       # reg_1_train, 5000 events per voxel (target)
+  partition: rate_train       # rate_1_train, 5000 events per voxel (target)
   fidelity: hf
 evaluation:
 - {partition: rate_validation, fidelity: hf}

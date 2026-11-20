@@ -1,9 +1,9 @@
-# Binomial GP + MLP covariate on voxel_sets_x+300+500_y-100+100_z-100+100_5mm: evt_2_train + reg_1_train counts
+# Binomial GP + MLP covariate on voxel_sets_x+300+500_y-100+100_z-100+100_5mm: evt_2_train + rate_1_train counts
 # with the MLP rate (donor emission inputs) as covariate. Same settings as
 # voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.mlp_lf2.yaml.
 observations:
 - {partition: rate_unlabeled, fidelity: lf}   # evt_2_train
-- {partition: rate_train, fidelity: hf}       # reg_1_train
+- {partition: rate_train, fidelity: hf}       # rate_1_train
 evaluation:
 - {partition: rate_validation, fidelity: hf}
 covariate:

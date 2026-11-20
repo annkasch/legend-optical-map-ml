@@ -3,6 +3,7 @@
 # Roles as in voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml. Raw data on $PSCRATCH (purge policy).
 # Manifests renamed 2026-11-18 (evt = event model, reg = regression; T/V = train/validation
 # in the voxel_id prefixes evtT_n, evtV_n, regT_n, regV_n); evt_1_val grew from 500 to 1600 voxels.
+# reg_* renamed rate_* 2026-11-19 (voxel_id prefixes rateT_n, rateV_n; same voxels and files).
 source:
   manifests:
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_1_train.csv
@@ -11,14 +12,14 @@ source:
     role: evt_validation
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_2_train.csv
     role: rate_unlabeled
-  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_train.csv
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_rate_1_train.csv
     role: rate_train
-  # reg_1_val: 1000 HF voxels since 2026-11-19 (500 taken over from reg_2_val), all of them
+  # rate_1_val: 1000 HF voxels since 2026-11-19 (500 taken over from rate_2_val), all of them
   # rate_validation; no rate_test (before: 500 voxels, 50/50 rate_validation / rate_test, so
-  # older box scores on 250 voxels are not directly comparable). reg_2_val (44 540 unseen),
-  # reg_3_val (12 480 at evt_*_train positions) and reg_4_val (1600 at evt_1_val positions)
+  # older box scores on 250 voxels are not directly comparable). rate_2_val (44 540 unseen),
+  # rate_3_val (12 480 at evt_*_train positions) and rate_4_val (1600 at evt_1_val positions)
   # are not used yet (docs/datasets.md).
-  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_val.csv
+  - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_rate_1_val.csv
     role: rate_validation
 output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
 cache_directory: ../../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
