@@ -10,11 +10,11 @@ source:
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_1_val.csv
     role: evt_validation
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_2_train.csv
-    role: gp_unlabeled
+    role: rate_unlabeled
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_train.csv
-    role: gp_train
+    role: rate_train
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_val.csv
-    fractions: {gp_validation: 0.5, gp_test: 0.5}
+    fractions: {rate_validation: 0.5, rate_test: 0.5}
 output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
 cache_directory: ../../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
 theta:

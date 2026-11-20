@@ -33,13 +33,13 @@ dim_phi: 6                   # emission point (3) + momentum (3) = the stream re
 event_source_options:
   in_memory: true            # 10.8M train photons = 300 MB
 # Voxel evaluation: same metrics and plots as voxel-trained fields (LF = evt_1_val, HF = reg_1_val
-# half of the voxel campaign; reg_1_val's other half is the blinded gp_test).
+# half of the voxel campaign; reg_1_val's other half is the blinded rate_test).
 data_provider: legend_optical_map_ml.provider:OpticalDataset
 data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute  # phi = absolute x, y, z, px, py, pz
 data_config: ../voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml
 evaluation:
 - {split: validation, partition: evt_validation, fidelity: lf}
-- {split: validation, partition: gp_validation, fidelity: hf}
+- {split: validation, partition: rate_validation, fidelity: hf}
 history_design_points: 500
 output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/field_f4/v1/seed0
 residual_test: {}  # residual learnability test at read-out (RESUM_FLEX docs/evaluation.md)

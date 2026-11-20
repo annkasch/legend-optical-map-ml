@@ -43,16 +43,16 @@ is recorded in the run's `experiment.json`.
 ## Unlabeled inputs and context-free inference
 
 Simulations without optical output (vertex and momentum only, e.g. `LF_primaries`) go into
-`gp_unlabeled`. The cache marks them `labeled = False`; reading their labels or hits raises,
+`rate_unlabeled`. The cache marks them `labeled = False`; reading their labels or hits raises,
 and preparation fails if one lands in a labeled role. They load only through
 `OpticalView(dir).load_inputs(partition, fidelity)`; the labels there are zero placeholders
 and must never be scored.
 
 ```bash
-.venv/bin/python -m core.surrogates predict RUN/checkpoints/best DATA_DIR gp_unlabeled --threads 8
+.venv/bin/python -m core.surrogates predict RUN/checkpoints/best DATA_DIR rate_unlabeled --threads 8
 ```
 
-writes `RUN/inference/best/gp_unlabeled_lf.{npz,json}`: per voxel the file, centre,
+writes `RUN/inference/best/rate_unlabeled_lf.{npz,json}`: per voxel the file, centre,
 normalized θ, event count and `mean_probability`, plus provenance. Only context-free models
 (mlp, transformer, bdt); results are never overwritten. Predict voxels the model was not
 trained on.

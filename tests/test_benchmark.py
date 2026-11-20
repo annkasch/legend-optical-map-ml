@@ -50,10 +50,10 @@ def _runs(root):
     (runs["binomial_gp"] / "metrics.json").write_text(
         json.dumps(
             [
-                dict(evaluation=0, partition="gp_train", fidelity="hf"),
+                dict(evaluation=0, partition="rate_train", fidelity="hf"),
                 dict(
                     evaluation=1,
-                    partition="gp_validation",
+                    partition="rate_validation",
                     fidelity="hf",
                     crps=3e-4,
                     predictive_nll=2.4,
@@ -69,7 +69,7 @@ def _runs(root):
             [
                 dict(
                     evaluation=0,
-                    partition="gp_validation",
+                    partition="rate_validation",
                     fidelity="hf",
                     level=1,
                     crps=4e-4,
@@ -78,21 +78,21 @@ def _runs(root):
             ]
         )  # fmt: skip
     )
-    np.savez(runs["countfield"] / "evaluation_gp_validation_hf.npz", **_arrays(TRUE_P * 0.95))
+    np.savez(runs["countfield"] / "evaluation_rate_validation_hf.npz", **_arrays(TRUE_P * 0.95))
     (runs["countfield"] / "metrics.json").write_text(
-        json.dumps([dict(group="gp_validation/hf", crps=3.1e-4, predictive_nll=2.41)])
+        json.dumps([dict(group="rate_validation/hf", crps=3.1e-4, predictive_nll=2.41)])
     )
-    folder = runs["event_model"] / "score_gp_validation_hf"  # RESUM_FLEX score stage
+    folder = runs["event_model"] / "score_rate_validation_hf"  # RESUM_FLEX score stage
     folder.mkdir(parents=True)
     np.savez(
-        folder / "gp_validation_hf_best_predictive.npz",
+        folder / "rate_validation_hf_best_predictive.npz",
         **_arrays(0.5 * (TRUE_P + TRUE_P.mean())),
     )
     row = dict(
         checkpoint="best",
-        partition="gp_validation",
+        partition="rate_validation",
         fidelity="hf",
-        event_inputs=dict(donor_partition="gp_validation", donor_fidelity="hf", seed=0),
+        event_inputs=dict(donor_partition="rate_validation", donor_fidelity="hf", seed=0),
         crps=3.5e-4,
         predictive_nll=2.45,
     )
@@ -161,7 +161,7 @@ def test_reference_and_mismatched_voxels(tmp_path):
 
 def test_missing_scoring_file_and_blinded_test(tmp_path):
     runs = _runs(tmp_path / "runs")
-    report = runs["event_model"] / "score_gp_validation_hf" / "score.json"
+    report = runs["event_model"] / "score_rate_validation_hf" / "score.json"
     saved = json.loads(report.read_text())
     report.unlink()
     with pytest.raises(FileNotFoundError, match="core.surrogates score"):
@@ -172,8 +172,8 @@ def test_missing_scoring_file_and_blinded_test(tmp_path):
         run_benchmark(_config(tmp_path, runs))
     raw = dict(title="t", output_directory="o", models=[{"label": "a", "kind": "mfgp", "run": "r"}])
     with pytest.raises(ValidationError, match="unblind_test"):
-        BenchmarkConfig(**raw, partition="gp_test")
-    BenchmarkConfig(**raw, partition="gp_test", unblind_test=True)
+        BenchmarkConfig(**raw, partition="rate_test")
+    BenchmarkConfig(**raw, partition="rate_test", unblind_test=True)
     with pytest.raises(ValidationError, match="unique"):
         BenchmarkConfig(**{**raw, "models": raw["models"] * 2})
     with pytest.raises(ValidationError, match="slurm_job"):  # runs record compute.json

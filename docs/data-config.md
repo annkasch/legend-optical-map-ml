@@ -26,23 +26,25 @@ Use exactly one `source` layout:
 - `directories`: lists of folders per fidelity (`lf`, `hf`), split by the global `split` fields;
 - `directory`: one root with `lf/` and `hf/` (old form).
 
-Roles: `evt_train`, `evt_validation`, `evt_test` (labeled LF event-model data); `gp_train`
-(observed GP data, commonly HF); `gp_unlabeled` (inputs-only LF voxels, no optical hits needed,
-see `docs/preparation.md`); `gp_validation`, `gp_test` (held-out GP data). Roles left out get
-no files. The event-model roles were `cnp_train`, `cnp_validation`, `cnp_test` until 2026-11-19;
-the old names are rejected, so data views prepared before then are prepared again and old run
-configs need the new names to be reused.
+Roles: `evt_train`, `evt_validation`, `evt_test` (labeled LF event-model data); `rate_train`
+(observed GP data, commonly HF); `rate_unlabeled` (inputs-only LF voxels, no optical hits needed,
+see `docs/preparation.md`); `rate_validation`, `rate_test` (held-out GP data). Roles left out get
+no files. Until 2026-11-19 the event-model roles were `cnp_train`, `cnp_validation`, `cnp_test`
+and the rate roles `gp_train`, `gp_unlabeled`, `gp_validation`, `gp_test`. The old names are
+rejected: data views prepared before then are prepared again, and outputs of older runs that
+record a partition (inference files, `score_gp_validation_hf/`, benchmark inputs) are not read
+under the new names; such runs need `predict` or `score` again to be reused.
 
 ```yaml
 source:
   sources:
   - path: /data/lf                 # fidelity: lf by default
-    fractions: {evt_train: 0.6, evt_validation: 0.1, gp_train: 0.3}   # sum to 1
+    fractions: {evt_train: 0.6, evt_validation: 0.1, rate_train: 0.3}   # sum to 1
   - path: /data/lf_batch2
-    counts: {evt_train: 5000, evt_validation: 1000, gp_train: rest}   # one role may take rest
+    counts: {evt_train: 5000, evt_validation: 1000, rate_train: rest}   # one role may take rest
   - path: /data/hf
     fidelity: hf
-    fractions: {gp_train: 1.0}     # an already split folder is one role at 1.0
+    fractions: {rate_train: 1.0}     # an already split folder is one role at 1.0
   exclude_files: [lf/run00782_....stp.lh5]   # relative to the source folder; bad files only
 ```
 
@@ -50,12 +52,12 @@ Manifests: each CSV lists files in an `stp_file` column (relative to the CSV). F
 from a `tier` column (`lf`/`hf`) or the entry's `fidelity`. `x_mm`, `y_mm`, `z_mm`, if present,
 are the exact voxel centre (else parsed from the file name). Assignments are used as given; a
 CSV or a raw file may appear only once (don't add `voxels_all.csv` next to its parts).
-`fractions` on a manifest splits it seeded, e.g. `{gp_validation: 0.5, gp_test: 0.5}`.
+`fractions` on a manifest splits it seeded, e.g. `{rate_validation: 0.5, rate_test: 0.5}`.
 
 Splitting keeps whole voxels together and is seeded per folder; with `sources` or `manifests`
 the role assignment is the split, so only `split.seed` and `split.manifest` apply. A voxel
-position in two roles is an error, except `gp_train` + `gp_unlabeled` (nested multi-fidelity
-design) and among `evt_validation`, `gp_validation`, `gp_test` (all held out).
+position in two roles is an error, except `rate_train` + `rate_unlabeled` (nested multi-fidelity
+design) and among `evt_validation`, `rate_validation`, `rate_test` (all held out).
 
 With `directories`, each folder must directly contain `.stp.lh5` files; repeated references
 to one physical file load once; the same basename twice per fidelity, or one file in both

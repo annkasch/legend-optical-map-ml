@@ -1,6 +1,7 @@
 """Export all photons per voxel of prepared optical data as a countfield photon file.
 
-    python scripts/export_photons.py DATA_DIR OUT.npz gp_unlabeled/lf gp_train/hf gp_validation/hf
+    python scripts/export_photons.py DATA_DIR OUT.npz \
+        rate_unlabeled/lf rate_train/hf rate_validation/hf
 
 Per voxel: x [V, 3] centre (m), k [V] hits, n [V] photons, group [V] = "partition/fidelity".
 Per photon (CSR, voxel v owns rows photon_offsets[v]:photon_offsets[v+1]):
@@ -64,7 +65,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("data_directory", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument("groups", nargs="+", help="partition/fidelity, e.g. gp_train/hf")
+    parser.add_argument("groups", nargs="+", help="partition/fidelity, e.g. rate_train/hf")
     parser.add_argument("--unblind-test", action="store_true")
     args = parser.parse_args()
     blinded = [g for g in args.groups if "test" in g]

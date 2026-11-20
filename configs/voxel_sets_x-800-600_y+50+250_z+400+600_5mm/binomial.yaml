@@ -3,10 +3,10 @@
 # Fidelities differ only in N, which enters the likelihood exactly. No event model is involved;
 # compare with voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mfgp.raw_lf.log.yaml.
 observations:
-- {partition: gp_unlabeled, fidelity: lf}   # LF2_train
-- {partition: gp_train, fidelity: hf}       # HF_train
+- {partition: rate_unlabeled, fidelity: lf}   # LF2_train
+- {partition: rate_train, fidelity: hf}       # HF_train
 evaluation:
-- {partition: gp_validation, fidelity: hf}
+- {partition: rate_validation, fidelity: hf}
 kernel: matern52
 n_restarts: 2
 seed: 0

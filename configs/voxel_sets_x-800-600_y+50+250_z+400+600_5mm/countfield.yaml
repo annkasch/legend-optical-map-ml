@@ -2,11 +2,11 @@
 # voxels as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.yaml (LF2_train, 1500 events per voxel, and
 # HF_train, 5000 events per voxel). 320 HF voxels share their position with an LF2 voxel
 # (independent simulations); they are merged by summing hits and events.
-# Counts file: scripts/export_counts.py (gp_test stays blinded and is not exported).
+# Counts file: scripts/export_counts.py (rate_test stays blinded and is not exported).
 data:
   path: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_counts.npz
-  observations: [gp_unlabeled/lf, gp_train/hf]
-  evaluation: [gp_validation/hf]
+  observations: [rate_unlabeled/lf, rate_train/hf]
+  evaluation: [rate_validation/hf]
   merge_decimals: 6   # m; positions agreeing to 1 µm are the same voxel
 model:
   kind: local_latent

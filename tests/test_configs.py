@@ -217,4 +217,4 @@ def test_raw_lf_mfgp_pair_differs_only_in_noise_and_uses_the_mlp_bll_training_da
     mlp = load_surrogate_config(folder / "mlp_bll.theta_absolute.yaml")
     gp_data = [(level.partition, level.fidelity) for level in learned.levels]
     assert gp_data == [(s.partition, s.fidelity) for s in mlp.train_sets]
-    assert [(e.partition, e.fidelity) for e in learned.evaluation] == [("gp_validation", "hf")]
+    assert [(e.partition, e.fidelity) for e in learned.evaluation] == [("rate_validation", "hf")]

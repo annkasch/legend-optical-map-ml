@@ -1,4 +1,4 @@
-"""Files without optical hit data: cache, gp_unlabeled role, inputs-only loading, inference."""
+"""Files without optical hit data: cache, rate_unlabeled role, inputs-only loading, inference."""
 
 import json
 
@@ -22,7 +22,7 @@ def strip_hits(folder):
     return folder
 
 
-def prepared(tmp_path, unlabeled_role="gp_unlabeled"):
+def prepared(tmp_path, unlabeled_role="rate_unlabeled"):
     labeled = role_folder(tmp_path / "labeled", 6)
     unlabeled = strip_hits(role_folder(tmp_path / "inputs", 4, offset=1.0, first_run=10))
     c = role_config(
@@ -72,7 +72,7 @@ def test_version_one_cache_is_upgraded_as_labeled(tmp_path):
     assert upgraded.update([path], workers=1) == 0  # nothing is read again
 
 
-def test_gp_unlabeled_role_loads_inputs_only(tmp_path):
+def test_rate_unlabeled_role_loads_inputs_only(tmp_path):
     c, result = prepared(tmp_path)
     out = c.output_directory
     assert result.normalization["fit_files"] == sorted(
@@ -81,17 +81,17 @@ def test_gp_unlabeled_role_loads_inputs_only(tmp_path):
         if r["split"] == "evt_train"
     )
     with pytest.raises(ValueError, match="labels are undefined"):
-        load_partition(out, "gp_unlabeled", "lf")
-    batch, paths = OpticalView(out).load_inputs("gp_unlabeled", "lf")
+        load_partition(out, "rate_unlabeled", "lf")
+    batch, paths = OpticalView(out).load_inputs("rate_unlabeled", "lf")
     assert batch.batch_size == 4 and len(paths) == 4 and not batch.labels.any()
     labeled, _ = OpticalView(out).load_inputs("evt_train", "lf")
     np.testing.assert_array_equal(labeled.phi, load_partition(out, "evt_train", "lf")[0].phi)
-    assert not (out / "reports/development/gp_unlabeled").exists()
+    assert not (out / "reports/development/rate_unlabeled").exists()
 
 
 def test_unlabeled_files_rejected_in_labeled_roles(tmp_path):
     with pytest.raises(ValueError, match="without optical hit data are in labeled partitions"):
-        prepared(tmp_path, unlabeled_role="gp_train")
+        prepared(tmp_path, unlabeled_role="rate_train")
 
 
 def _checkpoint(tmp_path, kind, normalization):
@@ -119,9 +119,9 @@ def test_inference_writes_mean_probability_per_voxel(tmp_path):
 
     c, result = prepared(tmp_path)
     checkpoint, model = _checkpoint(tmp_path, "mlp", result.normalization)
-    path = predict_partition(checkpoint, c.output_directory, "gp_unlabeled")
-    assert path == tmp_path / "run_mlp/inference/best/gp_unlabeled_lf.npz"
-    batch, _ = OpticalView(c.output_directory).load_inputs("gp_unlabeled", "lf")
+    path = predict_partition(checkpoint, c.output_directory, "rate_unlabeled")
+    assert path == tmp_path / "run_mlp/inference/best/rate_unlabeled_lf.npz"
+    batch, _ = OpticalView(c.output_directory).load_inputs("rate_unlabeled", "lf")
     with np.load(path) as arrays:
         np.testing.assert_allclose(arrays["mean_probability"], model.predict(batch).mean)
         assert arrays["coordinates"].shape == (4, 3)
@@ -129,7 +129,7 @@ def test_inference_writes_mean_probability_per_voxel(tmp_path):
     meta = json.loads(path.with_suffix(".json").read_text())
     assert meta["step"] == 7 and meta["design_points"] == 4
     with pytest.raises(FileExistsError):
-        predict_partition(checkpoint, c.output_directory, "gp_unlabeled")
+        predict_partition(checkpoint, c.output_directory, "rate_unlabeled")
 
 
 def test_inference_rejects_context_models_and_other_normalization(tmp_path):
@@ -138,14 +138,14 @@ def test_inference_rejects_context_models_and_other_normalization(tmp_path):
     c, result = prepared(tmp_path)
     cnp, _ = _checkpoint(tmp_path, "cnp", result.normalization)
     with pytest.raises(ValueError, match="context-free"):
-        predict_partition(cnp, c.output_directory, "gp_unlabeled")
+        predict_partition(cnp, c.output_directory, "rate_unlabeled")
     other = {
         **result.normalization,
         "theta": {**result.normalization["theta"], "offset": [0, 0, 0]},
     }
     mlp, _ = _checkpoint(tmp_path, "mlp", other)
     with pytest.raises(ValueError, match="Normalization"):
-        predict_partition(mlp, c.output_directory, "gp_unlabeled")
+        predict_partition(mlp, c.output_directory, "rate_unlabeled")
 
 
 def hf_layout(tmp_path, *, hf_validation_offset=3.0):
@@ -158,10 +158,10 @@ def hf_layout(tmp_path, *, hf_validation_offset=3.0):
         tmp_path,
         [
             {"path": str(labeled), "fractions": {"evt_train": 0.5, "evt_validation": 0.5}},
-            {"path": str(unlabeled), "fractions": {"gp_unlabeled": 1.0}},
-            {"path": str(hf), "fidelity": "hf", "fractions": {"gp_train": 1.0}},
+            {"path": str(unlabeled), "fractions": {"rate_unlabeled": 1.0}},
+            {"path": str(hf), "fidelity": "hf", "fractions": {"rate_train": 1.0}},
             {"path": str(hf_val), "fidelity": "hf",
-             "fractions": {"gp_validation": 0.5, "gp_test": 0.5}},
+             "fractions": {"rate_validation": 0.5, "rate_test": 0.5}},
         ],
     )
 
@@ -170,17 +170,17 @@ def test_hf_roles_allow_nested_gp_design(tmp_path):
     c = hf_layout(tmp_path)
     result = prepare_optical_data(c)
     out = c.output_directory
-    for role, n in [("gp_train", 3), ("gp_validation", 2), ("gp_test", 2)]:
+    for role, n in [("rate_train", 3), ("rate_validation", 2), ("rate_test", 2)]:
         batch, _ = load_partition(out, role, "hf")
         assert batch.batch_size == n
     assert all(f.startswith("lf/") for f in result.normalization["fit_files"])
     # The HF training voxels sit at unlabeled LF positions (nested design).
-    hf_theta = load_partition(out, "gp_train", "hf")[0].theta
-    lf_theta = OpticalView(out).load_theta("gp_unlabeled", "lf")[0]
+    hf_theta = load_partition(out, "rate_train", "hf")[0].theta
+    lf_theta = OpticalView(out).load_theta("rate_unlabeled", "lf")[0]
     assert all(any(np.allclose(t, u) for u in lf_theta) for t in hf_theta)
 
 
-def test_shared_positions_outside_gp_training_are_rejected(tmp_path):
+def test_shared_positions_outside_rate_training_are_rejected(tmp_path):
     # HF validation voxels at the positions of unlabeled GP training voxels: leakage.
     with pytest.raises(ValueError, match="shared by roles"):
         prepare_optical_data(hf_layout(tmp_path, hf_validation_offset=1.0))
@@ -195,11 +195,11 @@ def test_two_level_gp_from_inference_and_hf(tmp_path):
     c = hf_layout(tmp_path)
     result = prepare_optical_data(c)
     checkpoint, _ = _checkpoint(tmp_path, "mlp", result.normalization)
-    inference = predict_partition(checkpoint, c.output_directory, "gp_unlabeled")
+    inference = predict_partition(checkpoint, c.output_directory, "rate_unlabeled")
     settings = dict(
         levels=[
-            {"source": "model_mean", "partition": "gp_unlabeled", "inference": str(inference)},
-            {"source": "observed_fraction", "partition": "gp_train", "fidelity": "hf"},
+            {"source": "model_mean", "partition": "rate_unlabeled", "inference": str(inference)},
+            {"source": "observed_fraction", "partition": "rate_train", "fidelity": "hf"},
         ],
         n_restarts=1,
         data_directory=c.output_directory,
@@ -207,13 +207,13 @@ def test_two_level_gp_from_inference_and_hf(tmp_path):
         output_directory=tmp_path / "gp",
     )
     with pytest.raises(ValueError, match="blinded"):
-        MFGPRunConfig(**settings, evaluation=[{"partition": "gp_test", "fidelity": "hf"}])
+        MFGPRunConfig(**settings, evaluation=[{"partition": "rate_test", "fidelity": "hf"}])
     out = run_mfgp_config(
-        MFGPRunConfig(**settings, evaluation=[{"partition": "gp_validation", "fidelity": "hf"}])
+        MFGPRunConfig(**settings, evaluation=[{"partition": "rate_validation", "fidelity": "hf"}])
     )
     rows = json.loads((out / "metrics.json").read_text())
     assert [(r["partition"], r["fidelity"], r["level"], r["design_points"]) for r in rows] == [
-        ("gp_validation", "hf", 1, 2)
+        ("rate_validation", "hf", 1, 2)
     ]
     with np.load(out / "training_arrays.npz") as arrays:
         assert arrays["X_0"].shape[0] == 4 and arrays["X_1"].shape[0] == 3
@@ -228,9 +228,9 @@ def test_inference_file_level_matches_prepared_voxels(tmp_path):
 
     c, result = prepared(tmp_path)
     checkpoint, model = _checkpoint(tmp_path, "mlp", result.normalization)
-    inference = predict_partition(checkpoint, c.output_directory, "gp_unlabeled")
+    inference = predict_partition(checkpoint, c.output_directory, "rate_unlabeled")
     levels = [
-        {"source": "model_mean", "partition": "gp_unlabeled", "inference": str(inference)},
+        {"source": "model_mean", "partition": "rate_unlabeled", "inference": str(inference)},
         {"source": "observed_fraction", "partition": "evt_train", "fidelity": "lf"},
     ]
     config = MFGPRunConfig(
@@ -256,6 +256,6 @@ def test_inference_file_level_matches_prepared_voxels(tmp_path):
             ],
         }
     )
-    with pytest.raises(ValueError, match="holds gp_unlabeled/lf"):
+    with pytest.raises(ValueError, match="holds rate_unlabeled/lf"):
         run_mfgp_config(wrong)
 

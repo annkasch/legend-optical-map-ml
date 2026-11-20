@@ -11,15 +11,15 @@ source:
   # Inputs only (vertex + momentum, no optical hits): context-free model predictions for the
   # GP's level 0. Disjoint from LF_sim/validation; contains the 200 HF_sim voxels.
   - path: /global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375/LF_primaries/lf
-    fractions: {gp_unlabeled: 1.0}
+    fractions: {rate_unlabeled: 1.0}
   # HF (5000 primaries/voxel): GP training at 200 LF_primaries positions (nested design);
   # Ian's separate validation/hf voxels -> GP validation / blinded GP test.
   - path: /global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375/HF_sim/hf
     fidelity: hf
-    fractions: {gp_train: 1.0}
+    fractions: {rate_train: 1.0}
   - path: /global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375/validation/hf/hf
     fidelity: hf
-    fractions: {gp_validation: 0.5, gp_test: 0.5}
+    fractions: {rate_validation: 0.5, rate_test: 0.5}
   # Crashed runs: N=1 with the single vertex at the origin.
   exclude_files:
   - lf/run00782_v00010738_x+0.4300_y+0.3650_z+0.3875.stp.lh5

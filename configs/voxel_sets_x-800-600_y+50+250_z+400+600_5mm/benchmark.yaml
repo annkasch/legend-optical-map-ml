@@ -5,10 +5,10 @@
 # list each run (directory with compute.json, or scores/inference json) under compute.
 # countfield runs record no compute.json: their compute is not reported.
 title: LBNL 5 mm rate models
-partition: gp_validation
+partition: rate_validation
 fidelity: hf
 reference: Binomial GP
-output_directory: /global/cfs/projectdirs/m2676/users/aschuetz/data/benchmarks/lbnl_secondment_5mm_gp_validation
+output_directory: /global/cfs/projectdirs/m2676/users/aschuetz/data/benchmarks/lbnl_secondment_5mm_rate_validation
 models:
 - label: Binomial GP
   kind: binomial_gp

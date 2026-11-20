@@ -52,7 +52,7 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 .venv/bin/python -m core.surrogates train configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml
 # 2. Mean predicted p for the unlabeled LF voxels (LF_primaries)
 .venv/bin/python -m core.surrogates predict outputs/optical_resum/centered_mlp_v1/seed0/checkpoints/best \
-    outputs/optical_centered_cnp_v0 gp_unlabeled --threads 8
+    outputs/optical_centered_cnp_v0 rate_unlabeled --threads 8
 # 3. Two-level GP: MLP mean -> observed HF fraction
 .venv/bin/python -m core.surrogates mfgp configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml
 ```

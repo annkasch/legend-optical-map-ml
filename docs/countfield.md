@@ -5,8 +5,8 @@ neural-process and Point Transformer voxel models. It reads files exported from 
 view here; formats are in the script docstrings.
 
 ```bash
-python scripts/export_counts.py DATA_DIR OUT.npz gp_unlabeled/lf gp_train/hf gp_validation/hf
-python scripts/export_photons.py DATA_DIR OUT.npz gp_unlabeled/lf gp_train/hf gp_validation/hf
+python scripts/export_counts.py DATA_DIR OUT.npz rate_unlabeled/lf rate_train/hf rate_validation/hf
+python scripts/export_photons.py DATA_DIR OUT.npz rate_unlabeled/lf rate_train/hf rate_validation/hf
 ```
 
 Exports and countfield runs go to `outputs/<voxel_sets_…>/countfield/` of their dataset

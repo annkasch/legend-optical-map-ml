@@ -16,9 +16,9 @@ y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
 |---|---|---|
 | `LF_sim/lf` | 2000 | `evt_train` |
 | `validation/lf/lf` | 500 | `evt_validation` / `evt_test` 50/50 |
-| `LF_primaries/lf` | 2000 | `gp_unlabeled` (inputs only, contains the 200 HF positions) |
-| `HF_sim/hf` | 200 | `gp_train` |
-| `validation/hf/hf` | 500 | `gp_validation` / `gp_test` 50/50 |
+| `LF_primaries/lf` | 2000 | `rate_unlabeled` (inputs only, contains the 200 HF positions) |
+| `HF_sim/hf` | 200 | `rate_train` |
+| `validation/hf/hf` | 500 | `rate_validation` / `rate_test` 50/50 |
 
 - Crashed or truncated files are listed in `exclude_files` of the data config (file survey,
   2026-10-22; its `per_file.csv` is no longer kept).
@@ -34,11 +34,11 @@ Sofia Calgaro's voxel sets
 `/global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm`,
 CSV manifests per role (`voxels_{LF_train,CNP_val,LF2_train,HF_train,GP_val}.csv`). Data
 config: `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml`. About 6400 LF2 / 640 HF train voxels;
-GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`; no `evt_test`.
+GP_val (500) is split seeded 50/50 into `rate_validation` / `rate_test`; no `evt_test`.
 320 of the 640 HF train positions are LF2 positions (nested part of the design).
 
 - 11 GP_val voxels share positions with CNP_val (lists sampled independently). Accepted for
-  this dataset (`SHARED_VALIDATION_ROLES` includes `gp_test`); new campaigns must sample
+  this dataset (`SHARED_VALIDATION_ROLES` includes `rate_test`); new campaigns must sample
   validation and test disjoint instead.
 - Its reboost maps (`.../voxel_sets_x+600+800_y-250-50_z+400+600_5mm/maps`) are empty: y
   binning typo (-0.5 instead of -0.05 m). Not needed: the raw outputs are used.
@@ -59,9 +59,9 @@ On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data ca
   |---|---|---|---|
   | `evt_1_train` | `LF_train` | 6400 LF | `evt_train` |
   | `evt_1_val` | `CNP_val` | 1600 LF (500 before 2026-11-18) | `evt_validation` |
-  | `evt_2_train` | `LF2_train` | 6400 LF | `gp_unlabeled` (also `event_file` npz per voxel) |
-  | `reg_1_train` | `HF_train` | 640 HF | `gp_train` (`partner_lf_id` → `evtT_2_*`) |
-  | `reg_1_val` | `GP_val` | 500 HF | `gp_validation` / `gp_test` 50/50 (seeded, unchanged by the rename) |
+  | `evt_2_train` | `LF2_train` | 6400 LF | `rate_unlabeled` (also `event_file` npz per voxel) |
+  | `reg_1_train` | `HF_train` | 640 HF | `rate_train` (`partner_lf_id` → `evtT_2_*`) |
+  | `reg_1_val` | `GP_val` | 500 HF | `rate_validation` / `rate_test` 50/50 (seeded, unchanged by the rename) |
 
   Runs before 2026-11-18 selected and scored `evt_validation` on 500 voxels; later runs use
   1600, so their `lf_validation` metrics are not directly comparable.

@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from legend_optical_map_ml.config import (
-    GP_TRAINING_ROLES,
+    RATE_TRAINING_ROLES,
     ROLES,
     SHARED_VALIDATION_ROLES,
     OpticalDataConfig,
@@ -262,12 +262,12 @@ def _check_shared_positions(runs, assignments, config):
     """Reject cross-role overlap except nested GP inputs and held-out validation pairs."""
     for group in voxel_groups(runs, config):
         shared = {assignments[r.file] for r in group}
-        allowed = (set(GP_TRAINING_ROLES), set(SHARED_VALIDATION_ROLES))
+        allowed = (set(RATE_TRAINING_ROLES), set(SHARED_VALIDATION_ROLES))
         if len(shared) > 1 and not any(shared <= roles for roles in allowed):
             names = ", ".join(sorted(r.file for r in group))
             raise ValueError(
                 f"Voxel position shared by roles {sorted(shared)} ({names}); allowed pairs are "
-                f"{GP_TRAINING_ROLES} and {SHARED_VALIDATION_ROLES}"
+                f"{RATE_TRAINING_ROLES} and {SHARED_VALIDATION_ROLES}"
             )
 
 

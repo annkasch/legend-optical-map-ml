@@ -1,6 +1,7 @@
 """Export per-voxel hit counts of prepared optical data as a countfield count-set file.
 
-    python scripts/export_counts.py DATA_DIR OUT.npz gp_unlabeled/lf gp_train/hf gp_validation/hf
+    python scripts/export_counts.py DATA_DIR OUT.npz \
+        rate_unlabeled/lf rate_train/hf rate_validation/hf
 
 Writes x [P, 3] voxel centres (m), k [P] hits, n [P] events and group [P] = "partition/fidelity"
 (the format of countfield.data.save_groups). Groups named *test* are refused unless
@@ -30,7 +31,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("data_directory", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument("groups", nargs="+", help="partition/fidelity, e.g. gp_train/hf")
+    parser.add_argument("groups", nargs="+", help="partition/fidelity, e.g. rate_train/hf")
     parser.add_argument("--unblind-test", action="store_true")
     args = parser.parse_args()
 

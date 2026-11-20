@@ -2,15 +2,15 @@
 # with the MLP rate (donor emission inputs) as covariate. Same settings as
 # voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.mlp_lf2.yaml.
 observations:
-- {partition: gp_unlabeled, fidelity: lf}   # evt_2_train
-- {partition: gp_train, fidelity: hf}       # reg_1_train
+- {partition: rate_unlabeled, fidelity: lf}   # evt_2_train
+- {partition: rate_train, fidelity: hf}       # reg_1_train
 evaluation:
-- {partition: gp_validation, fidelity: hf}
+- {partition: rate_validation, fidelity: hf}
 covariate:
   inference:
-    gp_unlabeled/lf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_unlabeled_lf_photons-gp_unlabeled_lf.npz
-    gp_train/hf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_train_hf_photons-gp_unlabeled_lf.npz
-    gp_validation/hf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/gp_validation_hf_photons-gp_unlabeled_lf.npz
+    rate_unlabeled/lf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/rate_unlabeled_lf_photons-rate_unlabeled_lf.npz
+    rate_train/hf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/rate_train_hf_photons-rate_unlabeled_lf.npz
+    rate_validation/hf: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp/v1/seed0/inference/best/rate_validation_hf_photons-rate_unlabeled_lf.npz
 kernel: matern52
 n_restarts: 2
 seed: 0

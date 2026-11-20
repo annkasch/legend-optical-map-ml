@@ -41,27 +41,27 @@ def roles(c):
 
 
 def test_manifest_rows_split_by_fractions_and_counts(tmp_path):
-    c = config(tmp_path, {"fractions": {"gp_validation": 0.5, "gp_test": 0.5}})
+    c = config(tmp_path, {"fractions": {"rate_validation": 0.5, "rate_test": 0.5}})
     prepare_optical_data(c, workers=1)
     split = roles(c)
     hf = [role for name, role in split.items() if name.startswith("hf/")]
-    assert sorted(hf) == ["gp_test"] * 5 + ["gp_validation"] * 5
+    assert sorted(hf) == ["rate_test"] * 5 + ["rate_validation"] * 5
     assert all(role == "evt_train" for name, role in split.items() if name.startswith("lf/"))
     assert json.loads(c.split.manifest.read_text())["settings"]["seed"] == 3
     # Same seed, same assignment; another seed reshuffles.
-    again = config(tmp_path / "b", {"fractions": {"gp_validation": 0.5, "gp_test": 0.5}})
+    again = config(tmp_path / "b", {"fractions": {"rate_validation": 0.5, "rate_test": 0.5}})
     prepare_optical_data(again, workers=1)
     assert sorted(roles(again).values()) == sorted(split.values())
-    counted = config(tmp_path / "c", {"counts": {"gp_validation": 3, "gp_test": "rest"}})
+    counted = config(tmp_path / "c", {"counts": {"rate_validation": 3, "rate_test": "rest"}})
     prepare_optical_data(counted, workers=1)
     hf = [role for name, role in roles(counted).items() if name.startswith("hf/")]
-    assert sorted(hf) == ["gp_test"] * 7 + ["gp_validation"] * 3
+    assert sorted(hf) == ["rate_test"] * 7 + ["rate_validation"] * 3
 
 
 def test_single_role_manifests_keep_their_settings(tmp_path):
-    c = config(tmp_path, {"role": "gp_validation"})
+    c = config(tmp_path, {"role": "rate_validation"})
     prepare_optical_data(c, workers=1)
-    assert set(roles(c).values()) == {"evt_train", "gp_validation"}
+    assert set(roles(c).values()) == {"evt_train", "rate_validation"}
     assert "seed" not in json.loads(c.split.manifest.read_text())["settings"]
 
 
@@ -69,23 +69,28 @@ def test_manifest_needs_exactly_one_assignment(tmp_path):
     with pytest.raises(ValueError, match="exactly one of role, fractions or counts"):
         ManifestSource(path=tmp_path / "a.csv")
     with pytest.raises(ValueError, match="exactly one of role, fractions or counts"):
-        ManifestSource(path=tmp_path / "a.csv", role="gp_test", fractions={"gp_test": 1.0})
+        ManifestSource(path=tmp_path / "a.csv", role="rate_test", fractions={"rate_test": 1.0})
     with pytest.raises(ValueError, match="sum to 1"):
-        ManifestSource(path=tmp_path / "a.csv", fractions={"gp_test": 0.4})
+        ManifestSource(path=tmp_path / "a.csv", fractions={"rate_test": 0.4})
 
 
-def test_evt_validation_may_share_positions_with_gp_test():
+def test_evt_validation_may_share_positions_with_rate_test():
     from legend_optical_map_ml.config import SHARED_VALIDATION_ROLES
 
-    assert {"evt_validation", "gp_test"} <= set(SHARED_VALIDATION_ROLES)
-    assert "gp_train" not in SHARED_VALIDATION_ROLES and "evt_train" not in SHARED_VALIDATION_ROLES
+    assert {"evt_validation", "rate_test"} <= set(SHARED_VALIDATION_ROLES)
+    assert not {"rate_train", "evt_train"} & set(SHARED_VALIDATION_ROLES)
 
 
-@pytest.mark.parametrize("old", ["cnp_train", "cnp_validation", "cnp_test"])
-def test_old_event_model_role_names_are_rejected(old):
-    """The cnp_* roles were renamed to evt_* (2026-11-19); the old names fail validation."""
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [("cnp_train", "evt_train"), ("cnp_validation", "evt_validation"), ("cnp_test", "evt_test"),
+     ("gp_train", "rate_train"), ("gp_unlabeled", "rate_unlabeled"),
+     ("gp_validation", "rate_validation"), ("gp_test", "rate_test")],
+)
+def test_old_role_names_are_rejected(old, new):
+    """cnp_* → evt_* and gp_* → rate_* (2026-11-19); the old names fail validation."""
     with pytest.raises(ValueError, match=old):
         ManifestSource.model_validate({"path": "voxels.csv", "role": old})
     with pytest.raises(ValueError, match=old):
         ManifestSource.model_validate({"path": "voxels.csv", "fractions": {old: 1.0}})
-    assert ManifestSource.model_validate({"path": "v.csv", "role": old.replace("cnp", "evt")})
+    assert ManifestSource.model_validate({"path": "v.csv", "role": new})

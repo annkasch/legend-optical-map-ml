@@ -68,7 +68,7 @@ class BenchmarkModel(StrictModel):
 
 class BenchmarkConfig(StrictModel):
     title: str
-    partition: str = "gp_validation"
+    partition: str = "rate_validation"
     fidelity: Literal["lf", "hf"] = "hf"
     # Test partitions (name ending in "test") are read only with unblind_test: true.
     unblind_test: bool = False

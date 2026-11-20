@@ -7,26 +7,26 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 
 ANOMALOUS_FILE = "lf/run067_x-0.088_y+0.484_z-1.462.stp.lh5"
 # Roles of voxels in the role-based layout; see RoleSource. New roles are appended. The
-# event-model roles were cnp_train / cnp_validation / cnp_test until 2026-11-19; the old names
-# are rejected.
+# event-model roles were cnp_train / cnp_validation / cnp_test and the rate roles gp_train /
+# gp_unlabeled / gp_validation / gp_test until 2026-11-19; the old names are rejected.
 ROLES = (
-    "evt_train", "evt_validation", "evt_test", "gp_train", "gp_unlabeled", "gp_validation",
-    "gp_test",
+    "evt_train", "evt_validation", "evt_test", "rate_train", "rate_unlabeled", "rate_validation",
+    "rate_test",
 )
 Role = Literal[
-    "evt_train", "evt_validation", "evt_test", "gp_train", "gp_unlabeled", "gp_validation",
-    "gp_test",
+    "evt_train", "evt_validation", "evt_test", "rate_train", "rate_unlabeled", "rate_validation",
+    "rate_test",
 ]
 # Roles whose files need no optical hits (inputs only, e.g. for event-model inference).
-UNLABELED_ROLES = ("gp_unlabeled",)
+UNLABELED_ROLES = ("rate_unlabeled",)
 # Roles that may share positions in a nested multi-fidelity GP design, for example HF training
 # voxels at positions of LF inputs. Held-out event-model and GP validation roles may also
 # overlap.
-GP_TRAINING_ROLES = ("gp_train", "gp_unlabeled")
+RATE_TRAINING_ROLES = ("rate_train", "rate_unlabeled")
 # Held-out roles that may evaluate the same position. Event-model validation shared with the GP
 # test leaks the checkpoint choice into the test slightly; accepted for datasets whose validation
 # lists were sampled independently (e.g. LBNL secondment), avoid it in new samplings.
-SHARED_VALIDATION_ROLES = ("evt_validation", "gp_validation", "gp_test")
+SHARED_VALIDATION_ROLES = ("evt_validation", "rate_validation", "rate_test")
 
 
 class StrictModel(BaseModel):
@@ -67,7 +67,7 @@ class ManifestSource(StrictModel):
     """A CSV file list: all rows in one role, or split across roles like a RoleSource.
 
     ``fractions``/``counts`` split the rows seeded by ``split.seed`` (one stream per manifest),
-    keeping voxel groups together, e.g. ``fractions: {gp_validation: 0.5, gp_test: 0.5}``.
+    keeping voxel groups together, e.g. ``fractions: {rate_validation: 0.5, rate_test: 0.5}``.
     """
 
     path: Path

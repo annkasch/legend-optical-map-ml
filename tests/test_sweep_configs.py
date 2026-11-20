@@ -62,6 +62,6 @@ def test_variant_changes_its_fields_and_has_its_own_run_and_score(path):
     score = load_score_config(path.parent / f"score.{path.name}")
     base_score = load_score_config(path.parent / f"score.{BASE}")
     assert score.run == config.output_directory
-    assert score.output_directory == config.output_directory / "score_gp_validation_hf"
+    assert score.output_directory == config.output_directory / "score_rate_validation_hf"
     changed = _changed(base_score.model_dump(mode="json"), score.model_dump(mode="json"))
     assert sorted(changed) == [("output_directory",), ("run",)]

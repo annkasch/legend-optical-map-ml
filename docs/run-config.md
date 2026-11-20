@@ -56,7 +56,7 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).
 - LBNL lists have no CNP test set; those runs evaluate train and validation only.
-- Rate models (`train_sets`: LF2 + HF, or `mlp_bll.lf1`) set `partitions.test: gp_test`:
+- Rate models (`train_sets`: LF2 + HF, or `mlp_bll.lf1`) set `partitions.test: rate_test`:
   their test set is the blinded GP test, so the `score` stage refuses it without
   `unblind_test` (support models keep `evt_test`). `test_fidelities: []` keeps training from
   evaluating it.
@@ -78,13 +78,13 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
 Example: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml`, run after `predict` wrote the level-0 file.
 
 - `levels` from lowest to highest fidelity; the last is predicted. Typical: `model_mean` of
-  the MLP on `gp_unlabeled/lf`, then `observed_fraction` of `gp_train/hf`. Variants:
+  the MLP on `rate_unlabeled/lf`, then `observed_fraction` of `rate_train/hf`. Variants:
   `mfgp.log` (log space), `mfgp.raw_lf.log` (simulated LF fraction as level 0), `*.hetnoise`
   (per-voxel binomial noise), `binomial` (count GP; `.mlp`, `.mlp_lf2`: MLP covariate).
 - MFGP without an event model on both voxel datasets (2026-11-17): `mfgp.raw_lf.log.yaml`
   (`learned` noise) and `mfgp.raw_lf.log.hetnoise.yaml` (`observation_noise: binomial`), levels
-  = the MLP + BLL `train_sets` (simulated `gp_unlabeled/lf` → `gp_train/hf`), scored on
-  `gp_validation/hf`; `tests/test_configs.py` checks the pair and the data. x-800: v2 (v1 before
+  = the MLP + BLL `train_sets` (simulated `rate_unlabeled/lf` → `rate_train/hf`), scored on
+  `rate_validation/hf`; `tests/test_configs.py` checks the pair and the data. x-800: v2 (v1 before
   the design point rename).
 - `inference` points at the `predict` output; `evaluation` names held-out roles. Keep test
   roles out of `levels` and blinded until choices are final.

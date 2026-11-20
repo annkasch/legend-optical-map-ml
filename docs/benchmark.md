@@ -7,9 +7,9 @@ the **rate model**: the model that outputs this rate, a GP or an equivalent alte
 
 | Pool | Partitions | Used by |
 |---|---|---|
-| Rate training | `gp_unlabeled/lf` (LF2 train) + `gp_train/hf` (HF train) | every rate model |
+| Rate training | `rate_unlabeled/lf` (LF2 train) + `rate_train/hf` (HF train) | every rate model |
 | Support training | `evt_train/lf` (LF train), selected on `evt_validation/lf` | networks that only feed a GP |
-| Benchmark | `gp_validation/hf`; `gp_test/hf` once at the end | every rate model |
+| Benchmark | `rate_validation/hf`; `rate_test/hf` once at the end | every rate model |
 
 1. **Rate models get the same data.** Every model that outputs the voxel rate trains on
    LF2 + HF train: the binomial GP, the MFGP, the neural process, and a network with a
@@ -20,7 +20,7 @@ the **rate model**: the model that outputs this rate, a GP or an equivalent alte
    from their inputs only, so LF2 needs no extra simulation; its data and compute count as
    the pipeline's cost and are reported with it.
 3. **The benchmark sets are never used for training or checkpoint selection.**
-   `gp_test/hf` stays blinded until a config sets `unblind_test: true`.
+   `rate_test/hf` stays blinded until a config sets `unblind_test: true`.
 
 ## Scoring
 

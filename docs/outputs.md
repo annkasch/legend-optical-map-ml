@@ -28,7 +28,7 @@ outputs/
   centre, `centered_425_375_375`). Datasets are referred to by these names only.
 - **A run goes in the folder of the data it was trained on**, not the data it is scored on:
   a neural field trained on the photon store goes under `photon_<volume>/`, even though it is
-  scored on the voxel campaign's `gp_validation`.
+  scored on the voxel campaign's `rate_validation`.
 - Model names omit the dataset; GP models start with their type (`binomial_mlp_lf2_hf`,
   `mfgp_mlp_hf_log`). A different model (another noise model, input or architecture:
   `mfgp_mlp_hf_log_hetnoise`, `cnp_mixup`, `field_f4`) gets its own folder; so does a

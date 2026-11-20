@@ -2,10 +2,10 @@
 # one latent hit probability fitted to the hit counts of evt_2_train (1500 events per voxel)
 # and reg_1_train (5000 events per voxel). Same settings as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.yaml.
 observations:
-- {partition: gp_unlabeled, fidelity: lf}   # evt_2_train
-- {partition: gp_train, fidelity: hf}       # reg_1_train
+- {partition: rate_unlabeled, fidelity: lf}   # evt_2_train
+- {partition: rate_train, fidelity: hf}       # reg_1_train
 evaluation:
-- {partition: gp_validation, fidelity: hf}
+- {partition: rate_validation, fidelity: hf}
 kernel: matern52
 n_restarts: 2
 seed: 0

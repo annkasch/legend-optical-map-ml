@@ -4,8 +4,8 @@
 # Observations as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/binomial.yaml; LF/HF twins pooled.
 data:
   path: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/countfield/lbnl_secondment_5mm_photons.npz
-  observations: [gp_unlabeled/lf, gp_train/hf]
-  evaluation: [gp_validation/hf]
+  observations: [rate_unlabeled/lf, rate_train/hf]
+  evaluation: [rate_validation/hf]
   merge_decimals: 6
 model:
   kind: point_transformer

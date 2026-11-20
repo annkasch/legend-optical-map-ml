@@ -32,7 +32,7 @@ only what the task needs, using the table below. It lists every doc in `docs/`.
   arrays). One data YAML per dataset, with further named views in `views:` (one split for
   all); a run picks its view by `data_directory`. Event-only views (`theta.model_input:
   false`) keep one row per voxel and serve the centres as metadata (`docs/data-config.md`).
-- LF / HF = low / high fidelity (photons per voxel); LF2 = `gp_unlabeled`. Roles:
+- LF / HF = low / high fidelity (photons per voxel); LF2 = `rate_unlabeled`. Roles:
   `docs/data-config.md`; which model trains and is scored on what: `docs/benchmark.md`.
 - Datasets are named by their volume folder in `configs/` and `outputs/` (`voxel_sets_…`,
   `photon_…`), never by short names; origin and paths: `docs/datasets.md`.

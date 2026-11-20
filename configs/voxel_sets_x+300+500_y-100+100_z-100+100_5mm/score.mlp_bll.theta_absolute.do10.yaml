@@ -1,10 +1,10 @@
-# Benchmark score on gp_validation/hf of mlp_bll.theta_absolute.do10.yaml (sweep 3a),
+# Benchmark score on rate_validation/hf of mlp_bll.theta_absolute.do10.yaml (sweep 3a),
 # as score.mlp_bll.theta_absolute.yaml.
 #   sbatch scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/score.mlp_bll.theta_absolute.do10.yaml score
 run: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_theta_absolute_do10/v1/seed0
 checkpoints: [best]
-sets: [gp_validation/hf]
+sets: [rate_validation/hf]
 donors: scored
 seed: 0
 threads: 16
-output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_theta_absolute_do10/v1/seed0/score_gp_validation_hf
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_theta_absolute_do10/v1/seed0/score_rate_validation_hf

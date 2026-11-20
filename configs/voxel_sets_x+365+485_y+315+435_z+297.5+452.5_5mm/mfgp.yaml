@@ -1,16 +1,16 @@
 # Two-level MFGP on centered_425_375_375 (2026-10-28): MLP mean on unlabeled LF voxels ->
 # observed HF fraction (target). HF_sim voxels sit at LF_primaries positions (nested design).
-# GP choices are compared on gp_validation; gp_test stays blinded (unblind_test).
+# GP choices are compared on rate_validation; rate_test stays blinded (unblind_test).
 levels:
 - source: model_mean
-  partition: gp_unlabeled
+  partition: rate_unlabeled
   fidelity: lf
-  inference: ../../outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/event_learning/mlp/v1/seed0/inference/best/gp_unlabeled_lf.npz
+  inference: ../../outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/event_learning/mlp/v1/seed0/inference/best/rate_unlabeled_lf.npz
 - source: observed_fraction
-  partition: gp_train
+  partition: rate_train
   fidelity: hf
 evaluation:
-- {partition: gp_validation, fidelity: hf}
+- {partition: rate_validation, fidelity: hf}
 output_transform: identity   # plain hit rate first (user); log is the alternative
 kernel: rbf
 n_restarts: 5

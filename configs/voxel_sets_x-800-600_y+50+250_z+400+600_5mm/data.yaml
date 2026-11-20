@@ -10,11 +10,11 @@ source:
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_CNP_val.csv
     role: evt_validation
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_LF2_train.csv
-    role: gp_unlabeled
+    role: rate_unlabeled
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_HF_train.csv
-    role: gp_train
+    role: rate_train
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_GP_val.csv
-    fractions: {gp_validation: 0.5, gp_test: 0.5}
+    fractions: {rate_validation: 0.5, rate_test: 0.5}
 output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
 cache_directory: ../../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
 theta:

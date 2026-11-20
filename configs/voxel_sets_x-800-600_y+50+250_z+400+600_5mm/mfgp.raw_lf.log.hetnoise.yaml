@@ -3,13 +3,13 @@
 # RESUM_FLEX development). v2 (2026-11-17): rerun after the design point rename (v1 archived).
 levels:
 - source: observed_fraction
-  partition: gp_unlabeled   # LF2_train, 1500 events per voxel
+  partition: rate_unlabeled   # LF2_train, 1500 events per voxel
   fidelity: lf
 - source: observed_fraction
-  partition: gp_train       # HF_train, 5000 events per voxel (target)
+  partition: rate_train       # HF_train, 5000 events per voxel (target)
   fidelity: hf
 evaluation:
-- {partition: gp_validation, fidelity: hf}
+- {partition: rate_validation, fidelity: hf}
 output_transform: log   # log of the rate; observed fractions smoothed to (m + 0.5)/(N + 1)
 kernel: rbf
 n_restarts: 5

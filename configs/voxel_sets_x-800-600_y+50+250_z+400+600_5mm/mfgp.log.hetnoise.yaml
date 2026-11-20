@@ -3,14 +3,14 @@
 # RESUM_FLEX heteroscedastic-noise branch.
 levels:
 - source: model_mean
-  partition: gp_unlabeled
+  partition: rate_unlabeled
   fidelity: lf
-  inference: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp/v2/seed0/inference/best/gp_unlabeled_lf.npz
+  inference: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp/v2/seed0/inference/best/rate_unlabeled_lf.npz
 - source: observed_fraction
-  partition: gp_train
+  partition: rate_train
   fidelity: hf
 evaluation:
-- {partition: gp_validation, fidelity: hf}
+- {partition: rate_validation, fidelity: hf}
 output_transform: log   # log of the rate; observed fractions smoothed to (m + 0.5)/(N + 1)
 kernel: rbf
 n_restarts: 5
