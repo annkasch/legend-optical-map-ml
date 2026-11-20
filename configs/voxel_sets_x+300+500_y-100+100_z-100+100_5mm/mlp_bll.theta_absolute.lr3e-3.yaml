@@ -1,4 +1,7 @@
-# Hyperparameter sweep (options 3a, 2026-11-16): mlp_bll.theta_absolute.yaml (v2) with
+# v2 (2026-11-19): v1 retrained, seed 0 only, after evt_1_val grew to 1600 voxels; checkpoints
+# selected on all of them (no selection_max_design_points; v1 had 500 then, and a cap of 500);
+# scored on rate_validation/hf = all 1000 rate_1_val voxels. Seeds 1-2 stay v1.
+# v1: hyperparameter sweep (options 3a, 2026-11-16): mlp_bll.theta_absolute.yaml (v2) with
 # learning_rate 3e-3; all else unchanged (baseline = mlp_bll_theta_absolute/v2/seed0). Seed 0.
 #   sbatch -q regular -t 04:00:00 --job-name=sweep-lr3e-3 \
 #     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mlp_bll.theta_absolute.lr3e-3.yaml train
@@ -45,7 +48,6 @@ train_sets:
 - {partition: rate_train, fidelity: hf}       # rate_1_train
 partitions: {validation: evt_validation, test: rate_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
-output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_theta_absolute_lr3e-3/v1/seed0
-selection_max_design_points: 500
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_theta_absolute_lr3e-3/v2/seed0
 evaluation_threads: 16
 residual_test: {threads: 16}  # read-out residual test; threads as the other datasets

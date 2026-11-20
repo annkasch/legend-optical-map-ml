@@ -1,6 +1,7 @@
 # RESuM support network (options S1, 2026-11-19): the chosen MLP + BLL (input (b), lr3e-3;
-# mlp_bll.theta_absolute.lr3e-3.yaml) trained on LF train only (evt_train = evt_1_train) and
-# selected on evt_validation (evt_1_val) instead of the rate-model training data LF2 + HF. Its
+# mlp_bll.theta_absolute.lr3e-3.yaml, v2) trained on LF train only (evt_train = evt_1_train)
+# instead of the rate-model training data LF2 + HF; selected on all of evt_validation (evt_1_val,
+# 1600 voxels, no subset). Its
 # mean on rate_unlabeled (evt_2_train) is level 0 of mfgp.mlp_bll_lf1.log*.yaml.
 #   sbatch -q regular -t 04:00:00 --job-name=lf1-lr3e-3 \
 #     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mlp_bll.lf1.theta_absolute.lr3e-3.yaml train
@@ -48,6 +49,5 @@ data_provider: legend_optical_map_ml.provider:OpticalDataset
 partitions: {train: evt_train, validation: evt_validation, test: rate_test}  # evt_1_train, evt_1_val; rate_test is empty on this dataset
 data_config: data.yaml
 output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_lf1_theta_absolute_lr3e-3/v1/seed0
-selection_max_design_points: 500
 evaluation_threads: 16
 residual_test: {threads: 16}  # read-out residual test; threads as the other datasets

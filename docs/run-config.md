@@ -86,8 +86,11 @@ Example: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml`, r
   = the MLP + BLL `train_sets` (simulated `rate_unlabeled/lf` → `rate_train/hf`), scored on
   `rate_validation/hf`; `tests/test_configs.py` checks the pair and the data. x-800: v2 (v1 before
   the design point rename).
+- Box lr3e-3 v2 (2026-11-19): `mlp_bll.theta_absolute.lr3e-3.yaml` retrained (seed 0) after
+  `evt_1_val` grew to 1600 voxels, selecting on all of them (no `selection_max_design_points`);
+  seeds 1-2 stay v1. `tests/test_sweep_configs.py` lists such reruns in `RERUNS`.
 - RESuM on the box (2026-11-19): support network `mlp_bll.lf1.theta_absolute.lr3e-3.yaml` (the
-  chosen MLP + BLL, trained on `evt_train`, selected on `evt_validation`; named outside the
+  chosen MLP + BLL, trained on `evt_train`, selected on all of `evt_validation`; named outside the
   `mlp_bll.theta_absolute.*` sweep pattern), `predict` on `rate_unlabeled` in the
   `theta_absolute` view, then `mfgp.mlp_bll_lf1.log.yaml` (learned noise) and
   `.log.hetnoise.yaml` (binomial) on that view, scored on `rate_validation/hf`; the support
