@@ -13,8 +13,13 @@ source:
     role: rate_unlabeled
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_train.csv
     role: rate_train
+  # reg_1_val: 1000 HF voxels since 2026-11-19 (500 taken over from reg_2_val), all of them
+  # rate_validation; no rate_test (before: 500 voxels, 50/50 rate_validation / rate_test, so
+  # older box scores on 250 voxels are not directly comparable). reg_2_val (44 540 unseen),
+  # reg_3_val (12 480 at evt_*_train positions) and reg_4_val (1600 at evt_1_val positions)
+  # are not used yet (docs/datasets.md).
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_val.csv
-    fractions: {rate_validation: 0.5, rate_test: 0.5}
+    role: rate_validation
 output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data
 cache_directory: ../../outputs/event_cache  # shared by all datasets (docs/event-cache.md)
 theta:

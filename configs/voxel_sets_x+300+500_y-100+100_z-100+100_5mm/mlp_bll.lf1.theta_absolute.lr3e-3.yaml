@@ -1,0 +1,53 @@
+# RESuM support network (options S1, 2026-11-19): the chosen MLP + BLL (input (b), lr3e-3;
+# mlp_bll.theta_absolute.lr3e-3.yaml) trained on LF train only (evt_train = evt_1_train) and
+# selected on evt_validation (evt_1_val) instead of the rate-model training data LF2 + HF. Its
+# mean on rate_unlabeled (evt_2_train) is level 0 of mfgp.mlp_bll_lf1.log*.yaml.
+#   sbatch -q regular -t 04:00:00 --job-name=lf1-lr3e-3 \
+#     scripts/slurm/train_surrogate.sbatch configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/mlp_bll.lf1.theta_absolute.lr3e-3.yaml train
+#   then: sbatch --dependency=afterok:<train> scripts/slurm/predict_surrogate.sbatch \
+#     outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_lf1_theta_absolute_lr3e-3/v1/seed0/checkpoints/best \
+#     outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute rate_unlabeled
+model:
+  kind: mlp
+  architecture:
+    hidden_dims: [256, 256, 256]
+    dropout: 0.0
+  last_layer:
+    prior_precision: evidence
+    draws: 1000
+    seed: 0
+training:
+  backend: neural
+  loss: bernoulli
+  n_passes: 20
+  eval_every: 100
+  learning_rate: 0.003
+  lr_schedule: {kind: cosine, final_fraction: 0.01}
+  batch_size: 16
+  n_events: 750
+  targets: disjoint
+  context:
+    size: random
+    n_min: 16
+    max_fraction: 0.5
+  seed: 0
+  device: cpu
+  focal_gamma: 0
+  objective:
+    strategy: single
+  sampling:
+    strategy: natural
+  weighting:
+    strategy: none
+selection: bernoulli_log_loss
+lf_validation: true
+hf_validation: false
+test_fidelities: [] # Test (rate_test) stays blinded; benchmark and score stage unblind it at the end.
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+partitions: {train: evt_train, validation: evt_validation, test: rate_test}  # evt_1_train, evt_1_val; rate_test is empty on this dataset
+data_config: data.yaml
+output_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/event_learning/mlp_bll_lf1_theta_absolute_lr3e-3/v1/seed0
+selection_max_design_points: 500
+evaluation_threads: 16
+residual_test: {threads: 16}  # read-out residual test; threads as the other datasets

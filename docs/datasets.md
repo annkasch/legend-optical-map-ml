@@ -61,12 +61,19 @@ On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data ca
   | `evt_1_val` | `CNP_val` | 1600 LF (500 before 2026-11-18) | `evt_validation` |
   | `evt_2_train` | `LF2_train` | 6400 LF | `rate_unlabeled` (also `event_file` npz per voxel) |
   | `reg_1_train` | `HF_train` | 640 HF | `rate_train` (`partner_lf_id` → `evtT_2_*`) |
-  | `reg_1_val` | `GP_val` | 500 HF | `rate_validation` / `rate_test` 50/50 (seeded, unchanged by the rename) |
+  | `reg_1_val` | `GP_val` | 1000 HF (500 before 2026-11-19) | `rate_validation` (all; 50/50 with `rate_test` before 2026-11-19) |
+  | `reg_2_val` | – | 44 540 HF, no `evt_*` / `reg_*` position | not in the data config |
+  | `reg_3_val` | – | 12 480 HF at the `evt_1_train` / `evt_2_train` positions (not those in `reg_1_train`) | not in the data config |
+  | `reg_4_val` | – | 1600 HF at the `evt_1_val` positions | not in the data config |
 
   Runs before 2026-11-18 selected and scored `evt_validation` on 500 voxels; later runs use
-  1600, so their `lf_validation` metrics are not directly comparable.
-  `voxel_sets_x+300+500_y-100+100_z-100+100_5mm_reg_2_val` (same parent folder) is not in the
-  data config yet.
+  1600, so their `lf_validation` metrics are not directly comparable. Runs before 2026-11-19
+  were scored on 250 `reg_1_val` voxels (`rate_validation` half), later ones on all 1000; the
+  box has no `rate_test` now. `manifest.json` in the campaign folder describes the sets
+  (2026-11-19): with `reg_1_*`, `reg_2_val`, `reg_3_val` and `reg_4_val` every box voxel that
+  has LAr has one 5000-photon HF run (60 260 of the 64 000; `run20001`-`run79120` from the
+  `--hf-rest` simulation, also the 500 voxels `reg_1_val` took over from `reg_2_val`).
+  `regV_3_2925` holds 1170 photons only (voxel almost all HPGe / copper).
 - Homogeneous box `box_x+300+500_y-100+100_z-100+100` (32 chunks of 400k isotropic photons,
   9.68 ± 0.22 eV) → photon store `outputs/photon_x+300+500_y-100+100_z-100+100/data` (moved from `$PSCRATCH`
   2026-11-07; `configs/photon_x+300+500_y-100+100_z-100+100/photons.yaml`, `docs/photon-store.md`).

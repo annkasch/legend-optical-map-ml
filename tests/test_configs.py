@@ -218,3 +218,46 @@ def test_raw_lf_mfgp_pair_differs_only_in_noise_and_uses_the_mlp_bll_training_da
     gp_data = [(level.partition, level.fidelity) for level in learned.levels]
     assert gp_data == [(s.partition, s.fidelity) for s in mlp.train_sets]
     assert [(e.partition, e.fidelity) for e in learned.evaluation] == [("rate_validation", "hf")]
+
+
+def test_resum_lf1_support_network_and_its_mfgp_pair():
+    """mlp_bll.lf1.theta_absolute.lr3e-3.yaml + mfgp.mlp_bll_lf1.log(.hetnoise).yaml (RESuM S1)."""
+    from schemas.surrogates import load_mfgp_config, load_score_config, load_surrogate_config
+
+    folder = CONFIGS / "voxel_sets_x+300+500_y-100+100_z-100+100_5mm"
+    chosen = load_surrogate_config(folder / "mlp_bll.theta_absolute.lr3e-3.yaml")
+    lf1 = load_surrogate_config(folder / "mlp_bll.lf1.theta_absolute.lr3e-3.yaml")
+    a, b = lf1.model_dump(mode="json"), chosen.model_dump(mode="json")
+    # same model, training and selection; only the training data and the output differ
+    assert {k for k in a if a[k] != b[k]} == {"train_sets", "partitions", "output_directory"}
+    assert not lf1.train_sets
+    assert lf1.partitions["train"] == "evt_train"
+    assert lf1.partitions["validation"] == "evt_validation"
+    score = load_score_config(folder / "score.mlp_bll.lf1.theta_absolute.lr3e-3.yaml")
+    assert score.run == lf1.output_directory
+    assert score.output_directory == lf1.output_directory / "score_rate_validation_hf"
+
+    learned = load_mfgp_config(folder / "mfgp.mlp_bll_lf1.log.yaml")
+    binomial = load_mfgp_config(folder / "mfgp.mlp_bll_lf1.log.hetnoise.yaml")
+    assert (learned.observation_noise, binomial.observation_noise) == ("learned", "binomial")
+    a, b = learned.model_dump(mode="json"), binomial.model_dump(mode="json")
+    assert {k for k in a if a[k] != b[k]} == {"observation_noise", "output_directory"}
+    low, high = learned.levels
+    assert (low.source, low.partition, low.fidelity) == ("model_mean", "rate_unlabeled", "lf")
+    assert low.inference == lf1.output_directory / "inference/best/rate_unlabeled_lf.npz"
+    assert (high.source, high.partition, high.fidelity) == ("observed_fraction", "rate_train", "hf")
+    assert learned.data_directory == lf1.data_directory  # the view the run predicts on
+    assert [(e.partition, e.fidelity) for e in learned.evaluation] == [("rate_validation", "hf")]
+
+
+def test_box_reg_1_val_is_all_rate_validation():
+    """Box data.yaml: reg_1_val (1000 HF voxels) is rate_validation only, no rate_test."""
+    from legend_optical_map_ml.config import load_optical_config
+
+    data = load_optical_config(
+        CONFIGS / "voxel_sets_x+300+500_y-100+100_z-100+100_5mm" / "data.yaml"
+    )
+    [reg_1_val] = [m for m in data.source.manifests if m.path.name == "voxels_reg_1_val.csv"]
+    assert (reg_1_val.role, reg_1_val.fractions) == ("rate_validation", None)
+    assert not any("rate_test" in (m.fractions or {}) or m.role == "rate_test"
+                   for m in data.source.manifests)

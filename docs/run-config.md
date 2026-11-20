@@ -86,6 +86,12 @@ Example: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mfgp.yaml`, r
   = the MLP + BLL `train_sets` (simulated `rate_unlabeled/lf` → `rate_train/hf`), scored on
   `rate_validation/hf`; `tests/test_configs.py` checks the pair and the data. x-800: v2 (v1 before
   the design point rename).
+- RESuM on the box (2026-11-19): support network `mlp_bll.lf1.theta_absolute.lr3e-3.yaml` (the
+  chosen MLP + BLL, trained on `evt_train`, selected on `evt_validation`; named outside the
+  `mlp_bll.theta_absolute.*` sweep pattern), `predict` on `rate_unlabeled` in the
+  `theta_absolute` view, then `mfgp.mlp_bll_lf1.log.yaml` (learned noise) and
+  `.log.hetnoise.yaml` (binomial) on that view, scored on `rate_validation/hf`; the support
+  network itself is scored by `score.mlp_bll.lf1.theta_absolute.lr3e-3.yaml`.
 - `inference` points at the `predict` output; `evaluation` names held-out roles. Keep test
   roles out of `levels` and blinded until choices are final.
 - GP fitting time grows steeply with the number of voxels: run on a compute node
