@@ -5,9 +5,9 @@
 source:
   sources:
   - path: /global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375/LF_sim/lf
-    fractions: {cnp_train: 1.0}
+    fractions: {evt_train: 1.0}
   - path: /global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375/validation/lf/lf
-    fractions: {cnp_validation: 0.5, cnp_test: 0.5}
+    fractions: {evt_validation: 0.5, evt_test: 0.5}
   # Inputs only (vertex + momentum, no optical hits): context-free model predictions for the
   # GP's level 0. Disjoint from LF_sim/validation; contains the 200 HF_sim voxels.
   - path: /global/cfs/projectdirs/m2676/users/iwang/sim_output/centered_425_375_375/LF_primaries/lf

@@ -14,8 +14,8 @@ y 0.315-0.435, z 0.2975-0.4525 m, 25×25×32 grid. File names
 
 | Folder | Voxels | Role |
 |---|---|---|
-| `LF_sim/lf` | 2000 | `cnp_train` |
-| `validation/lf/lf` | 500 | `cnp_validation` / `cnp_test` 50/50 |
+| `LF_sim/lf` | 2000 | `evt_train` |
+| `validation/lf/lf` | 500 | `evt_validation` / `evt_test` 50/50 |
 | `LF_primaries/lf` | 2000 | `gp_unlabeled` (inputs only, contains the 200 HF positions) |
 | `HF_sim/hf` | 200 | `gp_train` |
 | `validation/hf/hf` | 500 | `gp_validation` / `gp_test` 50/50 |
@@ -34,7 +34,7 @@ Sofia Calgaro's voxel sets
 `/global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm`,
 CSV manifests per role (`voxels_{LF_train,CNP_val,LF2_train,HF_train,GP_val}.csv`). Data
 config: `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data.yaml`. About 6400 LF2 / 640 HF train voxels;
-GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`; no `cnp_test`.
+GP_val (500) is split seeded 50/50 into `gp_validation` / `gp_test`; no `evt_test`.
 320 of the 640 HF train positions are LF2 positions (nested part of the design).
 
 - 11 GP_val voxels share positions with CNP_val (lists sampled independently). Accepted for
@@ -57,13 +57,13 @@ On `$PSCRATCH` (`/pscratch/sd/a/aschuetz/genesis-remage/`; purge policy, data ca
 
   | Manifest | Old name | Voxels | Role |
   |---|---|---|---|
-  | `evt_1_train` | `LF_train` | 6400 LF | `cnp_train` |
-  | `evt_1_val` | `CNP_val` | 1600 LF (500 before 2026-11-18) | `cnp_validation` |
+  | `evt_1_train` | `LF_train` | 6400 LF | `evt_train` |
+  | `evt_1_val` | `CNP_val` | 1600 LF (500 before 2026-11-18) | `evt_validation` |
   | `evt_2_train` | `LF2_train` | 6400 LF | `gp_unlabeled` (also `event_file` npz per voxel) |
   | `reg_1_train` | `HF_train` | 640 HF | `gp_train` (`partner_lf_id` → `evtT_2_*`) |
   | `reg_1_val` | `GP_val` | 500 HF | `gp_validation` / `gp_test` 50/50 (seeded, unchanged by the rename) |
 
-  Runs before 2026-11-18 selected and scored `cnp_validation` on 500 voxels; later runs use
+  Runs before 2026-11-18 selected and scored `evt_validation` on 500 voxels; later runs use
   1600, so their `lf_validation` metrics are not directly comparable.
   `voxel_sets_x+300+500_y-100+100_z-100+100_5mm_reg_2_val` (same parent folder) is not in the
   data config yet.

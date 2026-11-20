@@ -1,6 +1,6 @@
-# As mlp_bll.yaml, but trained on LF train only (cnp_train, "LF1", 6400 voxels) instead of
+# As mlp_bll.yaml, but trained on LF train only (evt_train, "LF1", 6400 voxels) instead of
 # LF2 + HF train: the LF-only reference next to the benchmark-rule run (2026-11-12).
-# Checkpoints are selected on LF validation (cnp_validation), as there.
+# Checkpoints are selected on LF validation (evt_validation), as there.
 model:
   kind: mlp
   architecture:
@@ -38,7 +38,7 @@ hf_validation: false
 test_fidelities: [] # Test (gp_test) stays blinded; benchmark and score stage unblind it at the end.
 data_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
-partitions: {train: cnp_train, validation: cnp_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
+partitions: {train: evt_train, validation: evt_validation, test: gp_test}  # rate model: its test set is the blinded GP test (core.surrogates score refuses it)
 data_config: data.yaml
 output_directory: ../../outputs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/event_learning/mlp_bll_lf1/v1/seed0
 selection_max_design_points: 500

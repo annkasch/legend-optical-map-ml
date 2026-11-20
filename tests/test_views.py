@@ -145,7 +145,7 @@ def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path, kind):
     c = role_config(
         tmp_path,
         [
-            {"path": str(labeled), "fractions": {"cnp_train": 0.5, "cnp_validation": 0.5}},
+            {"path": str(labeled), "fractions": {"evt_train": 0.5, "evt_validation": 0.5}},
             {"path": str(unlabeled), "fractions": {"gp_unlabeled": 1.0}},
         ],
         views={"emission": EMISSION},
@@ -160,7 +160,7 @@ def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path, kind):
                      "batch_size": 1, "n_events": 4, "seed": 0, "device": "cpu"},
         "data_directory": str(data),
         "data_provider": "legend_optical_map_ml.provider:OpticalDataset",
-        "partitions": {"train": "cnp_train", "validation": "cnp_validation", "test": "cnp_test"},
+        "partitions": {"train": "evt_train", "validation": "evt_validation", "test": "evt_test"},
         "output_directory": str(tmp_path / "run"),
         "hf_validation": False,
     })
@@ -185,8 +185,8 @@ def test_mlp_bll_trains_and_predicts_on_event_only_view(tmp_path, kind):
     from schemas.surrogates import ScoreRunConfig
 
     scored = run_score(ScoreRunConfig(
-        run=output, sets=["cnp_validation/lf"], donors="scored", seed=1,
-        output_directory=output / "score_cnp_validation_lf",
+        run=output, sets=["evt_validation/lf"], donors="scored", seed=1,
+        output_directory=output / "score_evt_validation_lf",
     ))
     (row,) = json.loads((scored / "score.json").read_text())["rows"]
     record = row["event_inputs"]

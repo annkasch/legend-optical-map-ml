@@ -20,7 +20,7 @@ RESUM_FLEX `docs/configs.md` (models `docs/models.md`, Bayesian last layer
 Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `configs/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/mlp.yaml`
 (`mlp_bll`, `field_f*` for rate models).
 
-- `train` reads `cnp_train`, `cnp_validation` (`lf_validation: true`) and `cnp_test`
+- `train` reads `evt_train`, `evt_validation` (`lf_validation: true`) and `evt_test`
   (`test_fidelities: [lf]`, needs `unblind_test`). Set `hf_validation: false`: HF roles are GP
   levels and benchmark sets.
 - Checkpoints are selected on LF validation; `selection: bernoulli_log_loss` for natural
@@ -58,7 +58,7 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
 - LBNL lists have no CNP test set; those runs evaluate train and validation only.
 - Rate models (`train_sets`: LF2 + HF, or `mlp_bll.lf1`) set `partitions.test: gp_test`:
   their test set is the blinded GP test, so the `score` stage refuses it without
-  `unblind_test` (support models keep `cnp_test`). `test_fidelities: []` keeps training from
+  `unblind_test` (support models keep `evt_test`). `test_fidelities: []` keeps training from
   evaluating it.
 - Every training config sets `residual_test: {}`: the residual learnability test runs in
   the read-out (off by default in RESUM_FLEX; needs the `lgbm` extra). Runs trained without

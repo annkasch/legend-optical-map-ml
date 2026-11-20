@@ -65,7 +65,7 @@ def partition_names(config: OpticalDataConfig) -> tuple[str, ...]:
 
 def training_partition(config: OpticalDataConfig) -> str:
     """The partition normalization is fitted on."""
-    return "cnp_train" if config.source.sources or config.source.manifests else "train"
+    return "evt_train" if config.source.sources or config.source.manifests else "train"
 
 
 def role_targets(n: int, source: RoleSource) -> np.ndarray:

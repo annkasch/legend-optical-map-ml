@@ -67,7 +67,7 @@ def generate_reports(runs, assignments, excluded, config, manifest):
     for split in partition_names(config):
         if split in UNLABELED_ROLES:  # inputs only; no hits to report
             continue
-        held_out = split in ("test", "cnp_test")
+        held_out = split in ("test", "evt_test")
         target = root / (split if held_out else f"development/{split}")
         target.mkdir(parents=True, exist_ok=True)
         summaries = []

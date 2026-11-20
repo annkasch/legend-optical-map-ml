@@ -8,7 +8,7 @@ the **rate model**: the model that outputs this rate, a GP or an equivalent alte
 | Pool | Partitions | Used by |
 |---|---|---|
 | Rate training | `gp_unlabeled/lf` (LF2 train) + `gp_train/hf` (HF train) | every rate model |
-| Support training | `cnp_train/lf` (LF train), selected on `cnp_validation/lf` | networks that only feed a GP |
+| Support training | `evt_train/lf` (LF train), selected on `evt_validation/lf` | networks that only feed a GP |
 | Benchmark | `gp_validation/hf`; `gp_test/hf` once at the end | every rate model |
 
 1. **Rate models get the same data.** Every model that outputs the voxel rate trains on
@@ -40,7 +40,7 @@ of another voxel of the same set (seeded draw, never the voxel itself; same phot
 trained on, the same donors for every model with the same seed), moved into the scored voxel
 by the provider (`transfer_events`: absolute positions shifted by the centre difference,
 cylindrical features re-encoded at the new azimuth, offsets as they are). RESUM_FLEX's default is no borrowing (own photons); donors need the
-provider's rule. Earlier scores with donors from `cnp_train/lf` (1500 photons; training data
+provider's rule. Earlier scores with donors from `cnp_train/lf` (now `evt_train/lf`) (1500 photons; training data
 of LF-train models, `inference/best/*_events-cnp_train_lf_*`) are not comparable.
 
 Limits: the prediction averages over n donor photons, a Monte Carlo error sqrt(Var(p)/n)

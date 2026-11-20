@@ -6,9 +6,9 @@
 source:
   manifests:
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_1_train.csv
-    role: cnp_train
+    role: evt_train
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_1_val.csv
-    role: cnp_validation
+    role: evt_validation
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_evt_2_train.csv
     role: gp_unlabeled
   - path: /pscratch/sd/a/aschuetz/genesis-remage/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/voxels_reg_1_train.csv

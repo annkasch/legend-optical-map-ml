@@ -27,7 +27,7 @@ def config(tmp_path, split, seed=3):
     validation = [fixture_file(root, "hf", 10 + i, (1.0 + 0.05 * i, 0.1, 0.2)) for i in range(10)]
     return OpticalDataConfig.model_validate({
         "source": {"manifests": [
-            {"path": write_manifest(tmp_path / "train.csv", train, "lf"), "role": "cnp_train"},
+            {"path": write_manifest(tmp_path / "train.csv", train, "lf"), "role": "evt_train"},
             {"path": write_manifest(tmp_path / "val.csv", validation, "hf"), **split},
         ]},
         "output_directory": tmp_path / "prepared",
@@ -46,7 +46,7 @@ def test_manifest_rows_split_by_fractions_and_counts(tmp_path):
     split = roles(c)
     hf = [role for name, role in split.items() if name.startswith("hf/")]
     assert sorted(hf) == ["gp_test"] * 5 + ["gp_validation"] * 5
-    assert all(role == "cnp_train" for name, role in split.items() if name.startswith("lf/"))
+    assert all(role == "evt_train" for name, role in split.items() if name.startswith("lf/"))
     assert json.loads(c.split.manifest.read_text())["settings"]["seed"] == 3
     # Same seed, same assignment; another seed reshuffles.
     again = config(tmp_path / "b", {"fractions": {"gp_validation": 0.5, "gp_test": 0.5}})
@@ -61,7 +61,7 @@ def test_manifest_rows_split_by_fractions_and_counts(tmp_path):
 def test_single_role_manifests_keep_their_settings(tmp_path):
     c = config(tmp_path, {"role": "gp_validation"})
     prepare_optical_data(c, workers=1)
-    assert set(roles(c).values()) == {"cnp_train", "gp_validation"}
+    assert set(roles(c).values()) == {"evt_train", "gp_validation"}
     assert "seed" not in json.loads(c.split.manifest.read_text())["settings"]
 
 
@@ -74,8 +74,18 @@ def test_manifest_needs_exactly_one_assignment(tmp_path):
         ManifestSource(path=tmp_path / "a.csv", fractions={"gp_test": 0.4})
 
 
-def test_cnp_validation_may_share_positions_with_gp_test():
+def test_evt_validation_may_share_positions_with_gp_test():
     from legend_optical_map_ml.config import SHARED_VALIDATION_ROLES
 
-    assert {"cnp_validation", "gp_test"} <= set(SHARED_VALIDATION_ROLES)
-    assert "gp_train" not in SHARED_VALIDATION_ROLES and "cnp_train" not in SHARED_VALIDATION_ROLES
+    assert {"evt_validation", "gp_test"} <= set(SHARED_VALIDATION_ROLES)
+    assert "gp_train" not in SHARED_VALIDATION_ROLES and "evt_train" not in SHARED_VALIDATION_ROLES
+
+
+@pytest.mark.parametrize("old", ["cnp_train", "cnp_validation", "cnp_test"])
+def test_old_event_model_role_names_are_rejected(old):
+    """The cnp_* roles were renamed to evt_* (2026-11-19); the old names fail validation."""
+    with pytest.raises(ValueError, match=old):
+        ManifestSource.model_validate({"path": "voxels.csv", "role": old})
+    with pytest.raises(ValueError, match=old):
+        ManifestSource.model_validate({"path": "voxels.csv", "fractions": {old: 1.0}})
+    assert ManifestSource.model_validate({"path": "v.csv", "role": old.replace("cnp", "evt")})

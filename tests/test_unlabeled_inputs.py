@@ -28,7 +28,7 @@ def prepared(tmp_path, unlabeled_role="gp_unlabeled"):
     c = role_config(
         tmp_path,
         [
-            {"path": str(labeled), "fractions": {"cnp_train": 0.5, "cnp_validation": 0.5}},
+            {"path": str(labeled), "fractions": {"evt_train": 0.5, "evt_validation": 0.5}},
             {"path": str(unlabeled), "fractions": {unlabeled_role: 1.0}},
         ],
     )
@@ -78,14 +78,14 @@ def test_gp_unlabeled_role_loads_inputs_only(tmp_path):
     assert result.normalization["fit_files"] == sorted(
         r["file"]
         for r in json.loads((out / "manifest_snapshot.json").read_text())["files"]
-        if r["split"] == "cnp_train"
+        if r["split"] == "evt_train"
     )
     with pytest.raises(ValueError, match="labels are undefined"):
         load_partition(out, "gp_unlabeled", "lf")
     batch, paths = OpticalView(out).load_inputs("gp_unlabeled", "lf")
     assert batch.batch_size == 4 and len(paths) == 4 and not batch.labels.any()
-    labeled, _ = OpticalView(out).load_inputs("cnp_train", "lf")
-    np.testing.assert_array_equal(labeled.phi, load_partition(out, "cnp_train", "lf")[0].phi)
+    labeled, _ = OpticalView(out).load_inputs("evt_train", "lf")
+    np.testing.assert_array_equal(labeled.phi, load_partition(out, "evt_train", "lf")[0].phi)
     assert not (out / "reports/development/gp_unlabeled").exists()
 
 
@@ -157,7 +157,7 @@ def hf_layout(tmp_path, *, hf_validation_offset=3.0):
     return role_config(
         tmp_path,
         [
-            {"path": str(labeled), "fractions": {"cnp_train": 0.5, "cnp_validation": 0.5}},
+            {"path": str(labeled), "fractions": {"evt_train": 0.5, "evt_validation": 0.5}},
             {"path": str(unlabeled), "fractions": {"gp_unlabeled": 1.0}},
             {"path": str(hf), "fidelity": "hf", "fractions": {"gp_train": 1.0}},
             {"path": str(hf_val), "fidelity": "hf",
@@ -231,11 +231,11 @@ def test_inference_file_level_matches_prepared_voxels(tmp_path):
     inference = predict_partition(checkpoint, c.output_directory, "gp_unlabeled")
     levels = [
         {"source": "model_mean", "partition": "gp_unlabeled", "inference": str(inference)},
-        {"source": "observed_fraction", "partition": "cnp_train", "fidelity": "lf"},
+        {"source": "observed_fraction", "partition": "evt_train", "fidelity": "lf"},
     ]
     config = MFGPRunConfig(
         levels=levels,
-        evaluation=[{"partition": "cnp_validation", "fidelity": "lf"}],
+        evaluation=[{"partition": "evt_validation", "fidelity": "lf"}],
         n_restarts=1,
         data_directory=c.output_directory,
         data_provider="legend_optical_map_ml.provider:OpticalDataset",
@@ -251,7 +251,7 @@ def test_inference_file_level_matches_prepared_voxels(tmp_path):
         update={
             "output_directory": tmp_path / "gp2",
             "levels": [
-                config.levels[0].model_copy(update={"partition": "cnp_train"}),
+                config.levels[0].model_copy(update={"partition": "evt_train"}),
                 config.levels[1],
             ],
         }

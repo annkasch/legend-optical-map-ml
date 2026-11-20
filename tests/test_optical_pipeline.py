@@ -586,54 +586,54 @@ def test_role_sources_split_by_fraction_count_and_whole_folder(tmp_path):
     counted = role_folder(tmp_path / "counted", 6, offset=1.0)
     whole = role_folder(tmp_path / "whole", 3, offset=2.0)
     c = role_config(tmp_path, [
-        {"path": str(shared), "fractions": {"cnp_train": 0.6, "cnp_validation": 0.1,
-                                           "cnp_test": 0.0, "gp_train": 0.3}},
-        {"path": str(counted), "counts": {"cnp_train": 2, "gp_train": "rest"}},
-        {"path": str(whole), "fractions": {"cnp_validation": 1.0}},
+        {"path": str(shared), "fractions": {"evt_train": 0.6, "evt_validation": 0.1,
+                                           "evt_test": 0.0, "gp_train": 0.3}},
+        {"path": str(counted), "counts": {"evt_train": 2, "gp_train": "rest"}},
+        {"path": str(whole), "fractions": {"evt_validation": 1.0}},
     ])
     runs, _ = read_optical_runs(c.source)
     assert all(r.fidelity == "lf" for r in runs) and {r.source for r in runs} == {0, 1, 2}
     assignments, payload = assign_splits(runs, c)
     by_source = Counter((r.source, assignments[r.file]) for r in runs)
-    assert by_source == {(0, "cnp_train"): 6, (0, "cnp_validation"): 1, (0, "gp_train"): 3,
-                         (1, "cnp_train"): 2, (1, "gp_train"): 4, (2, "cnp_validation"): 3}
+    assert by_source == {(0, "evt_train"): 6, (0, "evt_validation"): 1, (0, "gp_train"): 3,
+                         (1, "evt_train"): 2, (1, "gp_train"): 4, (2, "evt_validation"): 3}
     assert assign_splits(runs, c)[0] == assignments
     result = prepare_optical_data(c)
     assert set(result.normalization["fit_files"]) == {
-        f for f, role in assignments.items() if role == "cnp_train"}
-    for role, n in [("cnp_train", 8), ("cnp_validation", 4), ("gp_train", 7)]:
+        f for f, role in assignments.items() if role == "evt_train"}
+    for role, n in [("evt_train", 8), ("evt_validation", 4), ("gp_train", 7)]:
         assert load(c.output_directory, role).batch_size == n
-    assert not has(c.output_directory, "cnp_test")
+    assert not has(c.output_directory, "evt_test")
     assert (c.output_directory / "reports/development/gp_train/lf_voxels.csv").exists()
     assert result.training_source().generate(1, 4, seed=0).labels.shape == (1, 4)
-    assert payload["split_order"][:3] == ["cnp_train", "cnp_validation", "cnp_test"]
+    assert payload["split_order"][:3] == ["evt_train", "evt_validation", "evt_test"]
 
 
 def test_role_sources_reject_invalid_splits(tmp_path):
     from legend_optical_map_ml.config import RoleSource, SourceConfig
 
     with pytest.raises(ValueError, match="sum to 1"):
-        RoleSource(path=tmp_path, fractions={"cnp_train": 0.5})
+        RoleSource(path=tmp_path, fractions={"evt_train": 0.5})
     with pytest.raises(ValueError, match="either fractions or counts"):
         RoleSource(path=tmp_path)
     with pytest.raises(ValueError, match="only one role"):
-        RoleSource(path=tmp_path, counts={"cnp_train": "rest", "gp_train": "rest"})
+        RoleSource(path=tmp_path, counts={"evt_train": "rest", "gp_train": "rest"})
     with pytest.raises(ValueError, match="only once"):
-        SourceConfig(sources=[{"path": tmp_path, "fractions": {"cnp_train": 1}}] * 2)
+        SourceConfig(sources=[{"path": tmp_path, "fractions": {"evt_train": 1}}] * 2)
     with pytest.raises(ValueError, match="either directory"):
         SourceConfig(directory=tmp_path, sources=[{"path": tmp_path, "fractions": {"gp_train": 1}}])
     folder = role_folder(tmp_path / "a", 4)
     with pytest.raises(ValueError, match="only split.seed"):
-        role_config(tmp_path, [{"path": str(folder), "fractions": {"cnp_train": 1}}],
+        role_config(tmp_path, [{"path": str(folder), "fractions": {"evt_train": 1}}],
                     split={"train_fraction": 0.5, "validation_fraction": 0.5,
                            "test_fraction": 0.0})
-    c = role_config(tmp_path, [{"path": str(folder), "counts": {"cnp_train": 3}}])
+    c = role_config(tmp_path, [{"path": str(folder), "counts": {"evt_train": 3}}])
     runs, _ = read_optical_runs(c.source)
     with pytest.raises(ValueError, match="do not match its 4 files"):
         assign_splits(runs, c)
     # A position shared by CNP training and GP training would leak into the GP.
     twin = role_folder(tmp_path / "b", 1, first_run=50)
-    c = role_config(tmp_path, [{"path": str(folder), "fractions": {"cnp_train": 1}},
+    c = role_config(tmp_path, [{"path": str(folder), "fractions": {"evt_train": 1}},
                                {"path": str(twin), "fractions": {"gp_train": 1}}])
     runs, _ = read_optical_runs(c.source)
     with pytest.raises(ValueError, match="shared by roles"):
@@ -644,7 +644,7 @@ def test_role_manifest_keeps_assignments_and_detects_changes(tmp_path):
     from legend_optical_map_ml.pipeline import ensure_prepared_optical_data
 
     folder = role_folder(tmp_path / "a", 8)
-    sources = [{"path": str(folder), "fractions": {"cnp_train": 0.5, "gp_train": 0.5}}]
+    sources = [{"path": str(folder), "fractions": {"evt_train": 0.5, "gp_train": 0.5}}]
     c = role_config(tmp_path, sources)
     ensure_prepared_optical_data(c)
     first = json.loads(c.split.manifest.read_text())
@@ -667,15 +667,15 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
 
     root = tmp_path / "inputs"
     centers = {
-        "cnp_train": (0.1, 0.2, 0.3),
-        "cnp_validation": (0.2, 0.2, 0.3),
+        "evt_train": (0.1, 0.2, 0.3),
+        "evt_validation": (0.2, 0.2, 0.3),
         "gp_unlabeled": (0.3, 0.2, 0.3),
         "gp_train": (0.3, 0.2, 0.3),
         "gp_validation": (0.2, 0.2, 0.3),
     }
     files = {
-        "cnp_train": fixture_file(root, "lf", 1, centers["cnp_train"]),
-        "cnp_validation": fixture_file(root, "lf", 2, centers["cnp_validation"]),
+        "evt_train": fixture_file(root, "lf", 1, centers["evt_train"]),
+        "evt_validation": fixture_file(root, "lf", 2, centers["evt_validation"]),
         "gp_unlabeled": fixture_file(root, "lf", 3, centers["gp_unlabeled"]),
         "gp_train": fixture_file(root, "hf", 3, centers["gp_train"]),
         "gp_validation": fixture_file(root, "hf", 2, centers["gp_validation"]),
@@ -711,15 +711,15 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
     view = OpticalView(data.output_directory)
     assert {r["split"] for r in json.loads(data.split.manifest.read_text())["files"]} == set(files)
     assert view.available() == {
-        ("cnp_train", "lf"),
-        ("cnp_validation", "lf"),
+        ("evt_train", "lf"),
+        ("evt_validation", "lf"),
         ("gp_unlabeled", "lf"),
         ("gp_train", "hf"),
         ("gp_validation", "hf"),
     }
     np.testing.assert_allclose(
-        view.centers(view.select("cnp_train", "lf"))[0],
-        np.asarray(centers["cnp_train"]) + [0.00025, 0, 0],
+        view.centers(view.select("evt_train", "lf"))[0],
+        np.asarray(centers["evt_train"]) + [0.00025, 0, 0],
     )
 
     run_config = yaml_safe_config(data.output_directory, tmp_path / "run")
@@ -735,17 +735,17 @@ def test_csv_file_lists_prepare_roles_and_run_mlp(tmp_path):
     result = run_experiment(SurrogateRunConfig.model_validate(run_config))
     assert (result / "checkpoints/best/model.json").is_file()
 
-    # RESUM_FLEX score stage on HF validation: donors from cnp_train/lf moved by the provider.
+    # RESUM_FLEX score stage on HF validation: donors from evt_train/lf moved by the provider.
     from core.surrogates.score_stage import run_score
     from schemas.surrogates import ScoreRunConfig
 
     scored = run_score(ScoreRunConfig(
-        run=result, sets=["gp_validation/hf"], donors="cnp_train/lf",
+        run=result, sets=["gp_validation/hf"], donors="evt_train/lf",
         output_directory=result / "score_gp_validation_hf",
     ))
     (row,) = json.loads((scored / "score.json").read_text())["rows"]
     assert np.isfinite(row["plugin_count_nll"])
-    assert row["event_inputs"]["donor_partition"] == "cnp_train"
+    assert row["event_inputs"]["donor_partition"] == "evt_train"
     assert (scored / "gp_validation_hf_best_coverage.png").is_file()
     # Donors from the scored set itself: one voxel has no other voxel to borrow from.
     with pytest.raises(ValueError, match="another design point"):
@@ -759,11 +759,11 @@ def test_cnp_run_on_role_data_rejects_missing_hf(tmp_path):
 
     folder = role_folder(tmp_path / "a", 6)
     c = role_config(tmp_path, [{"path": str(folder), "fractions": {
-        "cnp_train": 0.5, "cnp_validation": 0.25, "cnp_test": 0.25}}])
+        "evt_train": 0.5, "evt_validation": 0.25, "evt_test": 0.25}}])
     prepare_optical_data(c)
     root = c.output_directory
     base = yaml_safe_config(root, tmp_path / "run")
-    with pytest.raises(FileNotFoundError, match="no hf files in cnp_validation"):
+    with pytest.raises(FileNotFoundError, match="no hf files in evt_validation"):
         run_experiment(SurrogateRunConfig.model_validate({**base, "hf_validation": True}))
 
 
@@ -775,7 +775,7 @@ def yaml_safe_config(data, output):
                      "n_events": 4, "n_context_min": 1, "n_context_max": 2},
         "data_directory": str(data),
         "data_provider": "legend_optical_map_ml.provider:OpticalDataset",
-        "partitions": {"train": "cnp_train", "validation": "cnp_validation", "test": "cnp_test"},
+        "partitions": {"train": "evt_train", "validation": "evt_validation", "test": "evt_test"},
         "output_directory": str(output),
         "validation_context_events": 2,
     }
@@ -786,7 +786,7 @@ def test_fast_check_skips_reading_and_detects_config_and_file_changes(tmp_path, 
 
     a = role_folder(tmp_path / "a", 6)
     b = role_folder(tmp_path / "b", 4, offset=1.0, first_run=20)
-    sources = [{"path": str(a), "fractions": {"cnp_train": 0.5, "cnp_test": 0.5}}]
+    sources = [{"path": str(a), "fractions": {"evt_train": 0.5, "evt_test": 0.5}}]
     c = role_config(tmp_path, sources)
     out = pipeline.ensure_prepared_optical_data(c)
     assert (out / "source_stamp.json").is_file()
@@ -796,20 +796,20 @@ def test_fast_check_skips_reading_and_detects_config_and_file_changes(tmp_path, 
     pipeline.ensure_prepared_optical_data(c)
     assert not calls  # unchanged settings and files: neither raw files nor cache are read
     # Changed ratio, same everything else: data is regenerated with the new split.
-    c = role_config(tmp_path, [{**sources[0], "fractions": {"cnp_train": 1.0}}])
+    c = role_config(tmp_path, [{**sources[0], "fractions": {"evt_train": 1.0}}])
     pipeline.ensure_prepared_optical_data(c)
-    assert load(out, "cnp_train").batch_size == 6
-    assert not has(out, "cnp_test")
+    assert load(out, "evt_train").batch_size == 6
+    assert not has(out, "evt_test")
     # Changed input folder: regenerated from the new files.
-    c = role_config(tmp_path, [{"path": str(b), "fractions": {"cnp_train": 1.0}}])
+    c = role_config(tmp_path, [{"path": str(b), "fractions": {"evt_train": 1.0}}])
     pipeline.ensure_prepared_optical_data(c)
-    assert load(out, "cnp_train").batch_size == 4
+    assert load(out, "evt_train").batch_size == 4
     # A file added to the folder changes the stamp and is picked up.
     role_folder(tmp_path / "b2", 1, offset=3.0, first_run=40)
     new_file = next((tmp_path / "b2").iterdir())
     new_file.rename(b / new_file.name)
     pipeline.ensure_prepared_optical_data(c)
-    assert load(out, "cnp_train").batch_size == 5
+    assert load(out, "evt_train").batch_size == 5
 
 
 def test_cnp_run_regenerates_stale_data_from_data_config(tmp_path):
@@ -830,7 +830,7 @@ def test_cnp_run_regenerates_stale_data_from_data_config(tmp_path):
             "split": {"manifest": "prepared/split.json"},
         }))
 
-    write_data({"cnp_train": 0.5, "cnp_validation": 0.5})
+    write_data({"evt_train": 0.5, "evt_validation": 0.5})
     run_yaml = tmp_path / "run.yaml"
     run_yaml.write_text(yaml.safe_dump({**yaml_safe_config("prepared", "run"),
                                         "data_config": "data.yaml"}))
@@ -838,9 +838,9 @@ def test_cnp_run_regenerates_stale_data_from_data_config(tmp_path):
     assert run.data_config == data_yaml
     assert ensure_matching_data(run.data_config, run.data_directory)["regenerated"]
     assert not ensure_matching_data(run.data_config, run.data_directory)["regenerated"]
-    write_data({"cnp_train": 1.0})
+    write_data({"evt_train": 1.0})
     assert ensure_matching_data(run.data_config, run.data_directory)["regenerated"]
-    assert load(tmp_path / "prepared", "cnp_train").batch_size == 6
+    assert load(tmp_path / "prepared", "evt_train").batch_size == 6
     with pytest.raises(ValueError, match="none of the views"):
         ensure_matching_data(run.data_config, tmp_path / "elsewhere")
 
@@ -853,7 +853,7 @@ def test_cnp_selection_subset_and_evaluation_threads(tmp_path):
 
     folder = role_folder(tmp_path / "a", 12)
     c = role_config(tmp_path, [{"path": str(folder), "fractions": {
-        "cnp_train": 0.5, "cnp_validation": 0.5}}])
+        "evt_train": 0.5, "evt_validation": 0.5}}])
     prepare_optical_data(c)
     torch.set_num_threads(1)
     with evaluation_threads(3):

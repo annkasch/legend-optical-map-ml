@@ -6,24 +6,27 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 ANOMALOUS_FILE = "lf/run067_x-0.088_y+0.484_z-1.462.stp.lh5"
-# Roles of voxels in the role-based layout; see RoleSource. New roles are appended.
+# Roles of voxels in the role-based layout; see RoleSource. New roles are appended. The
+# event-model roles were cnp_train / cnp_validation / cnp_test until 2026-11-19; the old names
+# are rejected.
 ROLES = (
-    "cnp_train", "cnp_validation", "cnp_test", "gp_train", "gp_unlabeled", "gp_validation",
+    "evt_train", "evt_validation", "evt_test", "gp_train", "gp_unlabeled", "gp_validation",
     "gp_test",
 )
 Role = Literal[
-    "cnp_train", "cnp_validation", "cnp_test", "gp_train", "gp_unlabeled", "gp_validation",
+    "evt_train", "evt_validation", "evt_test", "gp_train", "gp_unlabeled", "gp_validation",
     "gp_test",
 ]
 # Roles whose files need no optical hits (inputs only, e.g. for event-model inference).
 UNLABELED_ROLES = ("gp_unlabeled",)
 # Roles that may share positions in a nested multi-fidelity GP design, for example HF training
-# voxels at positions of LF inputs. Held-out CNP and GP validation roles may also overlap.
+# voxels at positions of LF inputs. Held-out event-model and GP validation roles may also
+# overlap.
 GP_TRAINING_ROLES = ("gp_train", "gp_unlabeled")
-# Held-out roles that may evaluate the same position. CNP validation shared with the GP test
-# leaks the checkpoint choice into the test slightly; accepted for datasets whose validation
+# Held-out roles that may evaluate the same position. Event-model validation shared with the GP
+# test leaks the checkpoint choice into the test slightly; accepted for datasets whose validation
 # lists were sampled independently (e.g. LBNL secondment), avoid it in new samplings.
-SHARED_VALIDATION_ROLES = ("cnp_validation", "gp_validation", "gp_test")
+SHARED_VALIDATION_ROLES = ("evt_validation", "gp_validation", "gp_test")
 
 
 class StrictModel(BaseModel):
@@ -35,7 +38,7 @@ class RoleSource(StrictModel):
 
     Roles left out get no files. ``fractions`` must sum to 1 and are rounded per folder;
     ``counts`` must add up to the folder's file count unless one role takes ``rest``.
-    An already split folder is e.g. ``fractions: {cnp_validation: 1.0}``.
+    An already split folder is e.g. ``fractions: {evt_validation: 1.0}``.
     """
 
     path: Path

@@ -6,9 +6,9 @@
 source:
   manifests:
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_LF_train.csv
-    role: cnp_train
+    role: evt_train
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_CNP_val.csv
-    role: cnp_validation
+    role: evt_validation
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_LF2_train.csv
     role: gp_unlabeled
   - path: /global/cfs/cdirs/m2676/users/calgaro/lbnl_secondment/voxel_sets_x-800-600_y+50+250_z+400+600_5mm/voxels_HF_train.csv

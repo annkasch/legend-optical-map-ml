@@ -32,7 +32,7 @@ is recorded in the run's `experiment.json`.
   detector recorded a hit (multiple hits count once). Inputs have one primary per event
   (`vtx/n_part == 1`).
 - θ = voxel centre; φ = vertex offset from the centre and momentum components (per config).
-- Normalization from streaming moments over the training files (`cnp_train`), applied to every
+- Normalization from streaming moments over the training files (`evt_train`), applied to every
   role and fidelity.
 - The view (`view.npy`, `view.json`) lists each file's partition, fidelity, path and sha256. `code.json`
   records the code that prepared it (`outputs.md`, Code provenance).

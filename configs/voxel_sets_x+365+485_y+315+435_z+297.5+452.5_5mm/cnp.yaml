@@ -35,7 +35,7 @@ hf_validation: false
 test_fidelities: [lf]
 data_directory: ../../outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/data
 data_provider: legend_optical_map_ml.provider:OpticalDataset
-partitions: {train: cnp_train, validation: cnp_validation, test: cnp_test}
+partitions: {train: evt_train, validation: evt_validation, test: evt_test}
 data_config: data.yaml
 output_directory: ../../outputs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/event_learning/cnp/v1/seed0
 validation_context_events: 200

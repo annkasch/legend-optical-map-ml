@@ -26,18 +26,20 @@ Use exactly one `source` layout:
 - `directories`: lists of folders per fidelity (`lf`, `hf`), split by the global `split` fields;
 - `directory`: one root with `lf/` and `hf/` (old form).
 
-Roles: `cnp_train`, `cnp_validation`, `cnp_test` (labeled LF event-model data); `gp_train`
+Roles: `evt_train`, `evt_validation`, `evt_test` (labeled LF event-model data); `gp_train`
 (observed GP data, commonly HF); `gp_unlabeled` (inputs-only LF voxels, no optical hits needed,
 see `docs/preparation.md`); `gp_validation`, `gp_test` (held-out GP data). Roles left out get
-no files.
+no files. The event-model roles were `cnp_train`, `cnp_validation`, `cnp_test` until 2026-11-19;
+the old names are rejected, so data views prepared before then are prepared again and old run
+configs need the new names to be reused.
 
 ```yaml
 source:
   sources:
   - path: /data/lf                 # fidelity: lf by default
-    fractions: {cnp_train: 0.6, cnp_validation: 0.1, gp_train: 0.3}   # sum to 1
+    fractions: {evt_train: 0.6, evt_validation: 0.1, gp_train: 0.3}   # sum to 1
   - path: /data/lf_batch2
-    counts: {cnp_train: 5000, cnp_validation: 1000, gp_train: rest}   # one role may take rest
+    counts: {evt_train: 5000, evt_validation: 1000, gp_train: rest}   # one role may take rest
   - path: /data/hf
     fidelity: hf
     fractions: {gp_train: 1.0}     # an already split folder is one role at 1.0
@@ -53,7 +55,7 @@ CSV or a raw file may appear only once (don't add `voxels_all.csv` next to its p
 Splitting keeps whole voxels together and is seeded per folder; with `sources` or `manifests`
 the role assignment is the split, so only `split.seed` and `split.manifest` apply. A voxel
 position in two roles is an error, except `gp_train` + `gp_unlabeled` (nested multi-fidelity
-design) and among `cnp_validation`, `gp_validation`, `gp_test` (all held out).
+design) and among `evt_validation`, `gp_validation`, `gp_test` (all held out).
 
 With `directories`, each folder must directly contain `.stp.lh5` files; repeated references
 to one physical file load once; the same basename twice per fidelity, or one file in both
