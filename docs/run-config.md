@@ -52,6 +52,14 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   `trainable: output_layer`, natural sampling, `bernoulli_log_loss`), so all its metrics compare
   with the plain CNP. Mixup as a second loss term (`real_plus_mixup`, weight 0.001) gave nothing
   over the plain CNP (2026-11-16) and was dropped.
+- Neural-field training settings on the box (options F1 stage 1, 2026-11-23): `field_f2.yaml` in
+  `configs/photon_x+300+500_y-100+100_z-100+100/` (stream, photon store) and in
+  `configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/` (LF2 + HF train, `theta_absolute` view,
+  the field ignores θ) is the old setting: constant learning rate 1e-3, 10 passes, Fourier
+  `max_frequency` 2. Variants `field_f2.<parts>.yaml` join parts with `_`: `cos` (cosine decay
+  to 0.01), `lr<x>`, `p<n>` (`n_passes`); stream `cos`, `cos_p40`, `cos_p100` and the same with
+  `lr3e-3`, voxel `cos_p20`, `cos_lr3e-3_p20`. Each has `score.field_f2.<parts>.yaml` on
+  `rate_validation/hf`; `tests/test_field_configs.py` checks the naming rule.
 - Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).

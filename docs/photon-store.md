@@ -69,6 +69,9 @@ RESUM_FLEX `docs/stream.md`), trained on GPU with `scripts/slurm/train_photon_fi
 the voxel campaign with the RESUM_FLEX `score` stage (`data_directory`: the voxel view,
 `data_provider`: `OpticalDataset`; `docs/benchmark.md`).
 
+Learning rate: `training.lr_schedule` (`{kind: cosine, final_fraction: 0.01}`, default
+constant) spans all optimizer steps of the run (RESUM_FLEX ≥ e470cb4, its `docs/stream.md`).
+
 A stream model sees the view's φ columns as they are (RESUM_FLEX maps each into its stream
 units), so the view's φ must be the stream records: absolute x, y, z, px, py, pz (view
 `theta_absolute`), or the view with the loader's `transform` (above). A stream model never

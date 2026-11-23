@@ -1,0 +1,11 @@
+# Benchmark score (RESUM_FLEX `score` stage, docs/benchmark.md) of field_f2.cos_lr3e-3_p100.yaml on
+# rate_validation/hf of voxel_sets_x+300+500_y-100+100_z-100+100_5mm (1000 rate_1_val voxels),
+# donors from the scored set, as score.mlp_bll.theta_absolute.lr3e-3.yaml.
+#   sbatch scripts/slurm/train_surrogate.sbatch configs/photon_x+300+500_y-100+100_z-100+100/score.field_f2.cos_lr3e-3_p100.yaml score
+run: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/field_f2_cos_lr3e-3_p100/v1/seed0
+checkpoints: [best]
+sets: [rate_validation/hf]
+donors: scored
+seed: 0
+threads: 16
+output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/field_f2_cos_lr3e-3_p100/v1/seed0/score_rate_validation_hf
