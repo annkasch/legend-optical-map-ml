@@ -94,3 +94,18 @@ def test_variant_changes_its_fields_and_has_its_own_run_and_score(path):
     assert score.output_directory == config.output_directory / "score_rate_validation_hf"
     changed = _changed(base_score.model_dump(mode="json"), score.model_dump(mode="json"))
     assert sorted(changed) == [("output_directory",), ("run",)]
+
+
+def test_raw_position_field_differs_from_its_fourier_twin_only_in_the_encoding():
+    from schemas.surrogates import load_score_config
+
+    folder = ROOT / "configs" / FOLDERS[0]
+    fourier = _load(folder / "field_f2.cos_lr3e-3.yaml")
+    raw = _load(folder / "field_raw.cos_lr3e-3.yaml")
+    assert raw.model.encoding.kind == "none" and list(raw.model.encoding.columns) == [0, 1, 2]
+    changed = _changed(fourier.model_dump(mode="json"), raw.model_dump(mode="json"))
+    assert ("output_directory",) in changed
+    assert all(c == ("output_directory",) or c[:2] == ("model", "encoding") for c in changed)
+    assert raw.output_directory.parts[-3:] == ("field_raw_cos_lr3e-3", "v1", "seed0")
+    score = load_score_config(folder / "score.field_raw.cos_lr3e-3.yaml")
+    assert score.run == raw.output_directory
