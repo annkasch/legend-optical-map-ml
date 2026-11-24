@@ -96,16 +96,32 @@ def test_variant_changes_its_fields_and_has_its_own_run_and_score(path):
     assert sorted(changed) == [("output_directory",), ("run",)]
 
 
-def test_raw_position_field_differs_from_its_fourier_twin_only_in_the_encoding():
+ENCODING_VARIANTS = sorted((ROOT / "configs" / FOLDERS[0]).glob("field_*.*.yaml"))
+ENCODING_VARIANTS = [p for p in ENCODING_VARIANTS if not p.name.startswith("field_f2.")]
+
+
+def test_encoding_variants_exist():
+    names = {p.name for p in ENCODING_VARIANTS}
+    assert {"field_raw.cos_lr3e-3.yaml", "field_f2_mom.cos_lr3e-3.yaml"} <= names
+
+
+@pytest.mark.parametrize("path", ENCODING_VARIANTS, ids=lambda p: p.name)
+def test_encoding_variant_differs_from_its_fourier_twin_only_in_the_encodings(path):
+    """field_<enc>.<parts>.yaml = field_f2.<parts>.yaml with other position / direction encodings:
+    `raw` = position unencoded, `_mom` = raw momentum direction."""
     from schemas.surrogates import load_score_config
 
-    folder = ROOT / "configs" / FOLDERS[0]
-    fourier = _load(folder / "field_f2.cos_lr3e-3.yaml")
-    raw = _load(folder / "field_raw.cos_lr3e-3.yaml")
-    assert raw.model.encoding.kind == "none" and list(raw.model.encoding.columns) == [0, 1, 2]
-    changed = _changed(fourier.model_dump(mode="json"), raw.model_dump(mode="json"))
+    encoding, variant = path.name.removeprefix("field_").removesuffix(".yaml").split(".", 1)
+    twin = _load(path.parent / f"field_f2.{variant}.yaml")
+    config = _load(path)
+    position, _, direction = encoding.partition("_")
+    assert config.model.encoding.kind == ("none" if position == "raw" else "fourier")
+    assert config.model.direction.encoding == ("momentum" if direction == "mom" else "harmonics")
+    changed = _changed(twin.model_dump(mode="json"), config.model_dump(mode="json"))
     assert ("output_directory",) in changed
-    assert all(c == ("output_directory",) or c[:2] == ("model", "encoding") for c in changed)
-    assert raw.output_directory.parts[-3:] == ("field_raw_cos_lr3e-3", "v1", "seed0")
-    score = load_score_config(folder / "score.field_raw.cos_lr3e-3.yaml")
-    assert score.run == raw.output_directory
+    allowed = {("model", "encoding"), ("model", "direction")}
+    assert all(c == ("output_directory",) or c[:2] in allowed for c in changed)
+    assert config.output_directory.parts[-3:] == (f"field_{encoding}_{variant}", "v1", "seed0")
+    score = load_score_config(path.parent / f"score.{path.name}")
+    assert score.run == config.output_directory
+    assert score.output_directory == config.output_directory / "score_rate_validation_hf"

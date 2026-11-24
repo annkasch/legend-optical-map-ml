@@ -60,9 +60,11 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   to 0.01), `lr<x>`, `p<n>` (`n_passes`); stream `cos`, `cos_p40`, `cos_p100` and the same with
   `lr3e-3`, voxel `cos_p20`, `cos_lr3e-3_p20`. Each has `score.field_f2.<parts>.yaml` on
   `rate_validation/hf`; `tests/test_field_configs.py` checks the naming rule.
-  `field_raw.cos_lr3e-3.yaml` (stream, 2026-11-23) is `field_f2.cos_lr3e-3` with the emission
-  point unencoded (`encoding: {kind: none, columns: [0, 1, 2]}`): does the Fourier encoding
-  cause the gap to MLP + BLL?
+  Encoding variants (stream, 2026-11-23) `field_<enc>.<parts>.yaml` = `field_f2.<parts>.yaml` with
+  other encodings: `raw` = emission point unencoded (`encoding: {kind: none, columns: [0, 1, 2]}`),
+  `_mom` = raw momentum instead of spherical harmonics (`direction.encoding: momentum`);
+  `field_raw`, `field_f2_mom`, `field_raw_mom` (≈ an MLP on the six stream columns) separate the
+  position and direction encodings at the `cos_lr3e-3` recipe.
 - Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).
