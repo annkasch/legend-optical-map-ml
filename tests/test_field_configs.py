@@ -1,8 +1,9 @@
 """Field training-setting variants field_f2.<parts>.yaml change exactly the fields their name lists.
 
 Parts are joined by `_` (`cos_lr3e-3_p40`): `cos` = cosine learning-rate decay, `lr<x>` = learning
-rate, `p<n>` = n_passes. The base `field_f2.yaml` of each box folder is the old setting (constant
-rate 1e-3, 10 passes); each variant and the base have a score config on rate_validation/hf.
+rate, `p<n>` = n_passes, `wd<x>` = weight decay. The base `field_f2.yaml` of each box folder is
+the old setting (constant rate 1e-3, 10 passes); each variant and the base have a score config on
+rate_validation/hf.
 """
 
 import re
@@ -20,6 +21,7 @@ FIELDS = {
     "cos": ("training", "lr_schedule"),
     "lr": ("training", "learning_rate"),
     "p": ("training", "n_passes"),
+    "wd": ("training", "weight_decay"),
 }
 VARIANTS = sorted(p for f in FOLDERS for p in (ROOT / "configs" / f).glob("field_f2.*.yaml"))
 

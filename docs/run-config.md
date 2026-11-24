@@ -57,8 +57,9 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   `configs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/` (LF2 + HF train, `theta_absolute` view,
   the field ignores θ) is the old setting: constant learning rate 1e-3, 10 passes, Fourier
   `max_frequency` 2. Variants `field_f2.<parts>.yaml` join parts with `_`: `cos` (cosine decay
-  to 0.01), `lr<x>`, `p<n>` (`n_passes`); stream `cos`, `cos_p40`, `cos_p100` and the same with
-  `lr3e-3`, voxel `cos_p20`, `cos_lr3e-3_p20`. Each has `score.field_f2.<parts>.yaml` on
+  to 0.01), `lr<x>`, `p<n>` (`n_passes`), `wd<x>` (`weight_decay`, AdamW, RESUM_FLEX ≥ 234b797); stream `cos`, `cos_p40`, `cos_p100` and the same with
+  `lr3e-3`, voxel `cos_p20`, `cos_lr3e-3_p20`. Weight decay (stage 1c, 2026-11-24): stream
+  `cos_lr3e-3_p{40,100}_wd{1e-2,1e-1,1}`. Each has `score.field_f2.<parts>.yaml` on
   `rate_validation/hf`; `tests/test_field_configs.py` checks the naming rule.
   Encoding variants (stream, 2026-11-23) `field_<enc>.<parts>.yaml` = `field_f2.<parts>.yaml` with
   other encodings: `raw` = emission point unencoded (`encoding: {kind: none, columns: [0, 1, 2]}`),
