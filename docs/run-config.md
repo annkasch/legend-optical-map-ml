@@ -66,6 +66,8 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   `_mom` = raw momentum instead of spherical harmonics (`direction.encoding: momentum`);
   `field_raw`, `field_f2_mom`, `field_raw_mom` (≈ an MLP on the six stream columns) separate the
   position and direction encodings at the `cos_lr3e-3` recipe.
+  `field_raw_mom` also runs longer (`p100`, `p200`) and with smaller batches (`b<n>`, 2026-11-24);
+  without a `field_f2` twin the test compares it with `field_raw_mom.cos_lr3e-3`.
 - Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).

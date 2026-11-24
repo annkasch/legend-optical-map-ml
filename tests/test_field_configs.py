@@ -22,6 +22,7 @@ FIELDS = {
     "lr": ("training", "learning_rate"),
     "p": ("training", "n_passes"),
     "wd": ("training", "weight_decay"),
+    "b": ("training", "batch_size"),
 }
 VARIANTS = sorted(p for f in FOLDERS for p in (ROOT / "configs" / f).glob("field_f2.*.yaml"))
 
@@ -110,18 +111,27 @@ def test_encoding_variants_exist():
 @pytest.mark.parametrize("path", ENCODING_VARIANTS, ids=lambda p: p.name)
 def test_encoding_variant_differs_from_its_fourier_twin_only_in_the_encodings(path):
     """field_<enc>.<parts>.yaml = field_f2.<parts>.yaml with other position / direction encodings:
-    `raw` = position unencoded, `_mom` = raw momentum direction."""
+    `raw` = position unencoded, `_mom` = raw momentum direction. Without a field_f2 twin, the
+    run is compared with field_<enc>.cos_lr3e-3.yaml and may change the fields of its further
+    parts (e.g. `p200`, `b8192`)."""
     from schemas.surrogates import load_score_config
 
     encoding, variant = path.name.removeprefix("field_").removesuffix(".yaml").split(".", 1)
-    twin = _load(path.parent / f"field_f2.{variant}.yaml")
     config = _load(path)
     position, _, direction = encoding.partition("_")
     assert config.model.encoding.kind == ("none" if position == "raw" else "fourier")
     assert config.model.direction.encoding == ("momentum" if direction == "mom" else "harmonics")
+    twin_path = path.parent / f"field_f2.{variant}.yaml"
+    if twin_path.exists():
+        twin = _load(twin_path)
+        allowed = {("model", "encoding"), ("model", "direction")}
+    else:
+        base = "cos_lr3e-3"
+        assert variant.startswith(base + "_"), variant
+        twin = _load(path.parent / f"field_{encoding}.{base}.yaml")
+        allowed = {_part_field(part) for part in variant.removeprefix(base + "_").split("_")}
     changed = _changed(twin.model_dump(mode="json"), config.model_dump(mode="json"))
     assert ("output_directory",) in changed
-    allowed = {("model", "encoding"), ("model", "direction")}
     assert all(c == ("output_directory",) or c[:2] in allowed for c in changed)
     assert config.output_directory.parts[-3:] == (f"field_{encoding}_{variant}", "v1", "seed0")
     score = load_score_config(path.parent / f"score.{path.name}")

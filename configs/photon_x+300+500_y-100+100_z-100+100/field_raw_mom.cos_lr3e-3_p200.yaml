@@ -1,0 +1,51 @@
+# Underfitted raw + raw (options D3, 2026-11-24): field_raw_mom.cos_lr3e-3.yaml with 200 passes.
+# Encoding 2 x 2 (2026-11-23): field_f2.cos_lr3e-3.yaml with raw position, raw momentum (an MLP on the six stream columns); with field_f2 (Fourier + SH)
+# and field_raw (raw + SH) it separates the position and direction encodings at one recipe.
+#   sbatch -q regular -t 00:40:00 scripts/slurm/train_photon_field.sbatch configs/photon_x+300+500_y-100+100_z-100+100/field_raw_mom.cos_lr3e-3_p200.yaml
+# Base comment of field_f2.yaml:
+# Neural field trained on every photon of the homogeneous genesis-remage box x 300..500 mm
+# (photon store from configs/photon_x+300+500_y-100+100_z-100+100/photons.yaml): continuous emission point
+# (Fourier, max_frequency 2 (frequency scan; half-period 1/(2·2) store std)) and photon direction
+# (spherical harmonics), same network as voxel_sets_x-800-600_y+50+250_z+400+600_5mm/field_f2.yaml.
+# Selected on the store's validation photons; evaluated on the voxel campaign
+# (voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml, rate_1_val HF) with the RESUM_FLEX score stage.
+#   sbatch scripts/slurm/train_photon_field.sbatch configs/photon_x+300+500_y-100+100_z-100+100/field_f2.cos_lr3e-3.yaml
+model:
+  kind: field
+  architecture:
+    hidden_dims: [256, 256, 256]
+    dropout: 0.0
+  direction: {phi_columns: [3, 4, 5], encoding: momentum}   # raw momentum vector (length = photon energy)
+  encoding: {kind: none, columns: [0, 1, 2]}   # raw normalized emission point
+  last_layer:
+    prior_precision: evidence
+    draws: 1000
+    seed: 0
+training:
+  batch_size: 65536
+  n_passes: 200
+  learning_rate: 0.003
+  lr_schedule: {kind: cosine, final_fraction: 0.01}
+  eval_every: 50
+  seed: 0
+  device: cuda
+  precision: bf16
+  compile: false
+  validation_events: null     # all 800k validation photons
+event_store: ../../outputs/photon_x+300+500_y-100+100_z-100+100/data
+event_source: legend_optical_map_ml.photon_loader:PhotonStream
+dim_theta: 3                 # voxel centre of the evaluation view (not a stream input)
+dim_phi: 6                   # emission point (3) + momentum (3) = the stream records
+event_source_options:
+  in_memory: true            # 10.8M train photons = 300 MB
+# Voxel evaluation: same metrics and plots as voxel-trained fields (LF = evt_1_val, HF = rate_1_val
+# of the voxel campaign, all 1000 voxels rate_validation since 2026-11-19).
+data_provider: legend_optical_map_ml.provider:OpticalDataset
+data_directory: ../../outputs/voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data/views/theta_absolute  # phi = absolute x, y, z, px, py, pz
+data_config: ../voxel_sets_x+300+500_y-100+100_z-100+100_5mm/data.yaml
+evaluation:
+- {split: validation, partition: evt_validation, fidelity: lf}
+- {split: validation, partition: rate_validation, fidelity: hf}
+history_design_points: 500
+output_directory: ../../outputs/photon_x+300+500_y-100+100_z-100+100/event_learning/field_raw_mom_cos_lr3e-3_p200/v1/seed0
+residual_test: {}  # residual learnability test at read-out (RESUM_FLEX docs/evaluation.md)
