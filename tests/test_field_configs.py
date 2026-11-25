@@ -106,12 +106,20 @@ ENCODING_VARIANTS = [p for p in ENCODING_VARIANTS if not p.name.startswith("fiel
 def test_encoding_variants_exist():
     names = {p.name for p in ENCODING_VARIANTS}
     assert {"field_raw.cos_lr3e-3.yaml", "field_f2_mom.cos_lr3e-3.yaml"} <= names
+    # frequency scan (options G1): lower max_frequency at the raw + raw recipe
+    assert {f"field_{f}.cos_lr3e-3_p40_b16384.yaml" for f in ("f1", "f0p5")} <= names
+
+
+def test_frequency_part_parses_the_decimal_point():
+    # synthetic: the name parsing alone, as in the encoding test
+    assert [float(p[1:].replace("p", ".")) for p in ("f2", "f1", "f0p5")] == [2.0, 1.0, 0.5]
 
 
 @pytest.mark.parametrize("path", ENCODING_VARIANTS, ids=lambda p: p.name)
 def test_encoding_variant_differs_from_its_fourier_twin_only_in_the_encodings(path):
     """field_<enc>.<parts>.yaml = field_f2.<parts>.yaml with other position / direction encodings:
-    `raw` = position unencoded, `_mom` = raw momentum direction. Without a field_f2 twin, the
+    `raw` = position unencoded, `f<x>` = Fourier max_frequency x (`p` = decimal point, `f0p5` =
+    0.5), `_mom` = raw momentum direction. Without a field_f2 twin, the
     run is compared with field_<enc>.cos_lr3e-3.yaml and may change the fields of its further
     parts (e.g. `p200`, `b8192`)."""
     from schemas.surrogates import load_score_config
@@ -120,6 +128,8 @@ def test_encoding_variant_differs_from_its_fourier_twin_only_in_the_encodings(pa
     config = _load(path)
     position, _, direction = encoding.partition("_")
     assert config.model.encoding.kind == ("none" if position == "raw" else "fourier")
+    if position != "raw":
+        assert config.model.encoding.max_frequency == float(position[1:].replace("p", "."))
     assert config.model.direction.encoding == ("momentum" if direction == "mom" else "harmonics")
     twin_path = path.parent / f"field_f2.{variant}.yaml"
     if twin_path.exists():

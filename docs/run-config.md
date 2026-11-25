@@ -68,6 +68,9 @@ Examples: `configs/voxel_sets_x+365+485_y+315+435_z+297.5+452.5_5mm/mlp.yaml`, `
   position and direction encodings at the `cos_lr3e-3` recipe.
   `field_raw_mom` also runs longer (`p100`, `p200`) and with smaller batches (`b<n>`, 2026-11-24);
   without a `field_f2` twin the test compares it with `field_raw_mom.cos_lr3e-3`.
+  Fourier at the raw + raw recipe (options G, 2026-11-25): `field_f2.cos_lr3e-3_p40_b16384`, the
+  frequency scan `field_f1`, `field_f0p5` (`f<x>` = `max_frequency` x, `p` = decimal point; the
+  `n_frequencies: 8` octaves end at x) and `field_f2_mom` at the same parts.
 - Large validation sets: `selection_max_design_points: N` selects on a seeded subset (`validation_seed`;
   the full sets are still evaluated once at the end); `evaluation_threads: N` (same results;
   2.65 ms per 1000-event voxel on 1 thread, 0.9 ms on 16).
